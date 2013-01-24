@@ -1404,6 +1404,34 @@ def _get_basic_auth_info(request):
     username, password = base64.b64decode(auth).split(':')
     return username, password
 
+def resolve_user(request):
+    user = None
+    geoserver = False
+    superuser = False
+    logger.info("getting user")
+    if 'HTTP_AUTHORIZATION' in request.META:
+        username, password = _get_basic_auth_info(request)
+        logger.info("%s:%s",username,password)
+        acl_user = authenticate(username=username, password=password)
+        if acl_user:
+            user = acl_user.username
+            superuser = acl_user.is_superuser
+            logger.info("acluser:%s",user)
+        elif _get_basic_auth_info(request) == settings.GEOSERVER_CREDENTIALS:
+            geoserver = True
+            superuser = True
+            logger.info("geoserver")
+    elif not request.user.is_anonymous():
+        user = request.user.username
+        superuser = request.user.is_superuser
+        logger.info("not anon:%s",user)
+    return HttpResponse(json.dumps({
+        'user' : user,
+        'geoserver' : geoserver,
+        'superuser' : superuser
+    }))
+
+
 def layer_acls(request):
     """
     returns json-encoded lists of layer identifiers that
