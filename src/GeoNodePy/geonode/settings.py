@@ -22,6 +22,16 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #EMAIL_PORT = 587
 #EMAIL_USE_TLS = True
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'wm_db',
+        'USER': 'wm_user',
+        'PASSWORD': 'wm_password',
+        'HOST': 'localhost', 'PORT': '5432'
+        }
+}
+
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 ADMINS = (
@@ -47,12 +57,12 @@ ADMINS = (
 
 MANAGERS = ADMINS
 POSTGIS_VERSION = (1, 5, 3)
-DATABASE_ENGINE = 'sqlite3'
-DATABASE_NAME = os.path.join(PROJECT_ROOT,"..","..","..","development.db")
-DATABASE_USER = ''             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = ''             # Not used with sqlite3.
-DATABASE_PORT = ''             # Not used with sqlite3.
+#DATABASE_ENGINE = 'sqlite3'
+#DATABASE_NAME = os.path.join(PROJECT_ROOT,"..","..","..","development.db")
+#DATABASE_USER = ''             # Not used with sqlite3.
+#DATABASE_PASSWORD = ''         # Not used with sqlite3.
+#DATABASE_HOST = ''             # Not used with sqlite3.
+#DATABASE_PORT = ''             # Not used with sqlite3.
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
