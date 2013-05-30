@@ -23,9 +23,9 @@ The following documents give an overview to GeoNode, the overview document is ta
 For users
 =========
 
-Users are not required to have experience with GIS systems but most power GeoNode users have existings knowledge of tools like ESRI's ArcGIS or qGIS.
+Users are not required to have experience with GIS systems but most power GeoNode users have existing knowledge of tools like ESRI's ArcGIS or QGIS.
 
-The end user documentation is formatted in form of tutorials, this material has mostly been developed for Workshops during FOSS4g and similar conferences.
+The end user documentation is formatted in form of tutorials, this material has mostly been developed for workshops during FOSS4G and similar conferences.
 
  * :doc:`Tutorials Overview <users/index>`
  * :doc:`Registering a New Account <users/register>`
@@ -59,6 +59,8 @@ Administrators are expected to have some experience with Linux systems but they 
  * :doc:`Changing the Default Language <deploy/language>`
  * :doc:`Backup configuration & data <deploy/backup>`
  * :doc:`Management commands for GeoNode <deploy/commands>`
+ * :doc:`Configuring Alternate CSW Backends <deploy/csw>`
+ * :doc:`GeoSites: GeoNode Multi-Tenancy <deploy/multi-tenancy>`
 
 .. toctree::
     :hidden:
@@ -71,6 +73,9 @@ Administrators are expected to have some experience with Linux systems but they 
     deploy/ssl
     deploy/language
     deploy/backup
+    deploy/commands
+    deploy/csw
+    deploy/multi-tenancy
 
 For Developers
 ==============
@@ -118,8 +123,8 @@ Having trouble? We'd like to help!
 
  * Report bugs with GeoNode in our `ticket tracker`_.
 
-.. _archives of the GeoNode mailing list: http://librelist.com/browser/geonode/
-.. _post a question: mailto:geonode@librelist.com
+.. _archives of the GeoNode mailing list: https://groups.google.com/d/forum/geonode-users
+.. _post a question: mailto:geonode-users+subscribe@googlegroups.com
 .. _#geonode IRC channel: irc://irc.freenode.net/geonode
 .. _Freenode's web based client: http://webchat.freenode.net
-.. _ticket tracker: http://dev.geonode.org/trac
+.. _ticket tracker: http://github.com/GeoNode/geonode/issues

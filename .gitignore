@@ -4,44 +4,44 @@
 build
 target
 *.mo
-
-# virtualenv stuff
-/bin
-/include
-/lib/
-/lib64
-/setuptools-0.6c11-py2.6.egg
+pip-log.txt
 
 # supporting stuff pulled in by paver script
-/src/GeoNodePy/geonode/media/static/
-/geoserver_token
-/development.db
-/django.log
-/gs-data/
-/jetty.log
-/shared/geonode-geoserver-data.zip
-/src/geoserver-geonode-ext/logs/
-/src/gsconfig.py/
-/src/owslib/
-/src/avatar/
-/src/nosexcover/
-/webapps/
-/src/GeoNodePy/capra/development.db
+geonode/development.db
+geoserver
+downloaded
 
-# Directory created by collectstatic
-src/GeoNodePy/geonode/site_media/
+<<<<<<< HEAD
 
+# OSX specific
+.Python
+.DS_Store
+=======
+# Static media handling
+geonode/static/components/
+geonode/static/geoexplorer/
+geonode/static_root/
+>>>>>>> gncore/master
+
+# Uploaded files
+geonode/uploaded
+
+#Testing output
+.coverage
+.noseids
+geonode_test_data/
+nosetests.xml
+
+#Temporary files
+*~
+*.swp
 
 # OSX specific
 .Python
 .DS_Store
 
-# pip output files
-pip-log.txt
+# Docs
+docs/_build
 
-#Temporary files
-*~
-
-#Testing output
-.coverage
-nosetests.xml
+# ec2.py
+scripts/cloud/.gnec2.cfg

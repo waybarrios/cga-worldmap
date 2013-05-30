@@ -1,0 +1,70 @@
+{% extends "site_base.html" %}
+
+{% load i18n %}
+{% block title %} {% trans "Help" %} - {{ block.super }} {% endblock %}
+{% block head %}
+{% include "geonode/ext_header.html" %}
+{{ block.super }}
+<script type="text/javascript">
+
+    Ext.onReady(function() {
+        var titleTemplate = new Ext.Template("<span>Help</span>");
+        Ext.DomHelper.overwrite(Ext.get("page-breadcrumb"), titleTemplate.apply());
+    });
+</script>
+{% endblock %}
+
+
+{% block body %} 
+  <header class="jumbotron subhead" id="overview">
+    <h1>{% trans "GeoNode Help" %}</h1>
+    <p class="lead">{% trans "This page provides helpful information about how to use the GeoNode. You can use the sidebar links to navigate to what you want to know." %}</p>
+  </header>
+
+  {% blocktrans %}
+  <p>The GeoNode provides access to data sets and a map editing application allows users to browse existing maps and contribute their own.</p>
+
+  <h4 id="browsing-data">Browsing Layers</h4>
+  <p>The <a href="/data">Layers</a> tab allows you to browse data uploaded to this GeoNode.</p>
+  <p>All data can be downloaded in a variety of formats, for use in other applications.</p>
+
+  <h4 id="developer-access">Developer Access</h4>
+  <p>The <a href="/developer"> Developer</a> page is the place for developers to get started building applications against the GeoNode. It includes instructions on using the web services, links to the source code of the GeoNode, and information about the open source projects used to create it.</p>
+
+    <ul>
+        <li><a href="#help">WorldMap Help</a>
+        <li><a href="#tutorial">Tutorial</a>
+        <li><a href="#faq">Frequently Asked Questions (FAQ)</a>
+    </ul>
+
+    {% endblocktrans %}
+
+    <p class=MsoNormal><span style='font-size:14.0pt;font-family:Arial'>WorldMap Help Documents</span></p>
+
+
+  <h4 id="remixing-a-map">Remixing a Map</h4>
+  <p>Any map available can serve as a starting point for a new map.</p>
+  <ol>
+    <li>Open the map in the Map Composer.</li>
+    <li>Add and remove layers as you like.</li>
+    <li>Pan and zoom to highlight the area of interest.</li>
+    <li><strong>IMPORTANT:</strong> Update the title, abstract, contact info and tags to reflect the new map.</li>
+    <li>Save the map.</li>
+  </ol>
+  <p>You will be able to see your new map when you search for it from the <a href="maps">Maps</a> tab.</p> 
+  {% endblocktrans %} 
+{% endblock %}
+
+{% block sidebar %}
+  <ul class="nav nav-list">
+    <li class="nav-header">{% trans "Sections" %}</li>
+    <li><a href="#browsing-data">{% trans "Browsing Layers" %}</a></li>
+    <li><a href="#developer-access">{% trans "Developer Access" %}</a></li>
+    <li><a href="#browsing-maps">{% trans "Browsing Maps" %}</a></li>
+    <li><a href="#creating-a-map">{% trans "Creating a Map" %}</a></li>
+    <li><a href="#exporting-a-map">{% trans "Exporting a Map" %}</a></li>
+    <li><a href="#remixing-a-map">{% trans "Remixing a Map" %}</a></li>
+  </ul>
+{% endblock %}
+
+

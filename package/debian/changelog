@@ -1,0 +1,358 @@
+geonode (2.0.0+beta1) precise; urgency=high
+
+  [ Simone Dalmasso ]
+  * [fa7d46] correctly check permissions on layers for new map with layers
+  * [94478b] use keyword slug instead of name in search
+  * [1eb916] don't look for layer uuid since search now returns the id
+  * [361b55] remove the paginate.js in layer detail
+  * [0e1625] permissions in new uploader
+  * [da46f2] correctly assign data type
+
+  [ Matt Bertrand ]
+  * [704333] Make comment textarea wider
+  * [3046dd] Remove unnecessary class
+  * [fee410] Submit comments via ajax and reload comments section of page only
+  * [918abb] Use jquery & ajax to submit comment  and reload comments div instead of entire page
+  * [c3bb71] Rename comment form and enclosing div id's
+  * [86f70a] Update comment width css to reflect modified element id's.
+  * [ad5d4d] Display number of ratings next to average rating for maps, layers, documents Created new base tagtemplate to return number of ratings for a given object & id
+
+  [ Simone Dalmasso ]
+  * [3cc472] correctly assign the bbox_string used by download links
+
+  [ Angelos Tzotsos ]
+  * [3c0061] updated geoserver specs to 2.3.0
+  * [e5d90b] Added spec file for geonode-geoserver plugin
+
+  [ Tom Kralidis ]
+  * [1410e6] strip whitespace from XML text() values
+
+  [ Angelos Tzotsos ]
+  * [acb202] Added initial openSUSE rpm file for v2.0
+  * [d474a0] Fix for #842
+
+  [ Simone Dalmasso ]
+  * [36e8e4] add bbox and crd parameters to wcs requests
+  * [1e6055] fix the height and width
+  * [8a5fe4] update new map to reflect the new bbox order
+  * [f2ea52] update map models to reflect the new bbox order
+
+  [ Matthew Hanson ]
+  * [8c9b2a] fixed bad url name to registration
+
+  [ Simone Dalmasso ]
+  * [61518c] remove unneeded pagination class
+
+  [ Ariel Núñez ]
+  * [060d54] Updated changelog
+  * [db3d50] Reset version on master in preparation for beta
+
+ -- Ariel Núñez <ingenieroariel@gmail.com>  Mon, 08 Apr 2013 14:02:56 +0000
+
+geonode (2.0.0+alpha7) precise; urgency=low
+
+  * [9248b1] Upgraded gsconfig.py
+  * [d122db] Upgraded django-geoexplorer
+  * [0c9675] Modify port for accessing GeoNode before building debian package. Fixes #808
+  * [94edb1] Bumped to 2.0a7
+
+ -- Ariel Núñez <ingenieroariel@gmail.com>  Thu, 21 Mar 2013 13:29:43 +0000
+
+geonode (2.0.0+alpha6) precise; urgency=high
+
+  [ Simone Dalmasso ]
+  * [9d5a91] initial work on concrete resourcebase
+  * [02315a] make resource fk nullable
+  * [b83d1b] bump to base module in topicCategory fixtures
+  * [4447ee] move to new ContactRole model
+  * [095d9d] other minor adjustments
+  * [d5913f] put fixtures where should be
+  * [7af75c] fix more imports
+  * [616959] inherit from Resourcebase manager
+  * [33048d] some cleanup
+  * [af7807] move catalogue signals to ResourceBase
+  * [29407a] roll back to Role in people
+  * [f6685d] clean
+
+  [ Ivan Willig ]
+  * [72047f] Handle if the download folder already exists
+
+  [ Simone Dalmasso ]
+  * [290ded] get rid of the search pages
+  * [82f664] use search engine in home for layers
+  * [b66536] unify the rating functions in the proper template
+  * [32a3bc] add the rate.js file
+
+  [ Ivan Willig ]
+  * [72e3b3] Use a try except ImportError to import the pushd function
+  * [3c0e24] Make the forward_mercator function's handling of edge cases better.
+
+  [ Simone Dalmasso ]
+  * [188859] cleanup the paginate js
+
+  [ Ariel Núñez ]
+  * [276537] Better error messages when catalogue does not create the record
+  * [eb7297] Getting rid of whitespace
+  * [682914] Disabling the catalogue until pycsw is upgraded
+
+  [ Simone Dalmasso ]
+  * [324527] create the resource base in fixtures
+  * [508d4d] Make layer test pass
+  * [5e6bba] make map test to pass
+  * [a6495a] make documents test to pass
+  * [a0ecca] make search tests to pass
+  * [730325] reenable catalogue and make every test pass, fix search
+  * [77b672] move links to base, attache them to resourceBase and adjust the logic to make it work
+  * [444674] modify the default topic category behavior
+  * [1806c4] use the first in case none indicated
+
+  [ Christian Spanring ]
+  * [5fd70f] updates minified base.css
+  * [1ca5a0] Adds CSS cursor pointer on maps and layer list pages
+  * [196d0f] Minor HTML tweak to eliminate heading indent on map_list page
+  * [9d40b1] Prevents orphaned maplayers from breaking the map detail views
+
+  [ Simone Dalmasso ]
+  * [d06ddd] bump document detail to the new layout
+  * [a3d17f] general cleanup of unneeded code and some pyflakes clean
+  * [c4a377] add missed template
+
+  [ Matthew Hanson ]
+  * [718ab5] fixed notification for updatelayers
+
+  [ Christian Spanring ]
+  * [1bb139] Adds fallback to default auth backend in has_perm permission lookup function
+  * [5baf98] adds check for owner attr in obj in has_perm permission lookup
+
+  [ Simone Dalmasso ]
+  * [71ced0] fix categories behavior
+
+  [ Bart van den Eijnden ]
+  * [eb129c] make sure that Maps link in GeoExplorer works, thanks @cspanring for confirming that it works (closes #681)
+
+  [ Simone Dalmasso ]
+  * [0d493b] add document remove and fix document permissions
+  * [3ed443] add document type and size check
+  * [db16a8] fix mb count in document upload
+  * [c07afa] remove unwanted ipdb
+  * [506ddd] fix profile detail to reflect ResourceBase
+  * [6bbd8b] make search add relevance query resourcebase
+  * [21273e] delegate to resource base post save the contactroles creation and management
+  * [4fe747] don't save again the layer after pc and ac change in metadata.
+
+  [ Bart van den Eijnden ]
+  * [b166e0] restructure the GeoNode-GeoExplorer.js file so that it is easier to use an SDK application in GeoNode, a new mixin class was added in a separate file that is mixed in with GeoNode.Composer, an can be mixed in with any gxp.Viewer of an SDK application
+  * [066ad8] set rasterStyling to true on the styler plugin
+  * [b1a53a] add back accidentally removed code with https://github.com/GeoNode/geonode/pull/815 cc @jj0hns0n
+  * [392d57] fix issue reported by @simod I now get a Uncaught TypeError: Cannot read property 'Save' of undefined here both at layer/upload and document/upload pages.
+
+  [ Jeffrey Johnson ]
+  * [8fc5c0] Switch travis to build master
+
+  [ Bart van den Eijnden ]
+  * [a16f9b] add map_sdk.js and sdk_header.html template to make it easier to integrate OpenGeo Suite SDK apps in GeoNode
+
+  [ Simone Dalmasso ]
+  * [c75422] get rid of ext in documents upload
+  * [ee2792] check if the file exists before putting the url (mostly for tests)
+
+  [ Jeffrey Johnson ]
+  * [d70d4a] Fix _split_query import
+  * [972d33] Completely remove old layers/maps search implementation
+  * [1409df] Use consistent layer terminology in tests/smoke.py
+  * [1831e7] Make sure failing smoke tests fail the build
+  * [c08df9] Hook the javascript tests results up in jenkins
+
+  [ Simone Dalmasso ]
+  * [026522] select2 icon was missing
+
+  [ Ariel Núñez ]
+  * [5110a8] Updated changelog to alpha5
+
+ -- Ariel Núñez <ingenieroariel@gmail.com>  Wed, 20 Mar 2013 05:15:35 +0000
+
+geonode (2.0.0+alpha5) precise; urgency=low
+
+  [ Ariel Núñez ]
+  * [36d39b] Add back git-dch step in paver deb
+  * [3a0886] Do not add geoserver jars to the debian package, they are packaged elsewhere
+  * [888f83] Updated pavement script to properly place the deb artifact in launchpad
+  * [ab6b51] Reverted order of ppa name and version in paver deb task
+  * [4a9246] Fix version name and refactor ppa upload step
+  * [371b9d] Do not show vim when doing git-dch
+
+  [ capooti ]
+  * [ae82ca] Deleting a layer, we need to delete all of its associations to maps containing it. It fixes #597.
+
+  [ Ariel Núñez ]
+  * [fc33c0] Do not keep around old packages
+  * [5f282e] Fixed missing import
+
+  [ Tom Kralidis ]
+  * [1584d6] bump OWSLib
+
+  [ Ariel Núñez ]
+  * [9d0e7c] Switched to geoext by default
+
+  [ Jeffrey Johnson ]
+  * [474be1] Change path of admin and devel workshops.
+  * [799945] Comment out jenkins code quality tools for now
+  * [3a553d] Add USER and PASSWORD to package/support/geonode.local_settings
+
+  [ Ariel Núñez ]
+  * [5ecb99] USER and PASSWORD are optional for pycsw config
+  * [e3c958] Removed workaround for USER and PASSWORD from local_settings
+  * [54ea9e] Add more variations of ppa and key options to paver deb
+  * [149ad2] Automated package upload to ppa
+  * [4cb601] Requirements are already present on jenkins
+  * [631f33] Added -b option to git-dch to avoid problem in jenkins with version number
+  * [980f41] Avoid reading the branch name and hardcoded it to dev to make jenkins happy
+
+  [ Jeffrey Johnson ]
+  * [ccfc05] Download the latest deb in setup_geonode_deb fabric task
+  * [bc1dbf] shell=True when trying to use wildcard in sudo fab command
+  * [fe8dc4] cd into the dir structure that wget creates before trying to run dpkg
+  * [7f04c3] Dont terminate instance after making AMI (this is temporary and dangerous longterm)
+  * [d39682] add deploy_geonode_snapshot_package to fabfile
+  * [46e3df] Just deploy a snapshot package for now, dont build the AMI
+  * [4436ac] some tweaks to docs script to publish workshops to main site
+  * [7e1896] Publish the PDF Docs too
+
+  [ Bart van den Eijnden ]
+  * [63d908] fix 404s on the Amazon test instance, apparently these are all lowercase in GeoExplorer now, but did not run into this locally
+
+  [ Ariel Núñez ]
+  * [7d4d06] Bumped geoexplorer version
+  * [c06cb1] Added dependency on python-django
+  * [fed618] Bump Django version to 1.4.3
+  * [7964ec] Added gsconfig, owslib and pycsw dependencies
+  * [d69c79] geonode should depend only on python-pycsw, not on pycsw-cgi
+  * [293885] Using PPA dependencies in launchpad did not work, backing out gsconfig, owslib and pycsw debian packages from control file
+
+ -- Ariel Núñez <ingenieroariel@gmail.com>  Sun, 13 Jan 2013 05:11:16 +0000
+
+geonode (2.0.0+alpha0) precise; urgency=high
+  * Major source tree refactor
+  * Build refactor
+  * CSW refactor
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Wed, 8 Aug 2012 11:44:33 -0500
+
+geonode (1.2+beta2) precise; urgency=high
+  * Added geonode-updateip command
+  * Added MapQuest and OSM tiles by default to whitelist
+  * geonode-updateip also adds the local host to the printing whitelist
+  * Fixed gsconfig 0.6 bug with vector datastores
+  * Reorganized LOGGING in settings
+  * Fixed bug related to default style not being present
+  * Upgraded gsconfig to version 0.6
+  * Fixed missing links to local layers in map detail
+  * Map composer fixes
+  * More helpful importlayers
+ 
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Wed, 1 Aug 2012 11:44:33 -0500
+
+geonode (1.2+beta1) precise; urgency=high
+  * Fixed a reverse url problem remove
+  * Added legend to layer detail page
+  * Added Bing AerialWithLabels layer as a background layer
+  * Fixed download links in GeoTiff layers
+  * Made keywords optional again
+  * Fixed keywords representation in layer detail page
+  * Fixed link to production docs
+  * Added post_save signals to create contact after user creation
+  * Fixed bug affecting map search
+  * Added CSW based search to map composer
+  * Added ability to delete layers with a shared style
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Sun, 24 Jun 2012 11:44:33 -0500
+
+geonode (1.2+alpha2) precise; urgency=high
+  * Fixed a reverse url problem during upload
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Wed, 23 May 2012 11:44:33 -0500
+
+geonode (1.2+alpha1) precise; urgency=high
+  * Updated locale files
+  * Switched GeoServer's default output strategy to FILE
+  * Renamed geonode_import to importlayers
+  * Better legends
+  * Updated gxp, geoext, openlayers and other submodules
+  * Added more background layers
+  * Added comments
+  * Added ratings
+  * Added plusone (Facebook and Google Plus)
+  * Upgraded to Django-1.4
+  * Fixes for 12.04 compatibility (postgres9)
+  * Switched to lxml for parsing
+  * Added South for migrations
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Sun, 20 May 2012 18:44:33 -0500
+
+geonode (1.1.1+final2) lucid; urgency=low
+  * Fixed bug in first time installs.
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Thu, 19 Mar 2012 18:44:33 -0500
+
+geonode (1.1.1+final) lucid; urgency=low
+  * Fixed bug in deleting layers using a postgis backend.
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Thu, 12 Mar 2011 18:44:33 -0500
+
+geonode (1.1+final) lucid; urgency=low
+  * Moved from SPEED to Partial Buffer in GeoServer's output strategy
+  * Proper upgrade support
+  * Fixed location of GeoServer's data dir
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Sun, 5 Feb 2011 18:44:33 -0500
+
+geonode (1.1+RC2) lucid; urgency=low
+  * Fixed avatar links
+  * Added virtualenv upgrade to the installer to avoid bugs in Lucid
+  * Fixed admin media configuration
+  * Fixed login popup in embedded maps
+  * Removed the GetCapabilities calls in embedded maps
+  * Fixed install script, added pip upgrade
+  * Fixed path to geoserver data dir
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Fri, 2 Sept 2011 13:44:33 -0500
+
+geonode (1.1-rc1) natty; urgency=low
+  * After creating installer
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Fri, 2 Sept 2011 13:44:33 -0500
+
+geonode (1.1-beta4) natty; urgency=low
+  * Using latest master, after move to /geoserver
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Sun, 28 Aug 2011 17:44:33 -0500
+
+geonode (1.1.beta+2) unstable; urgency=low
+  * Update to 1.1beta+2 and added gettext and postgres support
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Wed, 10 Aug 2011 17:44:33 -0500
+
+geonode (1.0.final+1) unstable; urgency=low
+  * Add dependency on patch command
+
+ -- David Winslow <dwinslow@opengeo.org>  Tue, 14 Dec 2010 17:44:33 -0500
+
+geonode (1.0+final) unstable; urgency=low
+  * Update to GeoNode 1.0-final
+
+ -- David Winslow <dwinslow@opengeo.org>  Tue, 14 Dec 2010 14:59:18 -0500
+
+geonode (1.0+RC4) unstable; urgency=low
+  * Update to GeoNode 1.0RC4
+
+  * Force headless mode for tomcat service
+
+  * Add dependency on libproj-dev
+
+ -- David Winslow <dwinslow@opengeo.org>  Mon, 06 Dec 2010 15:44:01 -0500
+
+geonode (1.0+RC2) unstable; urgency=low
+
+  *  First complete release including pre and post install hooks.
+
+ -- Aaron Greengrass <aaron@thatserver.ca>  Thu, 04 Nov 2010 14:49:39 -0700
