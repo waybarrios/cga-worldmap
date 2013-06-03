@@ -84,9 +84,9 @@ def check_geonode_is_up():
     pass
 
 
-def get_wms():
+def get_wms(workspace,layer):
     global _wms
-    wms_url = settings.GEOSERVER_BASE_URL + "wms?request=GetCapabilities&version=1.1.0"
+    wms_url = settings.GEOSERVER_BASE_URL + "%s/%s/wms?request=GetCapabilities&version=1.1.0" % (workspace,layer)
     netloc = urlparse(wms_url).netloc
     http = httplib2.Http()
     http.add_credentials(_user, _password)

@@ -43,6 +43,11 @@ sitemaps = {
 
 urlpatterns = patterns('',
 
+    # Social views
+    (r'^account/', include('worldmap.register.urls')),
+    (r'^accounts/', include('worldmap.register.urls')),
+    (r'^people/', include('worldmap.profile.urls')),   
+
     # Static pages
     url(r'^$', 'geonode.views.index', name='home'),
     url(r'^help/$', 'django.views.generic.simple.direct_to_template',
@@ -67,10 +72,7 @@ urlpatterns = patterns('',
     # Upload views
     (r'^upload/', include('geonode.upload.urls')),
 
-    # Social views
-    (r"^account/", include("geonode.account.urls")),
-    (r"^accounts/", include("geonode.account.urls")),
-    (r'^people/', include('geonode.profile.urls')),
+
     (r'^avatar/', include('avatar.urls')),
     (r'^comments/', include('dialogos.urls')),
     (r'^ratings/', include('agon_ratings.urls')),
@@ -95,9 +97,7 @@ urlpatterns = patterns('',
                                   {'sitemaps': sitemaps}, name='sitemap'),
     (r'^i18n/', include('django.conf.urls.i18n')),
     (r'^admin/', include(admin.site.urls)),
-    url(r'^pin/registercomplete/$',
-                           'geonode.account.views.registercompleteOrganizationUser',
-                           name='registration_complete'),
+
     )
 
 #Documents views

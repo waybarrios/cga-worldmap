@@ -1,11 +1,12 @@
-{% extends "registration/base.html" %}
-{% load i18n %}
+{% extends "site_base.html" %}
 
-{% block breadcrumb %}
-<a id="logo" href="{% url home %}"><img src="{{STATIC_URL}}theme/img/WorldMap-Logo_26px.png" border="0"></a>
-<div id="page-breadcrumb"><span>{% trans "Forgot Username" %}</span></div>
-{% endblock %}
-{% block main %}
+{% load url from future %}
+{% load i18n %}
+{% load bootstrap_tags %}
+
+{% block head_title %}{% trans "Log in" %}{% endblock %}
+
+{% block body %}
 <div class="twocol">
     <p>{% trans "Enter your email address and click the submit button.  Your username will be sent to you." %}</p>
 

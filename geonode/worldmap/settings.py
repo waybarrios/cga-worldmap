@@ -21,6 +21,7 @@
 # Django settings for the GeoNode project.
 import os
 import logging
+import geonode
 
 #
 # General Django development settings
@@ -29,7 +30,7 @@ import logging
 # Defines the directory that contains the settings file as the PROJECT_ROOT
 # It is used for relative settings elsewhere.
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-
+GEONODE_ROOT = os.path.dirname(geonode.__file__)
 
 
 # Setting debug to true makes Django serve static media and
@@ -114,6 +115,7 @@ ADMIN_MEDIA_PREFIX = os.path.join(STATIC_URL, "admin/")
 # Additional directories which hold static files
 STATICFILES_DIRS = [
     os.path.join(PROJECT_ROOT, "static"),
+    os.path.join(GEONODE_ROOT, "static"),
 ]
 
 # List of finder classes that know how to find static files in
@@ -127,20 +129,21 @@ STATICFILES_FINDERS = (
 # Note that Django automatically includes the "templates" dir in all the
 # INSTALLED_APPS, se there is no need to add maps/templates or admin/templates
 TEMPLATE_DIRS = (
-    os.path.join(PROJECT_ROOT, "worldmap/templates"),
     os.path.join(PROJECT_ROOT, "templates"),
+    os.path.join(GEONODE_ROOT,"templates"),
 )
 
 # Location of translation files
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, "locale"),
+    os.path.join(GEONODE_ROOT, "locale"),
 )
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'myv-y4#7j-d*p-__@j#*3z@!y24fz8%^z2v6atuy4bo9vqr1_a'
 
 # Location of url mappings
-ROOT_URLCONF = 'geonode.urls'
+ROOT_URLCONF = 'worldmap.urls'
 
 # Site id in the Django sites framework
 SITE_ID = 1
@@ -192,6 +195,9 @@ INSTALLED_APPS = (
     'avatar',
     'dialogos',
     'agon_ratings',
+    'taggit',
+    'south',
+    'autocomplete_light',
     'notification',
     'announcements',
     'actstream',
@@ -210,14 +216,14 @@ INSTALLED_APPS = (
     'geonode.catalogue',
     'geonode.documents',
     
-    'geonode.profile',
-    'geonode.account',
-    'geonode.mapnotes',
-    'geonode.capabilities',    
+    'worldmap.profile',
+    'worldmap.register',
+    'worldmap.mapnotes',
+    'worldmap.capabilities',    
     
-    'autocomplete_light',
-    #'geonode.gazetteer',
-    #'geonode.queue',
+    
+    #'worldmap.gazetteer',
+    #'worldmap.queue',
     #'djcelery',
     #'djkombu',
     #'debug_toolbar',
@@ -313,8 +319,11 @@ MIDDLEWARE_CLASSES = (
     'pagination.middleware.PaginationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
+#This is only required for the Django Debug Toolbar
+INTERNAL_IPS = ('127.0.0.1',)
 
 # Replacement of default authentication backend in order to support
 # permissions per object.
@@ -366,14 +375,16 @@ ACTSTREAM_SETTINGS = {
 }
 
 # For South migrations
+#If upgrading from an earlier version of WorldMap,
+#you may need to comment this out
 SOUTH_MIGRATION_MODULES = {
     'avatar': 'geonode.migrations.avatar',
 }
 SOUTH_TESTS_MIGRATE=False
 
 # Settings for Social Apps
-AUTH_PROFILE_MODULE = 'profile.WorldMapProfile'
-REGISTRATION_OPEN = True
+AUTH_PROFILE_MODULE = 'people.Profile'
+REGISTRATION_OPEN = False
 
 #
 # Test Settings
@@ -554,20 +565,10 @@ DB_DATASTORE_PASSWORD = ''
 DB_DATASTORE_HOST = ''
 DB_DATASTORE_PORT = ''
 DB_DATASTORE_TYPE = ''
+
+# Name of the store in geoserver
 DB_DATASTORE_NAME = ''
 DB_DATASTORE_ENGINE = 'django.contrib.gis.db.backends.postgis'
-
-#The name of the store in Geoserver
-
-LEAFLET_CONFIG = {
-    'TILES_URL': 'http://{s}.tile2.opencyclemap.org/transport/{z}/{x}/{y}.png'
-}
-
-# Default TopicCategory to be used for resources. Use the slug field here
-DEFAULT_TOPICCATEGORY = 'location'
-
-MISSING_THUMBNAIL = 'geonode/img/missing_thumb.png'
-
 
 USE_GAZETTEER = False
 ##### START GAZETTEER SETTINGS #####
@@ -624,13 +625,23 @@ CUSTOM_ORG_AUTH_TEXT = 'Are you affiliated with XXXX?'
 #Automatically add users with the following email address suffix to the custom group, if created via layer/map permissions
 CUSTOM_GROUP_EMAIL_SUFFIX = ''
 #URL to redirect to if user indicates they are a member of your organization
-CUSTOM_ORG_AUTH_URL = ''
-CUSTOM_ORG_COOKIE = ''
+
 
 DEFAULT_WORKSPACE = 'geonode'
 
 HGL_VALIDATION_KEY='Contact Harvard Geospatial Library to request the validation key'
 CACHE_BACKEND = 'dummy://'
+
+#The name of the store in Geoserver
+
+LEAFLET_CONFIG = {
+    'TILES_URL': 'http://{s}.tile2.opencyclemap.org/transport/{z}/{x}/{y}.png'
+}
+
+# Default TopicCategory to be used for resources. Use the slug field here
+DEFAULT_TOPICCATEGORY = 'location'
+
+MISSING_THUMBNAIL = 'geonode/img/missing_thumb.png'
 
 #Require user emails to be unique
 ACCOUNT_EMAIL_UNIQUE = True

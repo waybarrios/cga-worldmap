@@ -30,7 +30,8 @@ from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
 import logging
 from urlparse import urlparse
-from geonode.maps.models import LayerStats, Layer
+from geonode.layers.models import Layer
+from geonode.stats.models import LayerStats
 import re
 import random
 

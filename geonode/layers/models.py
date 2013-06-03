@@ -147,12 +147,12 @@ class Layer(ResourceBase):
     def verify(self):
         """Makes sure the state of the layer is consistent in GeoServer and Catalogue.
         """
-
+    
         # Check the layer is in the wms get capabilities record
         # FIXME: Implement caching of capabilities record site wide
 
-        _local_wms = get_wms()
-        record = _local_wms.contents.get(self.typename)
+        _local_wms = get_wms(self.workspace,self.typename)
+        record = _local_wms.contents.get(self.name)
         if record is None:
             msg = "WMS Record missing for layer [%s]" % self.typename
             raise GeoNodeException(msg)
@@ -697,6 +697,13 @@ def set_attributes(layer):
                     logger.debug("Created [%s] attribute for [%s]", field, layer.name)
     else:
         logger.debug("No attributes found")
+
+class LayerStats(models.Model):
+    layer = models.ForeignKey(Layer, unique=True)
+    visits = models.IntegerField(_("Visits"), default = 0)
+    uniques = models.IntegerField(_("Unique Visitors"), default = 0)
+    downloads = models.IntegerField(_("Downloads"), default = 0)
+    last_modified = models.DateTimeField(auto_now=True, null=True)
 
 signals.pre_save.connect(pre_save_layer, sender=Layer)
 signals.pre_save.connect(geoserver_pre_save, sender=Layer)

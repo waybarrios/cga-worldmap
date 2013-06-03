@@ -117,7 +117,8 @@ def _install_data_dir():
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
     sh('pip install -e .')
-
+    sh('pip install -r requirements.txt')
+    
     info(('GeoNode development environment successfully set up.'
           'If you have not set up an administrative account,'
           ' please do so now. Use "paver start" to start up the server.'))

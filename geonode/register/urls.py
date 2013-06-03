@@ -1,16 +1,11 @@
 from django.conf.urls.defaults import *
-from geonode.register.views import registerOrganizationUser, registercompleteOrganizationUser, forgotUsername
-from geonode.register.forms import UserRegistrationForm
+from geonode.account.views import SignupView, registercompleteOrganizationUser, forgotUsername
+from geonode.account.forms import UserRegistrationForm
 
 urlpatterns = patterns('',
-                       url(r'^register/$',
-                           registerOrganizationUser,
-                           {'form_class' : UserRegistrationForm},
-                           name='registration_register'),
-                       url(r'^registercomplete/$',
-                           registercompleteOrganizationUser,
-                           name='registration_complete'),
+                       url(r"^signup/$", SignupView.as_view(), name="account_signup"),
                        url(r'^forgotname/$',
-                           forgotUsername, name='forgotname'),
-                       (r'', include('registration.urls')),
+                           forgotUsername, name="account_forgotname"),
+                       (r'', include('account.urls')),
                        )
+

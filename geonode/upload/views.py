@@ -440,6 +440,7 @@ _pages = {
     'tif' : ('time', 'run', 'final'),
     'kml' : ('run', 'final'),
     'csv' : ('csv', 'time', 'run', 'final'),
+    'zip' : ('srs', 'time', 'run', 'final'),
 }
 
 if not _ALLOW_TIME_STEP:

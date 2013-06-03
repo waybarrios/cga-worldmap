@@ -99,7 +99,7 @@ class Migration(SchemaMigration):
         db.delete_column('layers_layer', 'bbox_y1')
 
         # Deleting field 'Layer.topic_category'
-        db.delete_column('layers_layer', 'topic_category')
+        #db.delete_column('layers_layer', 'topic_category')
 
         # Deleting field 'Layer.purpose'
         db.delete_column('layers_layer', 'purpose')
@@ -249,7 +249,7 @@ class Migration(SchemaMigration):
         db.add_column('layers_layer', 'bbox_y1', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=19, decimal_places=10, blank=True), keep_default=False)
 
         # Adding field 'Layer.topic_category'
-        db.add_column('layers_layer', 'topic_category', self.gf('django.db.models.fields.CharField')(default='location', max_length=255), keep_default=False)
+        #db.add_column('layers_layer', 'topic_category', self.gf('django.db.models.fields.CharField')(default='location', max_length=255), keep_default=False)
 
         # Adding field 'Layer.purpose'
         db.add_column('layers_layer', 'purpose', self.gf('django.db.models.fields.TextField')(null=True, blank=True), keep_default=False)

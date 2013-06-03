@@ -17,7 +17,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.conf import settings
 from datetime import datetime, timedelta
-from profiles import utils
 
 def edit_profile(request, form_class=None, success_url=None,
                  template_name='profiles/edit_profile.html',

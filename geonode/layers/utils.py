@@ -26,16 +26,6 @@ import logging
 from zipfile import ZipFile
 from random import choice
 import re
-from django.db import transaction
-from django.utils.html import escape
-from django.utils.translation import ugettext as _
-from django.contrib.auth.models import User
-from geonode.maps.models import Map, Layer, MapLayer, 
-#Contact, ContactRole, Role, get_csw
-#from geonode.maps.gs_helpers import fixup_style, cascading_delete, get_sld_for, delete_from_postgis, get_postgis_bbox
-import geoserver
-from geoserver.catalog import FailedRequestError
-from geoserver.resource import FeatureType, Coverage
 import uuid
 import os
 import glob
@@ -404,7 +394,10 @@ def save(layer, base_file, user, overwrite = True, title=None,
     # ------------------
 
     try:
-        store, gs_resource = create_store_and_resource(name, data, overwrite=overwrite, charset=charset)
+        store, gs_resource = create_store_and_resource(name,
+                                                       data,
+                                                       overwrite=overwrite,
+                                                       charset=charset)
     except UploadError, e:
         msg = ('Could not save the layer %s, there was an upload '
                'error: %s' % (name, "Invalid/missing projection information in image" 
@@ -498,10 +491,10 @@ def save(layer, base_file, user, overwrite = True, title=None,
     # Step 8. Create the Django record for the layer
     logger.info('>>> Step 10. Creating Django record for [%s]', name)
     # FIXME: Do this inside the layer object
-    saved_layer = create_django_record(user, title, keywords, abstract, gs_resource, permissions)
+    saved_layer = create_django_record(user, title, keywords, abstract, gs_resource, permissions, files)
     return saved_layer
 
-def create_django_record(user, title, keywords, abstract, gs_resource, permissions):
+def create_django_record(user, title, keywords, abstract, gs_resource, permissions, files=None):
     name = gs_resource.name
     typename = gs_resource.store.workspace.name + ':' + name
     layer_uuid = str(uuid.uuid1())
@@ -555,7 +548,7 @@ def create_django_record(user, title, keywords, abstract, gs_resource, permissio
         Layer.objects.get(typename=typename)
     except Layer.DoesNotExist, e:
         msg = ('There was a problem saving the layer %s to Catalogue/Django. '
-               'Error is: %s' % (layer, str(e)))
+               'Error is: %s' % (saved_layer, str(e)))
         logger.exception(msg)
         logger.debug('Attempting to clean up after failed save for layer '
                      '[%s]', name)
@@ -741,9 +734,9 @@ def upload(incoming, user=None, overwrite=False,
 
 
 
-def _create_featurestore(name, data, overwrite):
+def _create_featurestore(name, data, overwrite, charset):
     cat = Layer.objects.gs_catalog
-    cat.create_featurestore(name, data, overwrite=overwrite)
+    cat.create_featurestore(name, data, overwrite=overwrite, charset=charset)
     return cat.get_store(name), cat.get_resource(name)
 
 

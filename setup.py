@@ -77,7 +77,7 @@ setup(name='GeoNode',
         "PIL",
         "lxml",
         # python dependencies
-        "gsconfig==0.6.3",
+        #"gsconfig==0.6.3",
         "OWSLib==0.7.2",
         "Django==1.4.3",
         "httplib2>=0.7",
@@ -118,36 +118,6 @@ setup(name='GeoNode',
         "MultipartPostHandler",
         # translation
         "transifex-client",
-        "psycopg2==2.4.1",
-        "ordereddict",
-
-        #Uncomment the following to use memcached
-        #"python-memcached",
-
-        #The following are for the gazetteer
-        #"-e git+https://github.com/cga-harvard/geopy.git#egg=geopy",
-        "geojson",
-        #"https://bitbucket.org/jespern/django-piston/get/5b3ef294fe89.zip"
-        
-        #Uncomment the following to use the django debug toolbar
-        #"-e git+https://github.com/robhudson/django-debug-toolbar.git#egg=django-debug-toolbar",
-
-        "boto",
-        #For scheduled tasks
-        "django-celery",
-        "django-kombu",
-        "pytz",
-        
-        #For gazetteer
-        "python-dateutil==1.5", #For Python < 3.0
-        "datautil",
-        "jdcal",
-        
-        #For mapnotes
-        "vectorformats",
-        
-        #For autocomplete
-        "django-autocomplete-light",
         ],
       zip_safe=False,
       )

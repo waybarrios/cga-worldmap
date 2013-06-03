@@ -86,17 +86,6 @@ class UserObjectRoleMapping(models.Model):
         unique_together = (('user', 'object_ct', 'object_id', 'role'), )
 
 
-# implicitly defined 'generic' groups of users
-ANONYMOUS_USERS = 'anonymous'
-AUTHENTICATED_USERS = 'authenticated'
-CUSTOM_GROUP_USERS = 'customgroup'
-GENERIC_GROUP_NAMES = {
-    ANONYMOUS_USERS: _('Anonymous Users'),
-    AUTHENTICATED_USERS: _('Registered Users'),
-    CUSTOM_GROUP_USERS: _(settings.CUSTOM_GROUP_NAME)
-}
-
-
 class GenericObjectRoleMapping(models.Model):
     """
     represents assignment of a role to an arbitrary implicitly
