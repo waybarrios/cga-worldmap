@@ -5,7 +5,7 @@ from django.contrib.gis.gdal.envelope import Envelope
 from vectorformats.Formats import Django, GeoJSON
 from geonode.maps.models import Map
 from django.contrib.auth.models import User
-from geonode.mapnotes.models import MapNote
+from geonode.worldmap.mapnotes.models import MapNote
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render_to_response
 from django.template import RequestContext, loader

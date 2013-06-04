@@ -37,7 +37,7 @@ from django.template.defaultfilters import slugify
 from django.conf import settings
 from xml.etree.ElementTree import XML
 from django.utils.translation import ugettext as _
-
+from django.core.urlresolvers import reverse
 # Geonode functionality
 from geonode import GeoNodeException
 from geonode.utils import check_geonode_is_up
@@ -46,12 +46,13 @@ from geonode.layers.models import Layer, Style
 from geonode.people.models import Profile
 from geonode.geoserver.helpers import cascading_delete, get_sld_for, delete_from_postgis
 from geonode.layers.metadata import set_metadata
-from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS
+from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 # Geoserver functionality
 import geoserver
 from geoserver.catalog import FailedRequestError, UploadError
 from geoserver.catalog import ConflictingDataError
 from geoserver.resource import FeatureType, Coverage
+from geonode.worldmap.register.views import _create_new_user
 from zipfile import ZipFile
 
 logger = logging.getLogger('geonode.layers.utils')
@@ -59,18 +60,29 @@ logger = logging.getLogger('geonode.layers.utils')
 _separator = '\n' + ('-' * 100) + '\n'
 
 
-def layer_set_permissions(layer, perm_spec):
+def layer_set_permissions(layer, perm_spec, use_email=False):
     if "authenticated" in perm_spec:
         layer.set_gen_level(AUTHENTICATED_USERS, perm_spec['authenticated'])
     if "anonymous" in perm_spec:
         layer.set_gen_level(ANONYMOUS_USERS, perm_spec['anonymous'])
+    if "customgroup" in perm_spec:
+        layer.set_gen_level(CUSTOM_GROUP_USERS, perm_spec['customgroup'])             
     if isinstance(perm_spec['users'], dict): perm_spec['users'] = perm_spec['users'].items()
     users = [n[0] for n in perm_spec['users']]
     excluded = users + [layer.owner]
-    existing = layer.get_user_levels().exclude(user__username__in=excluded)
+    if use_email:
+        existing = layer.get_user_levels().exclude(user__email__in=excluded)
+    else:
+        existing = layer.get_user_levels().exclude(user__username__in=excluded)
     existing.delete()
     for username, level in perm_spec['users']:
-        user = User.objects.get(username=username)
+        if use_email:
+            try:
+                user = User.objects.get(email=username)
+            except User.DoesNotExist:
+                user = _create_new_user(username, layer.title, reverse('layer_detail', args=(layer.typename,)), layer.owner_id)        
+        else:
+            user = User.objects.get(username=username)
         layer.set_user_level(user, level)
 
 

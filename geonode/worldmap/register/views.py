@@ -6,16 +6,17 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.models import User
-from geonode.account.forms import UserRegistrationForm, ForgotUsernameForm
+from geonode.worldmap.register.forms import UserRegistrationForm, ForgotUsernameForm
 from django.core.mail import send_mail
 from django.utils.translation import ugettext as _
 import logging
 import account.views
 from account.utils import default_redirect
 from django.contrib.sites.models import Site
-from geonode.profile.models import WorldmapProfile
-import Cookie, os
-logger = logging.getLogger("geonode.account.views")
+from geonode.worldmap.profile.models import WorldmapProfile
+import re
+
+logger = logging.getLogger("geonode.worldmap.register.views")
 
 
 class SignupView(account.views.SignupView):
@@ -59,8 +60,7 @@ def forgotUsername(request,template_name='register/username_form.html'):
     message = ''
 
 
-    #email_subject = _("Your username for ") + Site.objects.get_current().current_site.name
-    email_subject = _("Your username for ") + settings.SITENAME
+    email_subject = _("Your username for ") + Site.objects.get_current().name
 
     if request.method == 'POST':
         username_form = ForgotUsernameForm(request.POST)
@@ -125,10 +125,57 @@ def registercompleteOrganizationUser(request, template_name='register/registrati
     return render_to_response(template_name, RequestContext(request))
     
     
+def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner_id):
+    random_password = User.objects.make_random_password()
+    user_name = re.sub(r'\W', r'', user_email.split('@')[0])
+    user_length = len(user_name)
+    if user_length > 30:
+        user_name = user_name[0:29]
+    while len(User.objects.filter(username=user_name)) > 0:
+        username = user_name[0:user_length-4] + User.objects.make_random_password(length=4, allowed_chars='0123456789')
+    email = user_email.strip()
+    new_user = User(username=username,email=email)
+    new_user.set_password(User.objects.make_random_password(length=4, allowed_chars='0123456789'))
+    new_user.is_active = False
+    new_user.save()
+    if new_user:
+        new_profile = WorldmapProfile.objects.get_or_create(user=new_user, name=new_user.username, email=new_user.email)
+        if settings.USE_CUSTOM_ORG_AUTHORIZATION and new_user.email.endswith(settings.CUSTOM_GROUP_EMAIL_SUFFIX):
+            new_profile.is_org_member = True
+            new_profile.member_expiration_dt = datetime.today() + timedelta(days=365)
+            new_profile.save()
+    try:
+        _send_permissions_email(user_email, map_layer_title, map_layer_url, map_layer_owner_id, random_password)
+    except:
+        logger.debug("An error ocurred when sending the mail")
+    return new_user   
     
     
     
-    
-    
+def _send_permissions_email(user_email, map_layer_title, map_layer_url, map_layer_owner_id,  password):
+
+    current_site = Site.objects.get_current()
+    user = User.objects.get(email = user_email)
+    profile = WorldmapProfile.objects.get(user=user)
+    owner = User.objects.get(id=map_layer_owner_id)
+
+    subject = render_to_string('register/new_user_email_subject.txt',
+            { 'site': current_site,
+              'owner' : (owner.get_profile().name if owner.get_profile().name else owner.email),
+              })
+    # Email subject *must not* contain newlines
+    subject = ''.join(subject.splitlines())
+
+    message = render_to_string('register/new_user_email.txt',
+            { 'activation_key': profile.activation_key,
+              'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+              'owner': (owner.get_profile().name if owner.get_profile().name else owner.email),
+              'title': map_layer_title,
+              'url' : map_layer_url,
+              'site': current_site,
+              'username': user.username,
+              'password' : password })
+
+    send_mail(subject, message, settings.NO_REPLY_EMAIL, [user.email])
     
     

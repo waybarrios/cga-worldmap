@@ -1,7 +1,7 @@
 
 from django.conf.urls.defaults import *
 
-from geonode.capabilities import views
+from geonode.worldmap.capabilities import views
 
 
 urlpatterns = patterns('geonode.capabilities.views',

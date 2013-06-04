@@ -24,6 +24,9 @@ from django.conf.urls.static import static
 from geonode.sitemap import LayerSitemap, MapSitemap
 import geonode.proxy.urls
 
+import autocomplete_light
+autocomplete_light.autodiscover()
+
 # Import *_signals.py
 import geonode.social_signals
 
@@ -68,9 +71,8 @@ urlpatterns = patterns('',
     (r'^upload/', include('geonode.upload.urls')),
 
     # Social views
-    (r"^account/", include("geonode.account.urls")),
-    (r"^accounts/", include("geonode.account.urls")),
-    (r'^people/', include('geonode.profile.urls')),
+    #(r"^account/", include("account.urls")),
+    #(r'^people/', include('geonode.people.urls')),
     (r'^avatar/', include('avatar.urls')),
     (r'^comments/', include('dialogos.urls')),
     (r'^ratings/', include('agon_ratings.urls')),
@@ -95,8 +97,14 @@ urlpatterns = patterns('',
                                   {'sitemaps': sitemaps}, name='sitemap'),
     (r'^i18n/', include('django.conf.urls.i18n')),
     (r'^admin/', include(admin.site.urls)),
+    
+    
+    ### WorldMap custom URL's
+    (r"^account/", include("geonode.worldmap.register.urls")),
+    (r'^people/', include('geonode.worldmap.profile.urls')),
+    url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^pin/registercomplete/$',
-                           'geonode.account.views.registercompleteOrganizationUser',
+                           'geonode.worldmap.register.views.registercompleteOrganizationUser',
                            name='registration_complete'),
     )
 

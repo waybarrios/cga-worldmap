@@ -1131,8 +1131,8 @@ def upload_layer(request):
                 return render_to_response('maps/layer_upload_tab.html',
                                   RequestContext(request, {'charsets': CHARSETS}))
     elif request.method == 'POST':
-        from geonode.maps.forms import WorldMapLayerUploadForm
-        from geonode.maps.utils import save
+        from geonode.worldmap.layerutils.forms import WorldMapLayerUploadForm
+        from geonode.layers.utils import save
         from django.utils.html import escape
         import os, shutil
         form = WorldMapLayerUploadForm(request.POST, request.FILES)
@@ -1205,8 +1205,8 @@ def layer_replace(request, layername):
                                                            'lastmap' : request.session.get("lastmap"),
                                                            'lastmapTitle' : request.session.get("lastmapTitle")}))
     elif request.method == 'POST':
-        from geonode.maps.forms import LayerUploadForm
-        from geonode.maps.utils import save
+        from geonode.layers.forms import LayerUploadForm
+        from geonode.layers.utils import save
         from django.utils.html import escape
         import os, shutil
 
@@ -2231,7 +2231,7 @@ def addlayers(request):
 
     return render_to_response('addlayers.html', RequestContext(request, {
         'init_search': json.dumps(params or {}),
-        'viewer_config': json.dumps(map_obj.viewer_json(request.user, *DEFAULT_BASE_LAYERS)),
+        'viewer_config': json.dumps(map_obj.viewer_json(request.user)),
         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
         "site" : settings.SITEURL
     }))
@@ -2568,7 +2568,7 @@ def create_pg_layer(request):
         }))
 
     if request.method == 'POST':
-        from geonode.maps.utils import check_projection, create_django_record, get_valid_layer_name
+        from geonode.layers.utils import create_django_record, get_valid_layer_name
         from ordereddict import OrderedDict
         layer_form = LayerCreateForm(request.POST)
         if layer_form.is_valid():
@@ -2621,9 +2621,6 @@ def create_pg_layer(request):
                 cat.create_style(name, sld)
                 publishing.default_style = cat.get_style(name)
                 cat.save(publishing)
-
-                logger.info("Check projection")
-                check_projection(name, layer)
 
                 logger.info("Create django record")
                 geonodeLayer = create_django_record(request.user, layer_form.cleaned_data['title'], layer_form.cleaned_data['keywords'].strip().split(" "), layer_form.cleaned_data['abstract'], layer, permissions)

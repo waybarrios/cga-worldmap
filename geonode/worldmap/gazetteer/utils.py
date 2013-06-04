@@ -4,7 +4,7 @@ from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 #from psycopg2 import extras
-from geonode.gazetteer.models import GazetteerEntry
+from geonode.worldmap.gazetteer.models import GazetteerEntry
 from geopy import geocoders
 from django.conf import settings
 import psycopg2

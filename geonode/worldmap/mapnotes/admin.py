@@ -1,4 +1,4 @@
-from geonode.mapnotes.models import MapNote
+from geonode.worldmap.mapnotes.models import MapNote
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from django.contrib import admin

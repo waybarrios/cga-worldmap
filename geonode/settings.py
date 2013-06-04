@@ -210,10 +210,14 @@ INSTALLED_APPS = (
     'geonode.catalogue',
     'geonode.documents',
     
-    'geonode.profile',
-    'geonode.account',
-    'geonode.mapnotes',
-    'geonode.capabilities',    
+    'geonode.worldmap.profile',
+    'geonode.worldmap.register',
+    'geonode.worldmap.mapnotes',
+    'geonode.worldmap.capabilities',    
+    'geonode.worldmap.layerutils',
+    'geonode.worldmap.maputils',
+    'geonode.worldmap.securityutils',
+    'geonode.worldmap.stats',
     
     'autocomplete_light',
     #'geonode.gazetteer',

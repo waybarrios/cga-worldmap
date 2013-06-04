@@ -1,10 +1,10 @@
 __author__ = 'mbertrand'
-from geonode.gazetteer.handlers import DjangoAuthentication
+from geonode.worldmap.gazetteer.handlers import DjangoAuthentication
 from django.conf.urls.defaults import *
 from piston.resource import Resource
 
 
-from geonode.gazetteer.handlers import PlaceNameHandler
+from geonode.worldmap.gazetteer.handlers import PlaceNameHandler
 
 auth = DjangoAuthentication()
 ad = { 'authentication': auth }

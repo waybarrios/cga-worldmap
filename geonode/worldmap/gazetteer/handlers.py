@@ -5,7 +5,7 @@ from django.core.serializers.json import DateTimeAwareJSONEncoder
 from django.http import HttpResponse
 import simplejson
 from geonode.maps.models import MapLayer
-from geonode.gazetteer.utils import getGazetteerResults, getGazetteerEntry, getExternalServiceResults
+from geonode.worldmap.gazetteer.utils import getGazetteerResults, getGazetteerEntry, getExternalServiceResults
 
 __author__ = 'mbertrand'
 from piston.handler import BaseHandler

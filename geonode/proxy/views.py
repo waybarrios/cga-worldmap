@@ -31,7 +31,7 @@ from django.views.decorators.csrf import csrf_exempt
 import logging
 from urlparse import urlparse
 from geonode.layers.models import Layer
-from geonode.stats.models import LayerStats
+from geonode.worldmap.stats.models import LayerStats
 import re
 import random
 

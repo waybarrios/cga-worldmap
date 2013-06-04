@@ -698,12 +698,6 @@ def set_attributes(layer):
     else:
         logger.debug("No attributes found")
 
-class LayerStats(models.Model):
-    layer = models.ForeignKey(Layer, unique=True)
-    visits = models.IntegerField(_("Visits"), default = 0)
-    uniques = models.IntegerField(_("Unique Visitors"), default = 0)
-    downloads = models.IntegerField(_("Downloads"), default = 0)
-    last_modified = models.DateTimeField(auto_now=True, null=True)
 
 signals.pre_save.connect(pre_save_layer, sender=Layer)
 signals.pre_save.connect(geoserver_pre_save, sender=Layer)
