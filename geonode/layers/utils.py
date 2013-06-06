@@ -400,7 +400,7 @@ def save(layer, base_file, user, overwrite = True, title=None,
 
     #FIXME: DONT DO THIS
     #-------------------
-    if 'shp' not in files and 'zip' not in files:
+    if 'shp' not in files:
         main_file = files['base']
         data = main_file
     # ------------------

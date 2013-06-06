@@ -77,6 +77,7 @@ class UploaderSession(object):
 
     # the uploader session object
     import_session = None
+    logger.info("Hello")
 
     # if provided, this file will be uploaded to geoserver and set as
     # the default
@@ -234,6 +235,7 @@ def save_step(user, layer, base_file, overwrite=True):
         # which potentially may reset the id - hopefully prevent this...
         next_id = Upload.objects.all().aggregate(Max('import_id')).values()[0]
         next_id = next_id + 1 if next_id else 1
+        _log('WTF1')
 
         # @todo settings for use_url or auto detection if geoserver is
         # on same host

@@ -17,16 +17,16 @@ define(['./FileType'], function (FileType) {
             name: 'GeoTiff File',
             main: 'tiff',
             requires: ['tiff']
-        })//,
+        }),
         // CSV: new FileType({
         //     name: 'Comma Separated File',
         //     main: 'csv',
         //     requires: ['csv']
         // }),
-        // ZIP: new FileType({
-        //     name: 'Zip Archives',
-        //     main: 'zip',
-        //     requires: ['zip']
-        // })
+        ZIP: new FileType({
+             name: 'Zip Archives',
+             main: 'zip',
+             requires: ['zip']
+         })
     };
 });

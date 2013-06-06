@@ -48,6 +48,7 @@ from geonode.layers.enumerations import LAYER_ATTRIBUTE_NUMERIC_DATA_TYPES
 
 from geoserver.catalog import Catalog, FailedRequestError
 from agon_ratings.models import OverallRating
+from geonode.worldmap.layerutils.wm_gsconfig import WorldmapCatalog
 
 logger = logging.getLogger("geonode.layers.models")
 
@@ -69,7 +70,7 @@ class LayerManager(ResourceBaseManager):
     def __init__(self):
         models.Manager.__init__(self)
         url = "%srest" % settings.GEOSERVER_BASE_URL
-        self.gs_catalog = Catalog(url, _user, _password)
+        self.gs_catalog = WorldmapCatalog(url, _user, _password)
 
 def add_bbox_query(q, bbox):
     '''modify the queryset q to limit to the provided bbox
