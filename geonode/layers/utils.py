@@ -54,6 +54,7 @@ from geoserver.catalog import ConflictingDataError
 from geoserver.resource import FeatureType, Coverage
 from geonode.worldmap.register.views import _create_new_user
 from zipfile import ZipFile
+from tempfile import mkstemp
 
 logger = logging.getLogger('geonode.layers.utils')
 
@@ -117,7 +118,7 @@ def layer_type(filename):
         msg = ('Saving of extension [%s] is not implemented' % extension)
         raise GeoNodeException(msg)
 
-def get_files(filename, sldfile):
+def get_files(filename):
     """Converts the data to Shapefiles or Geotiffs and returns
        a dictionary with all the required files
     """
@@ -145,13 +146,18 @@ def get_files(filename, sldfile):
             else:
                 files[ext] = matches[0]
     elif extension.lower() == '.zip':
-        zipFiles = ZipFile(filename).namelist()
+        zip = ZipFile(filename)
+        zipFiles = zip.namelist()
 
         for file in zipFiles:
             shapefile, extension = os.path.splitext(file)
             if extension.lower() == '.shp':
                 base_name = shapefile
-                break
+            elif extension.lower() == '.sld':
+                sldFile = open(mkstemp()[1], "wb")
+                sldFile.write(zip.read(file))
+                sldFile.close()
+                files['sld'] =  sldFile.name
 
         zipString = ' '.join(zipFiles)
         logger.debug('zipString:%s', zipString)
@@ -167,9 +173,13 @@ def get_files(filename, sldfile):
 
         files['zip'] = filename
 
-    # Always upload stylefile if it exist
-    if sldfile and os.path.exists(sldfile):
-        files['sld'] = sldfile
+    matches = glob.glob(glob_name + ".[sS][lL][dD]")
+    if len(matches) == 1:
+        files['sld'] = matches[0]
+    elif len(matches) > 1:
+        msg = ('Multiple style files for %s exist; they need to be '
+               'distinct by spelling and not just case.') % filename
+        raise GeoNodeException(msg)
 
     matches = glob.glob(base_name + ".[xX][mM][lL]")
 
@@ -394,7 +404,7 @@ def save(layer, base_file, user, overwrite = True, title=None,
     logger.info('>>> Step 4. Starting upload of [%s] to GeoServer...', name)
 
     # Get the helper files if they exist
-    files = get_files(base_file, sldfile)
+    files = get_files(base_file)
 
     data = files
 
