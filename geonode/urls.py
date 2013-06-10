@@ -23,9 +23,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
 from geonode.sitemap import LayerSitemap, MapSitemap
 import geonode.proxy.urls
+import worldmap.urls
 
-import autocomplete_light
-autocomplete_light.autodiscover()
 
 # Import *_signals.py
 import geonode.social_signals
@@ -99,13 +98,7 @@ urlpatterns = patterns('',
     (r'^admin/', include(admin.site.urls)),
     
     
-    ### WorldMap custom URL's
-    (r"^account/", include("geonode.worldmap.register.urls")),
-    (r'^people/', include('geonode.worldmap.profile.urls')),
-    url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^pin/registercomplete/$',
-                           'geonode.worldmap.register.views.registercompleteOrganizationUser',
-                           name='registration_complete'),
+
     )
 
 #Documents views
@@ -119,3 +112,6 @@ urlpatterns += geonode.proxy.urls.urlpatterns
 # Serve static files
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+urlpatterns += worldmap.urls.urlpatterns

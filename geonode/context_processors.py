@@ -36,4 +36,7 @@ def resource_urls(request):
         SITE_NAME=site.name,
         SITE_DOMAIN=site.domain,
         DOCUMENTS_APP = settings.DOCUMENTS_APP,
+        USE_CUSTOM_ORG_AUTHORIZATION = settings.USE_CUSTOM_ORG_AUTHORIZATION,
+        CUSTOM_GROUP_NAME = settings.CUSTOM_GROUP_NAME,
+        
     )

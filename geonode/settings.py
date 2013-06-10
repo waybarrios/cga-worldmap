@@ -114,6 +114,7 @@ ADMIN_MEDIA_PREFIX = os.path.join(STATIC_URL, "admin/")
 # Additional directories which hold static files
 STATICFILES_DIRS = [
     os.path.join(PROJECT_ROOT, "static"),
+    os.path.join(PROJECT_ROOT, "worldmap/static"),
 ]
 
 # List of finder classes that know how to find static files in
@@ -210,6 +211,7 @@ INSTALLED_APPS = (
     'geonode.catalogue',
     'geonode.documents',
     
+    'geonode.worldmap',
     'geonode.worldmap.profile',
     'geonode.worldmap.register',
     'geonode.worldmap.mapnotes',
