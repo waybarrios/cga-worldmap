@@ -1,0 +1,3 @@
+[submodule "geonode-suite-sdk"]
+	path = geonode-suite-sdk
+	url = git://github.com/mbertrand/geonode-suite-sdk.git

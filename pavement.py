@@ -53,6 +53,38 @@ def grab(src, dest, name):
 GEOSERVER_URL="http://build.geonode.org/geoserver/latest/geoserver.war"
 DATA_DIR_URL="http://build.geonode.org/geoserver/latest/data.zip"
 JETTY_RUNNER_URL="http://repo2.maven.org/maven2/org/mortbay/jetty/jetty-runner/8.1.8.v20121106/jetty-runner-8.1.8.v20121106.jar"
+OPENGEO_SUITE_SDK_URL="http://repo.opengeo.org/suite/releases/sdk/OpenGeoSuite-3.0.2-sdk.zip"
+
+@task
+@cmdopts([
+    ('fast', 'f', 'Fast. Skip some operations for speed.'),
+])
+def setup_opengeo_sdk(options):
+    """Prepare a testing instance of GeoServer."""
+    fast = options.get('fast', False)
+    
+    sh("git submodule update --init --recursive")
+    
+    download_dir = path('downloaded')
+    if not download_dir.exists():
+        download_dir.makedirs()
+
+    suite_sdk_dir = path('opengeosuite-3.0.1-sdk')
+
+    sdk_bin = download_dir / os.path.basename(OPENGEO_SUITE_SDK_URL)
+
+    grab(OPENGEO_SUITE_SDK_URL, sdk_bin, "suite sdk")
+
+    if not suite_sdk_dir.exists():
+        suite_sdk_dir.makedirs()
+
+        print 'extracting suite sdk'
+        with zipfile.ZipFile(sdk_bin, "r") as z:
+            z.extractall()
+            
+    
+    sh("ant -f %s/build.xml -Dapp.path=../geonode-suite-sdk -Dsdk.build=../geonode-suite-sdk/build -Dapp.name=geonode-suite-sdk package" % (suite_sdk_dir))
+    sh("cp -R geonode-suite-sdk/build/geonode-suite-sdk/* geonode/static/sdk")
 
 @task
 @cmdopts([
