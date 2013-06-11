@@ -59,11 +59,11 @@ OPENGEO_SUITE_SDK_URL="http://repo.opengeo.org/suite/releases/sdk/OpenGeoSuite-3
 @cmdopts([
     ('fast', 'f', 'Fast. Skip some operations for speed.'),
 ])
-def setup_opengeo_sdk(options):
+def setup_geonode_sdk(options):
     """Prepare a testing instance of GeoServer."""
     fast = options.get('fast', False)
     
-    sh("git submodule update --init --recursive")
+    sh("git submodule update --init")
     
     download_dir = path('downloaded')
     if not download_dir.exists():
@@ -82,7 +82,7 @@ def setup_opengeo_sdk(options):
         with zipfile.ZipFile(sdk_bin, "r") as z:
             z.extractall()
             
-    
+    sh("rm -rf geonode-suite-sdk/build/*")    
     sh("ant -f %s/build.xml -Dapp.path=../geonode-suite-sdk -Dsdk.build=../geonode-suite-sdk/build -Dapp.name=geonode-suite-sdk package" % (suite_sdk_dir))
     sh("cp -R geonode-suite-sdk/build/geonode-suite-sdk/* geonode/static/sdk")
 
