@@ -84,7 +84,7 @@ def setup_geonode_sdk(options):
             
     sh("rm -rf geonode-suite-sdk/build/*")    
     sh("ant -f %s/build.xml -Dapp.path=../geonode-suite-sdk -Dsdk.build=../geonode-suite-sdk/build -Dapp.name=geonode-suite-sdk package" % (suite_sdk_dir))
-    sh("cp -R geonode-suite-sdk/build/geonode-suite-sdk/* geonode/static/sdk")
+    sh("cp -R ../geonode-suite-sdk/build/geonode-suite-sdk/* geonode/static/sdk")
 
 @task
 @cmdopts([
