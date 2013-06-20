@@ -1,0 +1,39 @@
+<!-- OpenLayers resources -->
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/src/openlayers/theme/default/style.css">
+<!-- GeoExt resources -->
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/src/geoext/resources/css/popup.css">
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/src/geoext/resources/css/layerlegend.css">
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/src/geoext/resources/css/gxtheme-gray.css">
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/theme/app/style.css">
+<!-- gxp resources -->
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/src/gxp/theme/all.css">
+
+
+<!-- app resources -->
+<script type="text/javascript" src="{{ STATIC_URL }}worldmap/js/nicEdit.js"></script>
+<!--script type="text/javascript" src="{{ STATIC_URL }}sdk/lib/app.js"></script-->
+
+<script type="text/javascript" src="http://localhost:9080/lib/app.js"></script>
+<script type="text/javascript">
+OpenLayers.ImgPath = "{{ STATIC_URL }}geoexplorer/externals/openlayers/theme/default/img";
+OpenLayers.Request.DEFAULT_CONFIG.headers = {
+    'X-CSRFToken': '{{ csrf_token|escapejs }}'
+};
+var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
+/**
+ *  Add GetFeedFeatureInfo tool to GeoExplorer.Viewer
+ */
+GeoExplorer.Viewer.prototype.loadConfig = function(config) {
+        config.viewerTools.push( {
+            ptype: "gxp_getfeedfeatureinfo",
+            checked: true
+        });
+        config.viewerTools.splice(5, 0, {
+            id: "styler",
+            ptype: "gxp_styler",
+            checked: true
+        });
+    GeoExplorer.Viewer.superclass.loadConfig.call(this, config);
+};
+
+</script>
