@@ -1,24 +1,87 @@
-@import "../../libs/bootstrap/less/bootstrap";
+@import "../../.components/bootstrap/less/bootstrap";
+@import "font-awesome.less";
 
-@grayLight: rgb(239, 240, 239);
+// Grays
+// -------------------------
 @grayDark: rgb(72, 71, 72);
+@grayLight: #bbb;
+@grayLighter: #eff0ef;
+@grayNeutral: #999;
 @graySp: #777;
-@grayNeutral: #ccc;
-@brown: #464646;
-@blueBright: #4bcfe3;
-@blueLight: #3cb3c5;
-@blueDark: #379ea9;
-@orange: #f05a24;
-@orangeLight: #f6921e;
-@orangeAlt: #f7931e;
 
-@textColor: @black;
+// Accent colors
+// -------------------------
+@blueBright: #4bcfe3;
+@blueDark: #379ea9;
+@blueLight: #3cb3c5;
+@brown: #464646;
+@orange: #f05a24;
+@orangeAlt: #f7931e;
+@orangeLight: #f6921e;
+
+// Scaffolding
+// -------------------------
+@bodyBackground: #fefefe;
+
+
+// Links
+// -------------------------
 @linkColor: #41aaba;
-@navBkgd:#a7e4ee;
-@bdrColor: #ccc;
+
+// Typography
+// -------------------------
+@baseFontSize: 13px;
+@baseLineHeight: 18px;
+@customFont: 'Lato', sans-serif;
+@textColor: @black;
+
+// Buttons
+// -------------------------
+@btnPrimaryBackground: #008CB3;
+@btnPrimaryBackgroundHighlight: darken(@btnPrimaryBackground, 10%);
+@btnInverseBackground: @gray;
+@btnInverseBackgroundHighlight: @grayDarker;
+
+// Forms
+// -------------------------
+@inputBorderRadius: 3px;
+
+// Dropdowns
+// -------------------------
+@dropdownLinkBackgroundHover: @btnPrimaryBackground;
+@dropdownDividerTop: #e5e5e5;
+@dropdownDividerBottom: @white;
+
+// Input placeholder text color
+// -------------------------
 @placeholderText: #aaa;
 
-@customFont: 'Lato', sans-serif;
+// Navbar
+// -------------------------
+@navbarHeight:                    25px;
+@navbarBackgroundHighlight:       @btnPrimaryBackground;
+@navbarBackground:                darken(@btnPrimaryBackground, 15%);
+
+@navbarText:                      #fefefe;
+@navbarLinkColor:                 #fefefe;
+@navbarLinkColorHover:            @white;
+@navbarLinkColorActive:           @navbarLinkColorHover;
+@navbarLinkBackgroundActive:      @navbarBackground;
+
+@navbarSearchBackground:          lighten(@navbarBackground, 25%);
+@navbarSearchBackgroundFocus:     @white;
+@navbarSearchBorder:              darken(@navbarSearchBackground, 30%);
+@navbarSearchPlaceholderColor:    #ccc;
+
+// Fluid grid
+// -------------------------
+@fluidGridColumnWidth:    6.382978723%;
+@fluidGridGutterWidth:    2.127659574%;
+
+
+@navBkgd:#a7e4ee;
+@bdrColor: #ccc;
+
 
 .lines (@p: 10px, @m: 10px, @bdr-width: 1px, @bdr-style: solid, @bdr-color: @grayNeutral) {
   padding-bottom:@p;
@@ -45,19 +108,29 @@
   font-weight: 400;
 }
 
+.input-append, .input-prepend {
+  font-size: 13px;
+}
+
 // Universal styles
 body {
   padding-top: 80px;
+  padding-bottom: 40px;
   background:@white;
-}
-
-h2, h3 {
-  margin-bottom:10px !important;
+  font-family:@customFont;
 }
 
 h2 {
   color:@gray;
   font-size:@baseFontSize + 8;
+  margin-bottom:10px !important;
+}
+
+h3 {
+  line-height: 18px;
+  font-size: 18px;
+  font-weight: normal;
+  margin-bottom: 0 !important;
 }
 
 // Fix for openlayers
@@ -82,6 +155,16 @@ img.olTileImage {
   text-indent: -9999em;
 }
 
+li [class^="icon-"], li [class*=" icon-"] {
+  display: inline-block;
+  width: 1.25em;
+  text-align: center;
+}
+
+.navbar .nav li.dropdown.open>.dropdown-toggle, .navbar .nav li.dropdown.active>.dropdown-toggle, .navbar .nav li.dropdown.open.active>.dropdown-toggle {
+background-color: transparent;
+}
+
 .navbar .nav.account-bar {
   margin-top: 7px;
 
@@ -90,7 +173,7 @@ img.olTileImage {
   }
 
   i {
-    font-size:22px;
+    font-size:16px;
   }
 
   li.actions {
@@ -119,12 +202,26 @@ img.olTileImage {
     border-radius: 3px;
   }
 }
+.people .profile-info {
+  color: @grayDarker;
+  margin-top: -10px
+}
+.people .dl-horizontal dd {
+  margin-left: 30px;
+}
+.people .dl-horizontal dt {
+  width: 15px;
+}
 
 .navbar {
   .navbar-inner {
     background:@brown;
+    border: 0;
     .box-shadow(20px);
     padding-top: 7px;
+    -webkit-box-shadow: 0 1px 3px rgba(0,0,0,.25),inset 0 -1px 0 rgba(0,0,0,.1);
+       -moz-box-shadow: 0 1px 3px rgba(0,0,0,.25),inset 0 -1px 0 rgba(0,0,0,.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,.25),inset 0 -1px 0 rgba(0,0,0,.1);
   }
 
   p {
@@ -270,12 +367,21 @@ ul.social {
     }
   }
 }
+.navbar .nav.pull-right {
+  margin-left: 10px;
+  margin-right: 0;
+}
 
 footer.footer {
   background:@gray;
   color:@white;
   font-size:@baseFontSize - 2;
   padding-top:10px;
+  position:fixed;
+  left:0px;
+  bottom:0px;
+  height:35px;
+  width:100%;
 
   a {
     color:@white;
@@ -313,8 +419,6 @@ footer.footer {
     }
 
     label {
-      font-weight:bold;
-      font-size:@baseFontSize + 2;
 
       span.note {
         font-weight:normal;
@@ -361,8 +465,10 @@ footer.footer {
 
 // Elements
 .meta {
-  font-size:@baseFontSize - 1;
   color:@graySp;
+}
+.meta p {
+  margin-bottom: 0;
 }
 
 .btn {
@@ -378,7 +484,11 @@ footer.footer {
     background:@blueDark;
     color:@white;
   }
-
+  &.btn-mini {
+    font-size: 11px;
+    line-height: 14px;
+    padding: 2px 6px;
+  }
   &.btn-primary {
     background:@orange;
 
@@ -470,17 +580,18 @@ section.widget-mini {
 }
 
 .img-placeholder {
+  background:#dddeda;
+  border-radius: 4px;
+  color:@graySp;
+   display:table-cell;
   float:left;
   margin:0 15px 15px 0;
-  background:#dddeda;
   text-align:center;
-  color:@graySp;
-  display:table-cell;
   vertical-align: middle;
 
   &.pl-153-113 {
-    .size(63px, 153px);
-    padding-top:50px;
+    .size(60px, 80px);
+    padding-top:20px;
   }
 
   &.pl-64-70 {
@@ -492,22 +603,29 @@ section.widget-mini {
 
 .list article,
 .grid article {
-
   .rating, .activity {
     color:@graySp;
   }
   .overall_rating {
     color: @orange;
+    img {
+      margin: 1px;
+    }
   }
-
 }
 
 .list article {
   border-bottom:1px solid @bdrColor;
-  padding-bottom:20px;
-  margin-bottom:20px;
   overflow:hidden;
   position: relative;
+
+  h3 {
+      font-weight: normal;
+      overflow: hidden;
+      text-overflow: ellipses;
+      white-space: nowrap;
+      width: 420px;
+  }
 
   .download {
     right: 20px;
@@ -516,20 +634,13 @@ section.widget-mini {
 
   img {
     float:left;
-    margin:0 15px 15px 0;
+    margin: 1px 15px 15px 0;
   }
 
   .details {
     float:left;
     width:420px;
     overflow: hidden;
-
-    h3 {
-      width:320px;
-      overflow: hidden;
-      text-overflow:ellipses;
-      font-weight:normal;
-    }
   }
 
   .abstract {
@@ -538,19 +649,44 @@ section.widget-mini {
 }
 
 .grid article {
-  width: 285px;
-  overflow: hidden;
+  border-right: 1px solid @grayNeutral;
   float: left;
+  height: 120px;
+  margin-right: 10px;
+  overflow: hidden;
+  padding-right: 10px;
+  
+
+  h3 {
+      color: @blueLight;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 185px;
+    }
+
+  img {
+    float:left;
+    margin: 1px 10px 15px 0;
+  }
 
   .details {
     clear: left;
+    width: 185px;
 
-    h3 {
-      padding-right: 10px;
+    p {
+      margin-bottom: 0;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 125px;
     }
+    .stats {margin-top: 0px;}
   }
+}
+
+.grid article:last-child {
+  border-right: 0;
 }
 
 aside .well {
@@ -588,6 +724,24 @@ aside .well {
       }
     }
   }
+}
+
+.badge {
+  background: @grayNeutral;
+}
+.sub-type {
+  background: @grayLight;
+  }
+
+/* Font-awesome icon rotation */
+.icon-rotate-45:before {
+  margin-left: -3px;
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  transform: rotate(45deg);
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
 }
 
 img.thumb {
@@ -657,6 +811,7 @@ section.article-list {
   font-weight:bold;
   display:block;
   margin-bottom:15px;
+  margin-top: 15px;
 }
 .hd-actions a.btn-primary {
   background-color: @orange;
@@ -666,12 +821,15 @@ section.article-list {
 }
 
 h2.page-title {
-  text-transform:uppercase;
-  font-size:48px;
-  letter-spacing: 0.1em;
-  font-family:@customFont;
-  font-weight: 300;
   color:@black;
+  font-family:@customFont;
+  font-size:36px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  text-transform:uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .strong {
@@ -797,7 +955,7 @@ ul.space li {
   }
 }
 #slide-pane {
-  border-right: 1px solid @grayNeutral;
+  border-right: 1px solid @grayLight;
   padding-right: 10px;
   position: relative;
   margin-left: 0;
@@ -812,13 +970,13 @@ ul.space li {
     #title;
   }
   .nav li {
-    border-bottom: 1px solid @grayNeutral;
+    border-bottom: 1px solid @grayLight;
     line-height: 1.3;
   }
   .nav a {
     padding: 0.8em;
     color: @grayDark;
-    font-size: 16px;
+    font-size: 13px;
     cursor: pointer;
   }
   .nav a.active {
@@ -837,12 +995,12 @@ ul.space li {
     margin-right: -30px;
     width: 20px;
     padding: 8px 4px 6px;
-    border: 1px solid @grayNeutral;
+    border: 1px solid @grayLight;
     .border-radius(0 3px 3px 0);
   }
   a.toggle-nav {
     display: block;
-    color: @grayLight;
+    color: @grayLighter;
     i {
       padding-right: 8px;
     }
@@ -915,7 +1073,8 @@ ul.space li {
 
 
 .tab-pane article {
-  margin-bottom:40px;
+  padding-bottom: 10px;
+  padding-top: 10px;
 
   img {
     margin-bottom:10px;
@@ -948,6 +1107,23 @@ ul.space li {
   }
 }
 
+article h3 [class^="icon-"], [class*=" icon-"] {
+      color: @blueLight;
+      margin-right: 5px;
+    }
+article a [class^="icon-"], [class*=" icon-"] {
+      color: @grayLight;
+      font-size: 14px;
+      margin-left: 5px;
+}
+article a [class^="icon-star"], [class*=" icon-star"] {
+  color: orange;
+  margin-left:0;
+}
+article a:hover [class^="icon-"], [class*=" icon-"] {
+  color: orange;
+  margin-left:5px;
+  }
 article.abstract {
   border-top:1px solid @bdrColor;
   border-bottom:1px solid @bdrColor;
@@ -1036,6 +1212,10 @@ body.home {
       &.article-list article h6 a {
         color:@linkColor;
       }
+
+      &.latest-maps .pl-153-113 {
+        display: none;
+      }
     }
   }
 }
@@ -1097,8 +1277,9 @@ body.data-list nav.back {
 }
 body.data #subnav-tabs,
 body.maps #subnav-tabs,
+body.people #subnav-tabs,
 body.documents #subnav-tabs {
-  background-color: @grayLight;
+  background-color: @grayLighter;
   color: @graySp;
   .border-radius(3px 3px 0 0);
   .box-shadow(0 1px 2px #CCC);
@@ -1251,7 +1432,6 @@ body.search-results {
   .content-wrap .container {
     width: 960px;
   }
-
   article {
     overflow:hidden;
     background:@grayLighter;
@@ -1340,7 +1520,7 @@ body.upload-prms .main-content {
 .steps {
   text-align:right;
   text-transform:uppercase;
-  border-bottom:1px solid @grayNeutral;
+  border-bottom:1px solid @grayLight;
   margin-bottom:10px;
 
   .step {
@@ -1400,6 +1580,7 @@ ul.list {
 }
 
 .navbar-fixed-top {
+  color: #fefefe;
   z-index: 1019;
 }
 
@@ -1410,4 +1591,63 @@ ul.list {
 
 #form_post_comment textarea {
   width: 100%;
+}
+
+// people
+
+.people .avatar {
+  margin-left: 0;
+  margin-right: 20px;
+}
+
+.avatar img {
+  display: block;
+  border-radius: 4px;
+}
+
+ul.stats {
+  margin-left: -10px;
+  margin-top: 0;
+
+  a {
+    border-left: 1px solid @grayLight;
+
+    float:left;
+    /*line-height: 14px;*/
+    padding:4px 10px;
+    font-size: @baseFontSize - 2;
+    .border-radius(0);
+    cursor: pointer;
+  }
+
+  a.selected { color: black; }
+
+  a:hover {
+    background: none;
+    text-decoration:none;
+  }
+}
+.stats li:first-child a {
+  border-left: 0;
+}
+.stats a strong {
+  display: block;
+  font-size: 14px;
+}
+
+/* Select2 */
+
+.ms-container ul {
+  border: 1px solid @grayLight;
+  margin-left: 0;
+  list-style-type: none;
+  padding: 10px;
+}
+
+.select-style {
+  margin-bottom: 20px;
+}
+
+#pb .ui-progressbar-value {
+  background: rgb(125, 196, 243);
 }

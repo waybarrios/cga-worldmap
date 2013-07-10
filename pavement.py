@@ -25,6 +25,7 @@ import time
 import urllib
 import zipfile
 import glob
+import fileinput
 
 from paver.easy import task, options, cmdopts, needs
 from paver.easy import path, sh, info, call_task
@@ -35,8 +36,8 @@ try:
 except ImportError:
     from paver.easy import pushd
 
-assert sys.version_info >= (2, 6, 2), \
-    SystemError("GeoNode Build requires python 2.6.2 or better")
+assert sys.version_info >= (2, 7), \
+    SystemError("GeoNode Build requires python 2.7 or better")
 
 
 def grab(src, dest, name):
@@ -130,21 +131,35 @@ def _install_data_dir():
     download_dir = path('downloaded')
     data_dir_zip = download_dir / os.path.basename(DATA_DIR_URL)
 
-    print 'extracting datadir'
-    with zipfile.ZipFile(data_dir_zip, "r") as z:
-        z.extractall(geoserver_dir)
+    if os.path.exists(data_dir_zip):
+        print 'extracting datadir'
+        with zipfile.ZipFile(data_dir_zip, "r") as z:
+            z.extractall(geoserver_dir)
 
-    config = geoserver_dir / 'data/security/auth/geonodeAuthProvider/config.xml'
-    with open(config) as f:
-        xml = f.read()
-        m = re.search('baseUrl>([^<]+)', xml)
-        xml = xml[:m.start(1)] + "http://localhost:8000/" + xml[m.end(1):]
-    with open(config, 'w') as f: f.write(xml)
+        config = geoserver_dir / 'data/security/auth/geonodeAuthProvider/config.xml'
+        with open(config) as f:
+            xml = f.read()
+            m = re.search('baseUrl>([^<]+)', xml)
+            xml = xml[:m.start(1)] + "http://localhost:8000/" + xml[m.end(1):]
+        with open(config, 'w') as f: f.write(xml)
+    else:
+        print 'data_dir_zip not found, unable to extract and configure'
 
+
+@task
+def setup_static(options):
+    with pushd('geonode/static'):
+        sh('bower install')
+        sh('bower-installer')
+    with pushd('geonode/static/geonode'):
+        sh('make')
+    # HACK Remove this recursive symlink manually
+    sh('rm geonode/static/.components/jquery-timeago/public')
 
 @task
 @needs([
     'setup_geoserver',
+    'setup_static',
 ])
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
@@ -204,7 +219,7 @@ def package(options):
     # Create a distribution in zip format for the geonode python package.
     dist_dir = path('dist')
     dist_dir.rmtree()
-    sh('python setup.py sdist --format=zip')
+    sh('python setup.py sdist --formats=zip')
 
     with pushd('package'):
 
@@ -454,22 +469,7 @@ def deb(options):
     key = options.get('key', None)
     ppa = options.get('ppa', None)
 
-    import geonode
-    from geonode.version import get_git_changeset
-    raw_version = geonode.__version__
-    version = geonode.get_version()
-    timestamp = get_git_changeset()
-
-    major, minor, revision, stage, edition = raw_version
-
-    branch = 'dev'
-
-    if stage == 'alpha' and edition == 0:
-        tail = '%s%s' % (branch, timestamp)
-    else:
-        tail = '%s%s' % (stage, edition)
-
-    simple_version = '%s.%s.%s+%s' % (major, minor, revision, tail)
+    version, simple_version = versions()
 
     info('Creating package for GeoNode version %s' % version)
 
@@ -489,6 +489,10 @@ def deb(options):
             ' --id-length=6 --ignore-branch --release' % (
             simple_version)))
 
+        deb_changelog = path('debian') / 'changelog'
+        for line in fileinput.input([deb_changelog], inplace = True):
+            print line.replace("urgency=low", "urgency=high"),
+
         ## Revert workaround for git-dhc bug
         path('.git').rmtree()
 
@@ -507,6 +511,47 @@ def deb(options):
 
     if ppa is not None:
         sh('dput ppa:%s geonode_%s_source.changes' % (ppa, simple_version))
+
+
+@task
+def publish():
+    if 'GPG_KEY_GEONODE' in os.environ:
+        key = os.environ['GPG_KEY_GEONODE']
+    else:
+        print "You need to set the GPG_KEY_GEONODE environment variable"
+        return
+
+    call_task('deb', options={
+     'key': key,
+     'ppa': 'geonode/testing',
+    })
+
+    version, simple_version = versions()
+    sh('git tag %s' % version)
+    sh('git push origin %s' % version)
+    sh('git tag debian/%s' % simple_version)
+    sh('git push origin debian/%s' % simple_version)
+    sh('python setup.py sdist upload')
+
+
+def versions():
+    import geonode
+    from geonode.version import get_git_changeset
+    raw_version = geonode.__version__
+    version = geonode.get_version()
+    timestamp = get_git_changeset()
+
+    major, minor, revision, stage, edition = raw_version
+
+    branch = 'dev'
+
+    if stage == 'alpha' and edition == 0:
+        tail = '%s%s' % (branch, timestamp)
+    else:
+        tail = '%s%s' % (stage, edition)
+
+    simple_version = '%s.%s.%s+%s' % (major, minor, revision, tail)
+    return version, simple_version
 
 
 def kill(arg1, arg2):

@@ -200,11 +200,11 @@ def change_admin_password():
     sudo('source /var/lib/geonode/bin/activate;cat ~/changepw.py | django-admin.py shell --settings=geonode.settings')
     run('rm ~/changepw.py')
 
-def geonode_updateip(server_name="alpha.dev.geonode.org"):
+def geonode_updateip(server_name="beta.dev.geonode.org"):
     sudo ('geonode-updateip %s' % server_name)
 
-def set_temp_hosts_entry(server_name="alpha.dev.geonode.org"):
-    sudo("IP=`wget -qO- http://instance-data/latest/meta-data/public-ipv4`; echo $IP alpha.dev.geonode.org >> /etc/hosts")
+def set_temp_hosts_entry(server_name="beta.dev.geonode.org"):
+    sudo("IP=`wget -qO- http://instance-data/latest/meta-data/public-ipv4`; echo $IP beta.dev.geonode.org >> /etc/hosts")
 
 def remove_temp_hosts_entry():
     sudo("sed '$d' /etc/hosts > temp; mv temp /etc/hosts")
@@ -261,4 +261,7 @@ def build_geonode_ami():
     print "AMI %s Ready for Use" % (ami_id)
 
 def install_sample_data():
-    sudo('source /var/lib/geonode/bin/activate; geonode importlayers /var/lib/geonode/lib/python2.7/site-packages/gisdata/data/good; geonode loaddata sample_admin.json')
+    run('geonode importlayers `python -c "import gisdata; print gisdata.GOOD_DATA"`')
+    run('geonode loaddata sample_admin.json')
+    # Fix permissions issue on the newly created thumbs dir
+    sudo('chmod -R 7777 /var/www/geonode/uploaded/thumbs/')

@@ -5,6 +5,8 @@ build
 target
 *.mo
 pip-log.txt
+MANIFEST
+dist
 
 # supporting stuff pulled in by paver script
 geonode/development.db
@@ -18,7 +20,8 @@ downloaded
 .DS_Store
 =======
 # Static media handling
-geonode/static/components/
+geonode/static/.components/
+geonode/static/lib/
 geonode/static/geoexplorer/
 geonode/static_root/
 >>>>>>> gncore/master
@@ -31,6 +34,7 @@ geonode/uploaded
 .noseids
 geonode_test_data/
 nosetests.xml
+geonode/static/geonode/junit.xml
 
 #Temporary files
 *~

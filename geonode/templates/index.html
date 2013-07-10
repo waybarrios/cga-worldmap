@@ -65,7 +65,7 @@
       {% endif %}
       <div class="well">
         <h2>{% trans "Latest Maps" %}</h2>
-        <section class="article-list">
+        <section class="article-list latest-maps">
           {% featured_maps as featured_maps %}
           {% for map in featured_maps %}
             {% include "maps/_map_list_item.html" %}
@@ -78,8 +78,5 @@
 {% endblock %}
 
 {% block extra_script %}  
-  <script src="{% static "libs/js/waypoints.js" %}"></script>
-  <script src="{% static "libs/js/jquery.raty.js" %}"></script>
-  <script src="{% static "geonode/js/global_search.js" %}"></script>
-  {% include 'rate.js' %}
+  {% include 'search_scripts.html' %}
 {% endblock extra_script %}
