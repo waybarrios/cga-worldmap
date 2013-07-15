@@ -46,6 +46,7 @@ from geonode.maps.gs_helpers import get_sld_for, get_postgis_bbox
 from geonode.maps.encode import num_encode, num_decode
 from django.db import transaction
 import autocomplete_light
+from geonode.maps.encode import despam, XssCleaner
 
 logger = logging.getLogger("geonode.maps.views")
 
@@ -123,7 +124,7 @@ class LayerContactForm(forms.Form):
 
 class LayerForm(forms.ModelForm):
     from geonode.maps.models import CONSTRAINT_OPTIONS
-    CONSTRAINT_HELP = '''<p>Please choose the appropriate type of restriction (if any) for the use of your data. 
+    CONSTRAINT_HELP = _('''<p>Please choose the appropriate type of restriction (if any) for the use of your data. 
     Then use the "Constraints Other" form below to provide any necessary details.</p>
     <p>
     Public Domain Dedication and License<br />
@@ -140,17 +141,17 @@ class LayerForm(forms.ModelForm):
     <p>
     CC-BY-SA<br />
     http://creativecommons.org/licenses/by-sa/2.0/
-    '''
+    ''')
     
     map_id = forms.CharField(widget=forms.HiddenInput(), initial='', required=False)
-    date = forms.DateTimeField(label='*' + ('Date'), widget=forms.SplitDateTimeWidget)
+    date = forms.DateTimeField(label='*' + (_('Date')), widget=forms.SplitDateTimeWidget)
     date.widget.widgets[0].attrs = {"class":"date"}
     date.widget.widgets[1].attrs = {"class":"time"}
     temporal_extent_start = forms.DateField(required=False,label= _('Temporal Extent Start Date'), widget=forms.DateInput(attrs={"class":"date"}))
     temporal_extent_end = forms.DateField(required=False,label= _('Temporal Extent End Date'), widget=forms.DateInput(attrs={"class":"date"}))
     title = forms.CharField(label = '*' + _('Title'), max_length=255)
-    abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea)
-    constraints_use = forms.ChoiceField(label= _('Contraints'), choices=[(x, x) for x in CONSTRAINT_OPTIONS], 
+    abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea(attrs={'cols': 60}))
+    constraints_use = forms.ChoiceField(label= _('Contraints'), choices=CONSTRAINT_OPTIONS, 
                                         help_text=CONSTRAINT_HELP)
     keywords = taggit.forms.TagField(required=False)
     class Meta:
@@ -163,7 +164,7 @@ class RoleForm(forms.ModelForm):
         exclude = ('contact', 'layer')
 
 class PocForm(forms.Form):
-    contact = forms.ModelChoiceField(label = "New point of contact",
+    contact = forms.ModelChoiceField(label = _("New point of contact"),
                                      queryset = Contact.objects.exclude(user=None))
 
 
@@ -234,18 +235,18 @@ def mapJSON(request, mapid):
             )
         map_obj = get_object_or_404(Map, pk=mapid)
         if not request.user.has_perm('maps.change_map', obj=map_obj):
-            return HttpResponse("You are not allowed to modify this map.", status=403)
+            return HttpResponse(_("You are not allowed to modify this map."), status=403)
         try:
             map_obj.update_from_viewer(request.raw_post_data)
             MapSnapshot.objects.create(config=clean_config(request.raw_post_data),map=Map.objects.get(id=map_obj.id),user=request.user)
             return HttpResponse(
-                "Map successfully updated.",
+                _("Map successfully updated."),
                 mimetype="text/plain",
                 status=204
             )
         except Exception, e:
             return HttpResponse(
-                "The server could not understand the request." + str(e),
+                _("The server could not understand the request.") + str(e),
                 mimetype="text/plain",
                 status=400
             )
@@ -273,7 +274,7 @@ def newmap_config(request):
         map_obj.abstract = DEFAULT_ABSTRACT
         map_obj.title = DEFAULT_TITLE
         map_obj.urlsuffix = DEFAULT_URL
-        if request.user.is_authenticated(): map.owner = request.user
+        if request.user.is_authenticated(): map_obj.owner = request.user
         config = map_obj.viewer_json(request.user)
         config['edit_map'] = True
         if 'id' in config:
@@ -573,14 +574,14 @@ def ajax_layer_permissions(request, layername, use_email=False):
 
     if not request.method == 'POST':
         return HttpResponse(
-            'You must use POST for editing layer permissions',
+            _('You must use POST for editing layer permissions'),
             status=405,
             mimetype='text/plain'
         )
 
     if not request.user.has_perm("maps.change_layer_permissions", obj=layer):
         return HttpResponse(
-            'You are not allowed to change permissions for this layer',
+            _('You are not allowed to change permissions for this layer'),
             status=401,
             mimetype='text/plain'
         )
@@ -599,7 +600,7 @@ def ajax_map_permissions(request, mapid, use_email=False):
 
     if not request.user.has_perm("maps.change_map_permissions", obj=map_obj):
         return HttpResponse(
-            'You are not allowed to change permissions for this map',
+            _('You are not allowed to change permissions for this map'),
             status=401,
             mimetype='text/plain'
         )
@@ -810,6 +811,53 @@ def ajax_start_twitter(request):
             status=500
         )
 
+def tweetview(request):
+    map = get_object_or_404(Map,urlsuffix="tweetmap")
+    config = map.viewer_json(request.user)
+
+    redirectPage = 'maps/tweetview.html'
+
+    first_visit = True
+    if request.session.get('visit' + str(map.id), False):
+        first_visit = False
+    else:
+        request.session['visit' + str(map.id)] = True
+
+    mapstats, created = MapStats.objects.get_or_create(map=map)
+    mapstats.visits += 1
+    if created or first_visit:
+        mapstats.uniques+=1
+    mapstats.save()
+
+
+    #Remember last visited map
+    request.session['lastmap'] = map.id
+    request.session['lastmapTitle'] = map.title
+
+    config['first_visit'] = first_visit
+    config['edit_map'] = request.user.has_perm('maps.change_map', obj=map)
+
+    geops_ip = settings.GEOPS_IP
+    if "geopsip" in request.GET:
+        geops_ip = request.GET["geopsip"]
+
+    try:
+        conn = httplib2.Http(timeout=10)
+        testUrl = "http://" +  settings.GEOPS_IP  + "/?LAYERS=point&TRANSPARENT=TRUE&FORMAT=image%2Fpng&TILED=false&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&RND=0.7935556590091437&SQL=SELECT%20goog_x%2C%20goog_y%2C%20%20tweet_text%20%20from%20tweets%20WHERE%20time%20%3E%201354300501%20AND%20time%20%3C%201354905302&RADIUS=1&R=0&G=0&B=255&NUM_REQUESTS=1&_OLSALT=0.731751827057451&SRS=EPSG%3A900913&BBOX=-16280475.52625,-4924280.9318723,16280475.52625,4924280.9318723&WIDTH=1664&HEIGHT=503"
+        #testUrl = "http://worldmap.harvard.edu"
+        resp, content = conn.request(testUrl, 'GET')
+    except:
+        redirectPage = "maps/tweetstartup.html"
+
+    return render_to_response(redirectPage, RequestContext(request, {
+        'config': json.dumps(config),
+        'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
+        'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
+        'maptitle': map.title,
+        'GEOPS_IP': geops_ip,
+        'urlsuffix': get_suffix_if_custom(map),
+        'tweetdownload': request.user.is_authenticated() and request.user.get_profile().is_org_member
+        }))
 
 def embed(request, mapid=None, snapshot=None):
     if mapid is None:
@@ -949,6 +997,8 @@ def layer_metadata(request, layername):
                 new_keywords = layer_form.cleaned_data['keywords']
 
                 the_layer = layer_form.save(commit=False)
+                x = XssCleaner()
+                the_layer.abstract = despam(x.strip(layer_form.cleaned_data["abstract"]))
                 the_layer.topic_category = new_category
                 the_layer.keywords.add(*new_keywords)
                 if request.user.is_superuser and gazetteer_form.is_valid():
@@ -1176,7 +1226,7 @@ def upload_layer(request):
                 logger.error("Unexpected error during upload: %s : %s", name, escape(str(e)))
                 return HttpResponse(json.dumps({
                     "success": False,
-                    "errormsgs": ["Unexpected error during upload: " + escape(str(e))]}))
+                    "errormsgs": [_("Unexpected error during upload: ") + escape(str(e))]}))
             finally:
                 if tempdir is not None:
                     shutil.rmtree(tempdir)
@@ -1265,7 +1315,7 @@ def layer_replace(request, layername):
                 logger.exception("Unexpected error during upload.")
                 return HttpResponse(json.dumps({
                     "success": False,
-                    "errors": ["Unexpected error during upload: " + escape(str(e))]}))
+                    "errors": [_("Unexpected error during upload: ") + escape(str(e))]}))
             finally:
                 if tempdir is not None:
                     shutil.rmtree(tempdir)

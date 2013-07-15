@@ -3,7 +3,10 @@
 
   function permissionsString(form, type) {
     var anonymousPermissions, authenticatedPermissions, customPermissions, levels;
-
+    if (typeof form === 'string'){
+        form = $(form);
+    }
+    
     var data = form.serializeObject();
 
     if (type == "maps") {
@@ -96,7 +99,7 @@
     $('#permissions-body').ready(function(){
       {% if layer != "none" and document != "none" %}
       $.ajax(
-        "{% if layer %}{% url layer_permissions layer.typename %}{% elif map %}{% url map_permissions map.id %}{% elif document %}{% url document_permissions document.id %}{% endif %}",
+        "{% if layer %}{% url "layer_permissions" "layer.typename" %}{% elif map %}{% url "map_permissions" map.id %}{% elif document %}{% url "document_permissions" document.id %}{% endif %}",
         {
           success: function(data){
             var perms = $.parseJSON($.parseJSON(data).permissions);
@@ -156,7 +159,7 @@
         multiple: true,
         width: 'element',
         ajax: {
-          url: "{% url account_ajax_lookup_email %}",
+          url: "{% url "account_ajax_lookup_email" %}",
           dataType: "json",
           type: "POST",
           data: function (term, page) {

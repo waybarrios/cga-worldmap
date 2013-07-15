@@ -195,7 +195,9 @@ def cascading_delete(cat, layer_name):
     lyr = cat.get_layer(resource_name)
     if(lyr is not None): #Already deleted
         store = resource.store
-        styles = lyr.styles + [lyr.default_style]
+        styles = lyr.styles
+        if lyr.default_style is not None:
+            styles += [lyr.default_style]
         cat.delete(lyr)
         for s in styles: 
             if s is not None and s.name not in _default_style_names:
