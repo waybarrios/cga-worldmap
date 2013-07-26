@@ -70,6 +70,7 @@ class LayerManager(ResourceBaseManager):
     def __init__(self):
         models.Manager.__init__(self)
         url = "%srest" % settings.GEOSERVER_BASE_URL
+        #self.gs_catalog = WorldmapCatalog(url, _user, _password)
         self.gs_catalog = WorldmapCatalog(url, _user, _password)
 
 def add_bbox_query(q, bbox):

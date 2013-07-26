@@ -762,7 +762,7 @@ def _create_featurestore(name, data, overwrite, charset):
     return cat.get_store(name), cat.get_resource(name)
 
 
-def _create_coveragestore(name, data, overwrite):
+def _create_coveragestore(name, data, overwrite, charset=None):
     cat = Layer.objects.gs_catalog
     cat.create_coveragestore(name, data, overwrite=overwrite)
     return cat.get_store(name), cat.get_resource(name)
