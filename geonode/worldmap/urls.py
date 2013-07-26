@@ -21,5 +21,6 @@ urlpatterns = patterns('',
     url(r'^pin/registercomplete/$',
                            'geonode.worldmap.register.views.registercompleteOrganizationUser',
                            name='registration_complete'),
+    (r'^bostonhoods/?', include('geonode.worldmap.hoods.urls')),
           
 )

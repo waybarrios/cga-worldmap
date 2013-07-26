@@ -224,6 +224,7 @@ INSTALLED_APPS = (
     'geonode.worldmap.maputils',
     'geonode.worldmap.securityutils',
     'geonode.worldmap.stats',
+    'geonode.worldmap.hoods',
     
     'autocomplete_light',
     #'geonode.gazetteer',
@@ -557,7 +558,33 @@ MAP_BASELAYERS = [{
       {"buffer": 0}
     ]
 
-}]
+},
+    {
+        "source": {"ptype": "gx_googlesource"},
+        "group": "background",
+        "name": "SATELLITE",
+        "visibility": False,
+        "fixed": True,
+    }, {
+        "source": {"ptype": "gx_googlesource"},
+        "group": "background",
+        "name": "TERRAIN",
+        "visibility": False,
+        "fixed": True,
+    }, {
+        "source": {"ptype": "gx_googlesource"},
+        "group": "background",
+        "name": "HYBRID",
+        "visibility": False,
+        "fixed": True,
+    }, {
+        "source": {"ptype": "gx_googlesource"},
+        "group": "background",
+        "name": "ROADMAP",
+        "visibility": False,
+        "fixed": True,
+        "group": "background"
+    }]
 
 
 # GeoNode vector data backend configuration.
@@ -637,6 +664,7 @@ if USE_QUEUE:
     import djcelery
     djcelery.setup_loader()
 
+GOOGLE_API_KEY = ''
 
 #Set name of additional permissions group (besides anonymous and authenticated)
 CUSTOM_GROUP_NAME = 'Organization Users'

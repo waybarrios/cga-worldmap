@@ -1,3 +1,4 @@
+{% load i18n %}
 <!-- OpenLayers resources -->
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}sdk/src/openlayers/theme/default/style.css">
 <!-- GeoExt resources -->
@@ -11,9 +12,18 @@
 
 <!-- app resources -->
 <script type="text/javascript" src="{{ STATIC_URL }}worldmap/js/nicEdit.js"></script>
-<!--script type="text/javascript" src="{{ STATIC_URL }}sdk/lib/app.js"></script-->
+{% if "gme-" in GOOGLE_API_KEY %}
+    <script src="http://www.google.com/jsapi?client={{GOOGLE_API_KEY}}"></script>
+{% else %}
+    <script src="http://www.google.com/jsapi?key={{GOOGLE_API_KEY}}"></script>
+{% endif %}
 
 <script type="text/javascript" src="http://localhost:9080/lib/app.js"></script>
+<!-- 
+
+ant -f ../opengeosuite-3.0.1-sdk/build.xml -Dapp.path=../geonode-suite-sdk -Dsdk.build=../geonode-suite-sdk/build -Dapp.name=geonode-suite-sdk debug
+
+ -->
 <script type="text/javascript">
 OpenLayers.ImgPath = "{{ STATIC_URL }}geoexplorer/externals/openlayers/theme/default/img";
 OpenLayers.Request.DEFAULT_CONFIG.headers = {
@@ -23,17 +33,138 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
 /**
  *  Add GetFeedFeatureInfo tool to GeoExplorer.Viewer
  */
-GeoExplorer.Viewer.prototype.loadConfig = function(config) {
-        config.viewerTools.push( {
-            ptype: "gxp_getfeedfeatureinfo",
-            checked: true
-        });
-        config.viewerTools.splice(5, 0, {
-            id: "styler",
-            ptype: "gxp_styler",
-            checked: true
-        });
-    GeoExplorer.Viewer.superclass.loadConfig.call(this, config);
-};
+ GeoExplorer.Composer.prototype.loadConfig = function(config) {
+         config.tools.splice(0, 0, {
+             ptype: "gxp_getfeedfeatureinfo",
+             checked: true
+         },{
+             actions: ["addlayersbutton"],  actionTarget: "paneltbar"
+         }, {
+             actions: ["mapmenu"],  actionTarget: "paneltbar"
+         }, {
+             ptype: "gxp_printpage",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Print" %}</span>',
+             customParams: {outputFilename: 'GeoExplorer-print'},
+             printService: config.printService,
+             actionTarget: "paneltbar",
+             showButtonText: true
+         }, {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },             {
+             ptype: "gxp_annotation",
+             user: "{{ user.id }}",
+             toggleGroup: 'interaction',
+             actionTarget:  "paneltbar",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Notes" %}</span>'
+         }, {
+             ptype: "gxp_geonodequerytool",
+             id: "worldmap_query_tool",
+             actionTarget:    "paneltbar",
+             toolText: '<span class="x-btn-text">{% trans 'Identify' %}</span>',
+             iconCls: null,
+             outputConfig: {width: 400, height: 200, panIn: false},
+             featurePanel: 'queryPanel',
+             attributePanel: 'gridWinPanel',
+             toggleGroup: 'interaction'
+         }, {
+             ptype: "gxp_featuremanager",
+             id: "querymanager",
+             selectStyle: {cursor: ''},
+             autoLoadFeatures: true,
+             maxFeatures: 50,
+             paging: true,
+             pagingType: gxp.plugins.FeatureManager.WFS_PAGING
+         }, {
+             ptype: "gxp_queryform",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Query" %}</span>',
+             featureManager: "querymanager",
+             autoExpand: "query",
+             actionTarget: "paneltbar",
+             outputTarget: "query"
+         }, {
+             ptype: "gxp_featuregrid",
+             featureManager: "querymanager",
+             showTotalResults: true,
+             autoLoadFeature: false,
+             alwaysDisplayOnMap: true,
+             controlOptions: {multiple: true},
+             displayMode: "selected",
+             outputTarget: "table",
+             outputConfig: {
+                 id: "featuregrid",
+                 columnsSortable: false
+             }
+         }, {
+             ptype: "gxp_zoomtoselectedfeatures",
+             featureManager: "querymanager",
+             actionTarget: ["featuregrid.contextMenu", "featuregrid.bbar"]
+         }, {
+             ptype: "gxp_measure",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Measure" %}</span>', 
+             toggleGroup: "interaction",
+             controlOptions: {immediate: true},
+             showButtonText: true,
+             actionTarget: "paneltbar"
+         },{
+             ptype: "gxp_featuremanager",
+             id: "featuremanager",
+             maxFeatures: 20,
+             paging: false
+         }, {
+             ptype: "gxp_featureeditor",
+             featureManager: "featuremanager",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Edit" %}</span>',
+             autoLoadFeature: true,
+             splitButton: true,
+             showButtonText: true,
+             toggleGroup: "interaction",
+             actionTarget: "paneltbar"
+         }, {
+             ptype: "gxp_googleearth",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Google Earth" %}</span>',
+             actionTarget: ["paneltbar"]
+         }, {
+             ptype: "gxp_streetviewtool",
+             iconCls: null,
+             text: '<span class="x-btn-text">{% trans "Street View" %}</span>',
+             actionTarget: ["paneltbar"]
+         },{
+             actions: ["->"],
+             actionTarget: "paneltbar"
+         }, {
+             actions: ["loginbutton"],
+             actionTarget: "paneltbar"
+         }, {
+             actions: ["aboutbutton"],  actionTarget: "paneltbar"
+         }, {
+             actions: ["-"], actionTarget: "paneltbar"
+         },
+         {
+         	ptype: 'gxp_mapshare',
+         	target: this,
+         	text: '<span class="x-btn-text">{% trans "Share Map" %}</span>',
+         	iconCls: null,
+             actionTarget:  "paneltbar"
+         },
+         (config["edit_map"] === true && config.id !== 0) ? 
+         {
+          	ptype: 'gxp_maprevisiontool',
+          	target: this,
+          	text: '<span class="x-btn-text">{% trans "Revisions" %}</span>',
+          	iconCls: null,
+              actionTarget:  "paneltbar"
+          } : {
+        	  actions: ["-"], actionTarget: "paneltbar"
+          }
+         );
+     GeoExplorer.Composer.superclass.loadConfig.call(this, config);
+ };
 
 </script>

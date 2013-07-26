@@ -15,7 +15,9 @@ from django.views.decorators.csrf import csrf_exempt
 import logging
 from urlparse import urlparse
 import psycopg2
-from geonode.maps.models import Map, LayerStats, Layer
+from geonode.worldmap.maputils.models import WorldMap
+from geonode.worldmap.stats.models import LayerStats
+from geonode.layers.models import Layer
 from geonode.maps.views import *
 import re
 
@@ -60,7 +62,7 @@ def create_hood(request):
         return HttpResponseRedirect('/accounts/login?next=' + request.get_full_path())
 
     mapid = settings.HOODS_TEMPLATE_ID
-    mapTemplate= get_object_or_404(Map,pk=mapid)
+    mapTemplate= get_object_or_404(WorldMap,pk=mapid)
     config = mapTemplate.viewer_json(request.user)
     config['edit_map'] = True
 

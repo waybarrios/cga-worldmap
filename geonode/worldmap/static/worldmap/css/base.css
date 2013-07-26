@@ -1,0 +1,32 @@
+
+.navbar .navbar-inner {
+    background: none repeat scroll 0 0 #FFF;
+    border: 0 none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 -1px 0 rgba(0, 0, 0, 0.1) inset;
+    padding-top: 7px;
+}
+
+.navbar .nav > li > a {
+    color: #000000;
+    float: none;
+    padding: 3.5px 15px;
+    text-decoration: none;
+    text-shadow: 0 1px 0 #E0E0E0;
+}
+
+.navbar .nav > li > a:hover {
+    color: #000;
+    font-weight: bold;
+}
+
+
+.nav-logo {
+    background: url("../img/WorldMap-Logo_26px.png") no-repeat scroll 0 0 transparent;
+    float: left;
+    height: 30px;
+    margin-bottom: 7px;
+    margin-top: 3px;
+    overflow: hidden;
+    text-indent: -9999em;
+    width: 180px;
+}

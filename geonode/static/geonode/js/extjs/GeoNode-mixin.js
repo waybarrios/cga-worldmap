@@ -38,7 +38,7 @@ GeoNode.ComposerMixin = {
             //Proceed if this is a local queryable WMS layer
             var layer = layerRecord.getLayer();
             if (layer instanceof OpenLayers.Layer.WMS && (layer.url == "/geoserver/wms" ||
-                    layer.url.indexOf(app.localGeoServerBaseUrl.replace(app.urlPortRegEx, "$1/")) === 0)) {
+                    layer.url.indexOf(app.localGeoServerBaseUrl === 0)) {
                 Ext.Ajax.request({
                     /* TODO: use a template variable here if possible */
                     url:"/layers/" + layer.params.LAYERS + "/edit-check",
