@@ -78,7 +78,7 @@ define(['underscore',
      */
     buildFileInfo = function (files) {
         var name, info;
-
+        var count = 0;
         for (name in files) {
             // filter out the prototype properties
 
@@ -90,13 +90,17 @@ define(['underscore',
                     info = layers[name];
                     $.merge(info.files, files[name]);
                     info.displayFiles();
-                } else {
+                } else if (count < 1) {
                     info = new LayerInfo({
                         name: name,
                         files: files[name]
                     });
                     info.collectErrors();
                     layers[name] = info;
+                    if (metadata_enabled)
+                    {
+                    	count++;
+                    }
                 }
             }
         }

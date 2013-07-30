@@ -165,6 +165,12 @@ define(function (require, exports) {
             form_data.append('time', time);
         } 
 
+        if (metadata_enabled) {
+                form_data.append("layer_title", $('#layer_title').val());
+                form_data.append("abstract", $('#abstract').val());
+                form_data.append("charset", $('#charset').val());   
+        }
+
         form_data.append('base_file', this.main);
         form_data.append('permissions', JSON.stringify(perm));
 
