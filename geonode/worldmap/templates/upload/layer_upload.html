@@ -142,7 +142,7 @@
   form_target = "{{ UPLOADER_URL }}",
   geogit_enabled = {{ GEOGIT_ENABLED|lower  }},
   time_enabled = {{ TIME_ENABLED|lower  }},
-  metadata_enabled = false,
+  metadata_enabled = true,
   userLookup = "{% url "geonode.views.ajax_lookup" %}"
 
 {% endautoescape %}

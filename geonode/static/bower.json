@@ -40,7 +40,7 @@
         ".components/jquery-ui/themes/cupertino/jquery-ui.css"
       ],
       "raty": [
-        ".components/raty/js/jquery.raty.min.js"
+        ".components/raty/lib/jquery.raty.min.js"
       ],
       "select2": [
         ".components/select2/select2.min.js",
