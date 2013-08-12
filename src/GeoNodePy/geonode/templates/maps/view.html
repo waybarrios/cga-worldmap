@@ -151,11 +151,12 @@ var init = function() {
                 editFeatureActionText: '<span class="x-btn-text">{% trans 'Edit Feature' %}</span>',
                 actionTarget:  {target: "paneltbar", index: 2},
                 toggleGroup: 'featureGroup'
-            }{% endif %},
+            }{% endif %}
+            {% if editmap %},
             {
             	ptype: "gxp_maprevisiontool",
             	actionTarget:   {target: "paneltbar", index: 20}
-            }
+            }{% endif %}
             ],
             proxy: "/proxy/?url=",
 
@@ -320,24 +321,7 @@ var init = function() {
 </div>
 <div id="featuredetails" style="float:right; width: 300px"></div>
 
-       <div id="langselect" style="display:inline">
-   			<!-- Only show the language form if the csrf_token is present -->
-   			{% if csrf_token != "NOTPROVIDED" %}       
-   				{% get_current_language as LANGUAGE %}
-    			<form class="langbar" id="target" action="/i18n/setlang/" method="post">
-      			{% csrf_token %}
 
-         			<select id="langval" name="language" onchange="javascript:form.submit()">
-           			{% for lang in LANGUAGES %}
-            			<option value="{{ lang.0 }}"
-                		{% ifequal LANGUAGE_CODE lang.0 %} selected="selected"{% endifequal %}>
-                		{{ lang.1 }}
-            			</option>
-           			{% endfor %}
-         			</select>
-     			</form>
-   			{% endif %}
-      </div>
 
 >>>>>>> origin/master
 {% endblock %}

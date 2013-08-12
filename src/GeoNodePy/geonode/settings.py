@@ -2,7 +2,7 @@
 # Django settings for GeoNode project.
 import logging
 import os
-
+from django.utils.translation import ugettext as _
 #
 # General Django development settings
 #
@@ -134,8 +134,8 @@ INSTALLED_APPS = (
     'geonode.profile',
     'geonode.register',
     'geonode.mapnotes',
-    'geonode.hoods',
     'geonode.capabilities',
+    #'geonode.hoods',
     #'geonode.gazetteer',
     #'geonode.queue',
     #'djcelery',
@@ -342,14 +342,14 @@ MAP_BASELAYERS = [
  {
         "source": {"ptype": "gx_olsource"},
         "type": "OpenLayers.Layer",
-        "args": ["No background"],
+        "args": [_("No background")],
         "visibility": False,
         "fixed": True,
         "group": "background"
     }, {
         "source": {"ptype": "gx_olsource"},
         "type": "OpenLayers.Layer.OSM",
-        "args": ["OpenStreetMap"],
+        "args": [_("OpenStreetMap")],
         "visibility": False,
         "fixed": True,
         "group": "background"
@@ -488,10 +488,10 @@ CACHE_BACKEND = 'dummy://'
 
 ### Boston neighborhood settings  ###
 ### These need to be set to the correct values for the worldmap instance ###
-HOODS_TEMPLATE_LAYER = 'tl_2010_25025_tabblock10_f2j_651' # layer name in geoserver
-HOODS_TEMPLATE_ID = 8  #Map id to be used as template
-HOODS_TEMPLATE_ATTRIBUTE = 'GEOID10'  #Attribute to be used for block id
-HOODS_MASTER_LAYER = 'masterhoodlayer_nuw'
+# HOODS_TEMPLATE_LAYER = 'tl_2010_25025_tabblock10_f2j_651' # layer name in geoserver
+# HOODS_TEMPLATE_ID = 8  #Map id to be used as template
+# HOODS_TEMPLATE_ATTRIBUTE = 'GEOID10'  #Attribute to be used for block id
+# HOODS_MASTER_LAYER = 'masterhoodlayer_nuw'
 
 GEOPS_IP =  '128.30.77.57:8083'
 #GEOPS_IP =  '140.247.116.252:8083'

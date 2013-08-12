@@ -214,9 +214,13 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     youTubeText: 'YouTube',
     hglText: "Harvard Geospatial Library",
     moreText: 'More...',
-
-
-
+    uploadLayerText: 'Upload Layer',
+    createLayerText: 'Create Layer',
+    rectifyLayerText: 'Rectify Layer',
+    worldmapDataText: 'WorldMap Data',
+    externalDataText: 'External Data',
+    leavePageWarningText: 'If you leave this page, unsaved changes will be lost.',
+    
     constructor: function(config) {
         this.config = config;
         this.popupCache = {};
@@ -311,7 +315,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         // global beforeunload handler
         window.onbeforeunload = (function() {
             if (this.fireEvent("beforeunload") === false) {
-                return "If you leave this page, unsaved changes will be lost.";
+                return this.leavePageWarningText;
             }
         }).createDelegate(this);
 
@@ -1427,7 +1431,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
 
         this.capGrid = new Ext.Panel({
             autoScroll: true,
-            title: 'External Data',
+            title: this.externalDataText,
             header: false,
             layout: 'border',
             border: false,
@@ -1628,13 +1632,14 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         this.mapPanel.add(moreButton);
 
         
-//        var languageSelect = {
-//        	xtype: 'box',
-//        	contentEl: 'langselect',
-//        	cls: "language-overlay-element"
-//        };
-//
-//        this.mapPanel.add(languageSelect);
+        var languageSelect = {
+        	xtype: 'box',
+        	contentEl: 'langselect',
+        	cls: "language-overlay-element"
+        };
+
+        this.mapPanel.add(languageSelect);
+
 
         var publishAction = new Ext.Action({
             tooltip: this.publishActionText,
@@ -1731,7 +1736,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     initMetadataForm: function() {
 
         var geoEx = this;
-
+        var saveButton = Ext.getCmp("gx_saveButton");
+        var saveAsButton = Ext.getCmp("gx_saveAsButton");        
         var titleField = new Ext.form.TextField({
             width: '95%',
             fieldLabel: this.metaDataMapTitle,
@@ -1743,11 +1749,15 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     if (urlField.isValid()) {
                         //saveAsButton.enable();
                         saveButton.enable();
+                        if (!saveAsButton.hidden)
+                        	saveAsButton.enable();
                     }
                 },
                 "invalid": function() {
                     //saveAsButton.disable();
                     saveButton.disable();
+                    if (!saveAsButton.hidden)
+                    	saveAsButton.disable();
                 }
             }
         });
@@ -1812,23 +1822,27 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     if (titleField.isValid()) {
                         //saveAsButton.enable();
                         saveButton.enable();
+                        if (!saveAsButton.hidden)
+                        	saveAsButton.enable();
                     }
                 },
                 "invalid": function() {
                     //saveAsButton.disable();
                     saveButton.disable();
+                    if (!saveAsButton.hidden)
+                    	saveAsButton.disable();
                 }
             }
         });
 
         var checkUrlBeforeSave = function(as) {
             Ext.getCmp('gx_saveButton').disable();
-            //Ext.getCmp('gx_saveAsButton').disable();
+            Ext.getCmp('gx_saveAsButton').disable();
 
             Ext.Ajax.request({
                 url: "/maps/checkurl/",
                 method: 'POST',
-                params : {query:urlField.getValue(), mapid: geoEx.mapID},
+                params : {query:urlField.getValue(), mapid: as ? 0 : geoEx.mapID},
                 success: function(response, options) {
                     var urlcount = Ext.decode(response.responseText).count;
                     var rt = "";
@@ -1848,7 +1862,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                         if (!isValid) {
                             urlField.markInvalid(rt);
                             Ext.getCmp('gx_saveButton').enable();
-                            //Ext.getCmp('gx_saveAsButton').enable();
+                            Ext.getCmp('gx_saveAsButton').enable();
                             return false;
                         }
 
@@ -1864,7 +1878,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 },
                 failure: function(response, options) {
                     Ext.getCmp('gx_saveButton').enable();
-                    //Ext.getCmp('gx_saveAsButton').enable();
+                    Ext.getCmp('gx_saveAsButton').enable();
                     return false;
                     //Ext.Msg.alert('Error', response.responseText, geoEx.showMetadataForm);
                 },
@@ -1913,6 +1927,18 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             scope: this
         });
 
+        var saveAsButton = new Ext.Button({
+            id: 'gx_saveAsButton',
+            text: this.metadataFormSaveAsCopyText,
+            cls:'x-btn-text',
+            disabled: !this.about.title,
+            hidden: this.about["urlsuffix"] !== "boston",
+            handler: function(e) {
+                checkUrlBeforeSave(true);
+            },
+            scope: this
+        });
+        
         this.metadataForm = new Ext.Window({
             title: this.metaDataHeader,
             closeAction: 'hide',
@@ -1924,6 +1950,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 "->",
                 //saveAsButton,
                 saveButton,
+                saveAsButton,
                 new Ext.Button({
                     text: this.metadataFormCancelText,
                     cls:'x-btn-text',
@@ -1992,7 +2019,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     initUploadPanel: function() {
         this.uploadPanel = new Ext.Panel({
             id: 'worldmap_update_panel',
-            title: 'Upload Layer',
+            title: this.uploadLayerText,
             header: false,
             autoLoad: {url: '/data/upload/?tab=true', scripts: true},
             listeners:{
@@ -2009,7 +2036,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     initCreatePanel: function() {
         this.createPanel = new Ext.Panel({
             id: 'worldmap_create_panel',
-            title: 'Create Layer',
+            title: this.createLayerText,
             header: false,
             autoLoad: {url: '/data/create_pg_layer/?tab=true', scripts: true},
             listeners:{
@@ -2026,7 +2053,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     initWarperPanel: function() {
         this.warperPanel = new Ext.Panel({
             id: 'worldmap_warper_panel',
-            title: 'Rectify Layer',
+            title: this.rectifyLayerText,
             header: false,
             contentEl: 'warpDiv',
             autoScroll: true
@@ -2048,7 +2075,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             activeTab: 0,
             region:'center',
             items: [
-                {contentEl: 'searchDiv', title: 'WorldMap Data', autoScroll: true},
+                {contentEl: 'searchDiv', title: this.worldmapDataText, autoScroll: true},
                 this.capGrid
             ]
         });
@@ -2307,13 +2334,14 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                         Ext.Msg.alert('Error', response.responseText);
 
                     Ext.getCmp('gx_saveButton').enable();
-                    //Ext.getCmp('gx_saveAsButton').enable();
+                    Ext.getCmp('gx_saveAsButton').enable();
                 },
                 scope: this
             });
         }
         else {
             /* save an existing map */
+        	var saveAsButton = Ext.getCmp('gx_saveAsButton');
             Ext.Ajax.request({
                 url: this.updateURL(),
                 method: 'PUT',
@@ -2323,7 +2351,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     this.fireEvent("saved", this.mapID);
                     this.metadataForm.hide();
                     Ext.getCmp('gx_saveButton').enable();
-                    //Ext.getCmp('gx_saveAsButton').enable();
+                    if (!saveAsButton.hidden)
+                    	saveAsButton.enable();
                 },
                 failure: function(response, options) {
                     if (response.status === 401)
@@ -2331,7 +2360,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     else {
                         Ext.Msg.alert('Error', response.responseText);
                         Ext.getCmp('gx_saveButton').enable();
-                        //Ext.getCmp('gx_saveAsButton').enable();
+                        if (!saveAsButton.hidden)
+                        	saveAsButton.enable();
                     }
                 },
                 scope: this

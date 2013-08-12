@@ -44,7 +44,7 @@ if (window.GeoExplorer) {
         layerContainerText: gettext("Map Layers"),
         layerSelectionLabel: gettext("View available data from:"),
         layerLocalLabel: gettext("Upload your own data"),
-
+        
         layersContainerText: gettext("Data"),
         layersPanelText: gettext("Layers"),
         legendPanelText: gettext("Legend"),
@@ -115,6 +115,12 @@ if (window.GeoExplorer) {
         youTubeText: gettext("YouTube"),
         hglText: gettext("Harvard Geospatial Library"),
         moreText: gettext("More..."),
+        uploadLayerText: gettext('Upload Layer'),
+        createLayerText: gettext('Create Layer'),
+        rectifyLayerText: gettext('Rectify Layer'),
+        worldmapDataText:  gettext('WorldMap Data'),
+        externalDataText: gettext('External Data'),
+        leavePageWarningText: gettext('If you leave this page, unsaved changes will be lost.'),
     });
 }
 
