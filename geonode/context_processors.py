@@ -40,7 +40,8 @@ def resource_urls(request):
         GEOGIT_ENABLED = getattr(settings, "GEOGIT_DATASTORE", False),
         TIME_ENABLED = getattr(settings, "UPLOADER_SHOW_TIME_STEP", False),
         PRINTNG_ENABLED = getattr(settings, "PRINTNG_ENABLED", False),
+        DEBUG_STATIC = getattr(settings, "DEBUG_STATIC", False),
         USE_CUSTOM_ORG_AUTHORIZATION = settings.USE_CUSTOM_ORG_AUTHORIZATION,
         CUSTOM_GROUP_NAME = settings.CUSTOM_GROUP_NAME,
-        GOOGLE_API_KEY=settings.GOOGLE_API_KEY,
+        GOOGLE_API_KEY=settings.GOOGLE_API_KEY
     )

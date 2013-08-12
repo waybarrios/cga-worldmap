@@ -37,6 +37,7 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 DEBUG = TEMPLATE_DEBUG = True
 
 
+
 #Email settings (example gmail account) for registration, passwords, etc
 #DEFAULT_FROM_EMAIL = 'your_email@gmail.com'
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -45,6 +46,10 @@ DEBUG = TEMPLATE_DEBUG = True
 #EMAIL_HOST_PASSWORD = 'password'
 #EMAIL_PORT = 587
 #EMAIL_USE_TLS = True
+
+
+# Set to True to load non-minified versions of (static) client dependencies
+DEBUG_STATIC = False
 
 
 # This is needed for integration tests, they require

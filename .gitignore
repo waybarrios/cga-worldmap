@@ -20,10 +20,15 @@ downloaded
 .DS_Store
 =======
 # Static media handling
+*.jshintrc
 geonode/static/.components/
 geonode/static/lib/
 geonode/static/geoexplorer/
 geonode/static_root/
+<<<<<<< HEAD
+>>>>>>> gncore/master
+=======
+geonode/static/node_modules/
 >>>>>>> gncore/master
 
 # Uploaded files
