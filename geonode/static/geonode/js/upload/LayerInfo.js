@@ -242,14 +242,15 @@ define(function (require, exports) {
     };
 
     LayerInfo.prototype.displayUploadedLayerLinks = function(resp) {
-        var self = this;
-        var a = '<a href="' + resp.url + '" class="btn">Layer Info</a>';
-        var b = '<a href="' + resp.url + '/metadata" class="btn">Edit Metadata</a>';
-        var c = '<a href="' + resp.url + '/style/manage" class="btn">Manage Styles</a>';
-        self.logStatus({
-            msg: '<p> Your layer was successfully uploaded<br/><br/>' + a + '&nbsp;&nbsp;&nbsp;' + b + '&nbsp;&nbsp;&nbsp;' + c + '</p>',
-            level: 'alert-success'
-        });
+//        var self = this;
+//        var a = '<a href="' + resp.url + '" class="btn">Layer Info</a>';
+//        var b = '<a href="' + resp.url + '/metadata" class="btn">Edit Metadata</a>';
+//        var c = '<a href="' + resp.url + '/style/manage" class="btn">Manage Styles</a>';
+//        self.logStatus({
+//            msg: '<p> Your layer was successfully uploaded<br/><br/>' + a + '&nbsp;&nbsp;&nbsp;' + b + '&nbsp;&nbsp;&nbsp;' + c + '</p>',
+//            level: 'alert-success'
+//        });
+        window.location.href = resp.url + '/metadata';
     };
  
     /** Function to deal with the final step in the upload process 

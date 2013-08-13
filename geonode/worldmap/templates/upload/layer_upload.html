@@ -90,8 +90,8 @@
 
               <div id="metadata-upload">
               <form id="metadata-uploader" method="post" enctype="multipart/form-data">
-              <label for="title">{% trans "Title" %}</label><input type="text" id="layer_title" label="Title"></input>
-              <label for="abstract">{% trans "Abstract" %}</label><textarea rows="4" cols="50" id="abstract" label="Abstract"></textarea>
+              <label for="title">{% trans "Title" %}</label><input type="text" id="layer_title" label="Title" class="required"></input>
+              <label for="abstract">{% trans "Abstract" %}</label><textarea rows="4" cols="50" id="abstract" label="Abstract" class="required"></textarea>
               <label for="charset">{% trans "Encoding" %}</label>
               <select id="charset">
               {% for charset in charsets %}
@@ -145,6 +145,8 @@
   metadata_enabled = true,
   userLookup = "{% url "geonode.views.ajax_lookup" %}"
 
+
+  
 {% endautoescape %}
 
 </script>

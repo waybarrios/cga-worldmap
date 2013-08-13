@@ -156,7 +156,7 @@ class LayerForm(forms.ModelForm):
     keywords = taggit.forms.TagField(required=False)
     class Meta:
         model = Layer
-        exclude = ('owner', 'contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename', 'topic_category', 'bbox', 'llbbox', 'srs', 'geographic_bounding_box', 'in_gazetteer', 'gazetteer_project' ) #, 'topic_category'
+        exclude = ('owner', 'contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename', 'category', 'bbox', 'llbbox', 'srs', 'geographic_bounding_box', 'in_gazetteer', 'gazetteer_project' ) #, 'topic_category'
 
 class RoleForm(forms.ModelForm):
     class Meta:
@@ -1004,7 +1004,7 @@ def layer_metadata(request, layername):
                 the_layer = layer_form.save(commit=False)
                 x = XssCleaner()
                 the_layer.abstract = despam(x.strip(layer_form.cleaned_data["abstract"]))
-                the_layer.topic_category = new_category
+                the_layer.category = new_category
                 the_layer.keywords.add(*new_keywords)
                 if request.user.is_superuser and gazetteer_form.is_valid():
                     the_layer.in_gazetteer = "gazetteer_include" in request.POST
@@ -1024,7 +1024,7 @@ def layer_metadata(request, layername):
                     logger.debug("adding layer to map [%s]", str(mapid))
                     maplayer = MapLayer.objects.create(map=Map.objects.get(id=mapid),
                         name = layer.typename,
-                        group = layer.topic_category.title if layer.topic_category else 'General',
+                        group = layer.category.title if layer.category else 'General',
                         layer_params = '{"selected":true, "title": "' + layer.title + '"}',
                         source_params = '{"ptype": "gxp_gnsource"}',
                         ows_url = settings.GEOSERVER_BASE_URL + "wms",
@@ -1714,7 +1714,7 @@ def search_result_detail(request):
     try:
         layer = Layer.objects.get(uuid=uuid)
         layer_is_remote = False
-        category = layer.topic_category
+        category = layer.category
     except Exception:
         layer = None
         layer_is_remote = True
@@ -2199,9 +2199,6 @@ class LayerCategoryForm(forms.Form):
         if not ccf_data:
             msg = u"This field is required."
             self._errors = self.error_class([msg])
-
-
-
 
         # Always return the full collection of cleaned data.
         return cleaned_data

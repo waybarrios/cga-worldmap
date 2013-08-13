@@ -54,7 +54,7 @@ urlpatterns = patterns('',
     url(r'^about/$', TemplateView.as_view(template_name='about.html'), name='about'),
 
     # Layer views
-    (r'^layers/', include('geonode.layers.urls')),
+    (r'^layers/', include('geonode.worldmap.layerutils.urls')),
 
     # Map views
     (r'^maps/', include('geonode.worldmap.maputils.urls')),

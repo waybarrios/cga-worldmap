@@ -1,0 +1,147 @@
+{% extends "layers/layer_base.html" %}
+{% load i18n %}
+{% load bootstrap_tags %}
+
+{% block title %}{{ layer.typename }} — {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<script type="text/javascript" src="{{ STATIC_URL }}worldmap/js/nicEdit.js"></script>
+<style type="text/css">
+    .su_only {
+        display:none;
+    }
+
+    .su_only_gaz {
+        display:none;
+    }
+
+.helptext {
+	display: inline-block;
+	font-size: 0px;
+	vertical-align: top;
+	width: 22px;
+	height: 22px;
+	background: url("img/system_help_22.png");
+}
+
+.modal_help {
+	display:none;
+	height:auto;
+	width:auto;
+	position: fixed;
+	top: 25%;
+	left: 50%;
+	margin: 10px;
+	padding: 10px;
+	background-color: #ced9e7;
+	border: 1px solid #000;
+}
+
+</style>
+{% endblock %}
+
+{% block body_class %}data{% endblock %}
+
+{% block body_outer %}  
+<form class="form-horizontal" action="{% url "layer_metadata" layer.typename %}" method="POST">
+    <legend>
+      {% blocktrans with layer.typename as layer_title %}
+        Editing details for {{ layer_title }}
+      {% endblocktrans %}
+    </legend>
+    {% if layer.metadata_uploaded %}
+	<div style="background-color: orange;">{% blocktrans %}Note: this layer's orginal metadata was populated by importing a metadata XML file.
+        GeoNode's metadata import supports a subset of ISO, FGDC, and Dublin Core metadata elements.
+        Some of your original metadata may have been lost.{% endblocktrans %}</div>
+    {% endif %}
+
+    {% if layer_form.errors %}
+	<div style="background-color: pink">{% blocktrans %}Error updating metadata.  Please check the following fields: {% endblocktrans %}
+            <ul>
+        {% for field in layer_form %}
+            {% if field.errors %}
+                <li>{{ field.label }}</li>
+            {% endif %}
+        {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    <br/>
+    {% csrf_token %}
+    <div class="form-controls">
+      {{ layer_form|as_bootstrap }}
+    </div>
+ 
+                <fieldset id="category_form">
+                <label class="control-label required-field">{%  trans "Category"  %}</label><br/>
+
+                {%  if category_form.errors %}<li>{{ category_form.errors.as_ul }}</li>{%  endif %}
+
+
+                    {% autoescape off %}
+                    {% for choice in category_form.category_choice_field.field.choices %}
+                    <div style="width:50%;float:left;padding-bottom:5px;">
+                        <input type="radio" name="category_choice_field" value="{{choice.0}}"
+                        {% ifequal category_form.initial choice.0 %}
+                        checked="checked"
+                        {% endifequal %}/>
+                        <label for="" style="display:inline">{{choice.1}}</label>
+                    </div>
+                    {% endfor %}
+                    {% endautoescape %}
+
+ 
+            </fieldset>
+   
+    
+      <header>{% trans "Attributes" %}</header>
+      {{ attribute_form.management_form }}
+      <table cellpadding="5" cellspacing="5" width="100%"><tr><th style="text-align: left;">{% trans "Attribute" %}</th><th style="text-align: left;">{% trans "Description" %}</th></tr>
+          {% for form in attribute_form.forms %}
+          {% if form.attribute %}
+          <tr><td><div style="display:none">{{form.id}}</div>{{form.attribute}}</td><td> {{form.description}}</td></tr>
+          {% endif %}
+          {% endfor %}
+      </table>
+    <fieldset class="form-controls modal-forms modal hide fade" id="poc_form" >
+      <h2>{% trans "Point of Contact" %}</h2>
+      {{ poc_form|as_bootstrap }}
+      <button type='button' class="modal-cloose-btn btn btn-primary">Done</button>
+    </fieldset>
+    <fieldset class="form-controls modal-forms modal hide fade" id="metadata_form">
+      <h2>{% trans "Metadata Provider" %}</h2>
+        {{ author_form|as_bootstrap }}
+      <button type='button' class="modal-cloose-btn btn btn-primary">Done</button>
+    </fieldset>
+    <div class="form-actions">
+      <input type="submit" class="btn btn-primary" value="{% trans "Update" %}"/>
+    </div>
+  </form>
+<div id="modalhelp" class="modal_help"></div>
+{% endblock %}
+{% block extra_script %}
+ {% include 'metadata_form_js.html' %} 
+  <script type="text/javascript">
+
+		function hideModal() {
+			$("#modalhelp").css("display","none");
+		}
+		function showModal(text) {
+			$("#modalhelp").css("display","block").html(text);
+		}
+		function showHelp(event) {
+			showModal(event.target.innerHTML);
+		}
+
+		$(document).ready(function() {
+     		{% autoescape off %}
+         		$(".helptext").on('mouseover',showHelp);
+     			$(".helptext").on('mouseout',hideModal);
+         	{% endautoescape %}
+ 		});
+
+	     var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
+	     var myNicEditor = new nicEditor({fullPanel : true,  maxHeight: 190, iconsPath: nicEditIconsPath}).panelInstance("id_layer-abstract");
+
+ </script>
+{% endblock %}

@@ -77,6 +77,9 @@ TIME_ZONE = 'America/New_York'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
+
+gettext = lambda s: s
+
 LANGUAGE_CODE = 'en'
 
 LANGUAGES = (
@@ -231,6 +234,7 @@ INSTALLED_APPS = (
     'geonode.worldmap.stats',
     'geonode.worldmap.hoods',
     
+    'modeltranslation',
     'autocomplete_light',
     #'geonode.gazetteer',
     #'geonode.queue',
@@ -670,6 +674,7 @@ if USE_QUEUE:
     djcelery.setup_loader()
 
 GOOGLE_API_KEY = ''
+GOOGLE_ANALYTICS_CODE=''
 
 #Set name of additional permissions group (besides anonymous and authenticated)
 CUSTOM_GROUP_NAME = 'Organization Users'

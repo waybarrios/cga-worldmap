@@ -43,5 +43,6 @@ def resource_urls(request):
         DEBUG_STATIC = getattr(settings, "DEBUG_STATIC", False),
         USE_CUSTOM_ORG_AUTHORIZATION = settings.USE_CUSTOM_ORG_AUTHORIZATION,
         CUSTOM_GROUP_NAME = settings.CUSTOM_GROUP_NAME,
-        GOOGLE_API_KEY=settings.GOOGLE_API_KEY
+        GOOGLE_API_KEY=settings.GOOGLE_API_KEY,
+        GOOGLE_ANALYTICS_CODE=settings.GOOGLE_ANALYTICS_CODE
     )

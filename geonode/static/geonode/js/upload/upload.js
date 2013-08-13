@@ -270,7 +270,19 @@ define(['underscore',
         var checked = checkFiles();
         if ($.isEmptyObject(layers) || !checked) {
             alert('You are uploading an incomplete set of files.');
-        } else {
+        }else {
+        	if (metadata_enabled) {
+      		  var empty_flds = 0;
+      		  $(".required").each(function() {
+      		    if(!$.trim($(this).val())) {
+      		        empty_flds++;
+      		        $(this).focus();
+      		        return;
+      		    }    
+      		  });
+        	}
+        	
+        	
             $.each(layers, function (name, layerinfo) {
                 layerinfo.uploadFiles();
             });
