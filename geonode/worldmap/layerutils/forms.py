@@ -5,7 +5,7 @@ from django.utils import simplejson as json
 from geonode.layers.forms import LayerUploadForm, LayerForm
 from geonode.layers.models import Layer
 from geonode.base.models import TopicCategory
-from geonode.layers.models import Attribute
+from geonode.worldmap.layerutils.models import SearchAttribute
 import taggit
 from django.utils.translation import ugettext as _
 from re import escape
@@ -114,4 +114,16 @@ class WorldMapLayerForm(forms.ModelForm):
                    'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type',
                    'csw_wkt_geometry', 'metadata_uploaded', 'metadata_xml', 'csw_anytext',
                    'popular_count', 'share_count', 'thumbnail', 'default_style', 'styles')
+        
+        
+class SearchAttributeForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(SearchAttributeForm, self).__init__(*args, **kwargs)
+        self.fields['attribute'].widget.attrs['readonly'] = True
+        self.fields['display_order'].widget.attrs['size'] = 3
+
+    class Meta:
+        model = SearchAttribute
+        exclude = ('attribute_type','count','min','max','average','median','stddev',
+                   'sum','unique_values','last_stats_updated','objects')
     

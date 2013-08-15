@@ -11,10 +11,11 @@ from django.utils.html import escape
 from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 from geonode.base.models import TopicCategory
 from geonode.maps.models import Map
-from geonode.layers.models import Layer, Attribute 
+from geonode.layers.models import Layer, Attribute
 from geonode.layers.utils import layer_set_permissions
 from geonode.worldmap.profile.forms import ContactProfileForm, LayerContactForm
 from geonode.worldmap.layerutils.forms import LayerCreateForm, LayerCategoryForm, GEOMETRY_CHOICES
+from geonode.worldmap.layerutils.models import SearchAttribute
 from geonode.worldmap.stats.models import LayerStats
 from geonode.geoserver.helpers import get_sld_for
 from django.utils import simplejson as json
@@ -22,7 +23,7 @@ import logging
 import re
 from geonode.layers.views import _resolve_layer, _PERMISSION_MSG_METADATA
 from django.forms.models import inlineformset_factory
-from geonode.layers.forms import LayerAttributeForm
+from geonode.worldmap.layerutils.forms import SearchAttributeForm
 from geonode.worldmap.layerutils.forms import WorldMapLayerForm
 from geonode.worldmap.maputils.encode import XssCleaner, despam
 
@@ -314,29 +315,32 @@ def category_list():
 
 def layer_metadata(request, layername, template='layers/layer_metadata.html'):
     layer = _resolve_layer(request, layername, 'layers.change_layer', _PERMISSION_MSG_METADATA)
-    layer_attribute_set = inlineformset_factory(Layer, Attribute, extra=0, form=LayerAttributeForm, )
+    layer_attribute_set = inlineformset_factory(Layer, SearchAttribute, extra=0, form=SearchAttributeForm, )
 
     topic_category = layer.category
 
     if request.method == "POST":
         layer_form = WorldMapLayerForm(request.POST, instance=layer, prefix="layer")
-        attribute_form = layer_attribute_set(request.POST, instance=layer, prefix="layer_attribute_set", queryset=Attribute.objects.order_by('display_order'))
+        attribute_form = layer_attribute_set(request.POST, instance=layer, prefix="layer_attribute_set", queryset=SearchAttribute.objects.order_by('display_order'))
         category_form = LayerCategoryForm(request.POST, prefix="category_choice_field")
     else:
         layer_form = WorldMapLayerForm(instance=layer, prefix="layer")
-        attribute_form = layer_attribute_set(instance=layer, prefix="layer_attribute_set", queryset=Attribute.objects.order_by('display_order'))
+        attribute_form = layer_attribute_set(instance=layer, prefix="layer_attribute_set", queryset=SearchAttribute.objects.order_by('display_order'))
         category_form = LayerCategoryForm(prefix="category_choice_field", initial=topic_category.id if topic_category else None)
+
+    if not attribute_form.is_valid():
+        pass
 
     if request.method == "POST" and layer_form.is_valid() and attribute_form.is_valid() and category_form.is_valid():
         new_keywords = layer_form.cleaned_data['keywords']
         new_category = TopicCategory.objects.get(id=category_form.cleaned_data['category_choice_field'])
         
         for form in attribute_form.cleaned_data:
-            la = Attribute.objects.get(id=int(form['id'].id))
-            la.description = form["description"]
+            la = SearchAttribute.objects.get(attribute_ptr=int(form['attribute_ptr'].id))
             la.attribute_label = form["attribute_label"]
             la.visible = form["visible"]
             la.display_order = form["display_order"]
+            la.searchable = form["searchable"]
             la.save()
 
         the_layer = layer_form.save()

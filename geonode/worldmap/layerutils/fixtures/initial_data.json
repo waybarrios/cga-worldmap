@@ -43,8 +43,8 @@
         "pk": 13, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "FU", 
-            "gn_description": "Biota", 
+            "description": "Naturally occurring flora and fauna. For example, resources describing wildlife, biological sciences, ecology, wilderness, sea life, wetlands, and habitats.", 
+            "gn_description": "Ecology & Biota", 
             "is_choice": true, 
             "identifier": "biota"
         }
@@ -53,7 +53,7 @@
         "pk": 6, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "legal land descriptions. Examples: political and administrative boundaries", 
+            "description": "legal land descriptions. For example, political and administrative boundaries.", 
             "gn_description": "Boundaries", 
             "is_choice": true, 
             "identifier": "boundaries"
@@ -63,8 +63,8 @@
         "pk": 19, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Processes and phenomena of the atmosphere. Examples: cloud cover, weather, climate, atmospheric conditions, climate change, precipitation", 
-            "gn_description": "Climatology Meteorology Atmosphere", 
+            "description": "Atmospheric processes and phenomena. For example, resources describing cloud cover, weather, atmospheric conditions, climate change, and precipitation.", 
+            "gn_description": "Climate & Weather", 
             "is_choice": true, 
             "identifier": "climatologyMeteorologyAtmosphere"
         }
@@ -73,8 +73,8 @@
         "pk": 11, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Economic activities, conditions and employment. Examples: production, labour, revenue, commerce, industry, tourism and ecotourism, forestry, fisheries, commercial or subsistence hunting, exploration and exploitation of resources such as minerals, oil and gas", 
-            "gn_description": "Economy", 
+            "description": "Economic activities or employment. For example, resources describing labor, revenue, commerce, industry, tourism and ecotourism, forestry, fisheries, commercial or subsistence hunting, and exploration and exploitation of resources such as minerals, oil, and gas.", 
+            "gn_description": "Economic Activities & Employment", 
             "is_choice": true, 
             "identifier": "economy"
         }
@@ -83,7 +83,7 @@
         "pk": 3, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Height above or below sea level. Examples: altitude, bathymetry, digital elevation models, slope, derived products", 
+            "description": "Height above or below sea level. For example, resources describing altitude, bathymetry, digital elevation models, slope, and products derived from this information.", 
             "gn_description": "Elevation", 
             "is_choice": true, 
             "identifier": "elevation"
@@ -93,8 +93,8 @@
         "pk": 9, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Environmental resources, protection and conservation. Examples: environmental pollution, waste storage and treatment, environmental impact assessment, monitoring environmental risk, nature reserves, landscape", 
-            "gn_description": "Environment", 
+            "description": "Environmental resources, protection, and conservation. For example, resources describing pollution, waste storage and treatment, environmental impact assessment, environmental risk, and nature reserves.", 
+            "gn_description": "Environmental Resources,Conservation", 
             "is_choice": true, 
             "identifier": "environment"
         }
@@ -103,8 +103,8 @@
         "pk": 2, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "rearing of animals and/or cultivation of plants. Examples: agriculture, irrigation, aquaculture, plantations, herding, pests and diseases affecting crops and livestock", 
-            "gn_description": "Farming", 
+            "description": "Rearing of animals or cultivation of plants. For example, resources describing irrigation, aquaculture, herding, and pests and diseases affecting crops and livestock.", 
+            "gn_description": "Farming & Agriculture", 
             "is_choice": true, 
             "identifier": "farming"
         }
@@ -113,8 +113,8 @@
         "pk": 1, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Information pertaining to earth sciences. Examples: geophysical features and processes, geology, minerals, sciences dealing with the composition, structure and origin of the earth s rocks, risks of earthquakes, volcanic activity, landslides, gravity information, soils, permafrost, hydrogeology, erosion", 
-            "gn_description": "Geoscientific Information", 
+            "description": "Earth sciences. For example, resources describing geophysical features and processes, minerals, the composition, structure and origin of the earth's rocks, earthquakes, volcanic activity, landslides, gravity information, soils, permafrost, hydrogeology, and erosion.", 
+            "gn_description": "Earth Sciences", 
             "is_choice": true, 
             "identifier": "geoscientificInformation"
         }
@@ -124,7 +124,7 @@
         "model": "base.topiccategory", 
         "fields": {
             "description": "Health, health services, human ecology, and safety. Examples: disease and illness, factors affecting health, hygiene, substance abuse, mental and physical health, health services", 
-            "gn_description": "Health", 
+            "gn_description": "Health & Human Ecology", 
             "is_choice": true, 
             "identifier": "health"
         }
@@ -134,7 +134,7 @@
         "model": "base.topiccategory", 
         "fields": {
             "description": "Base maps. Examples: land cover, topographic maps, imagery, unclassified images, annotations", 
-            "gn_description": "Imagery Base Maps Earth Cover", 
+            "gn_description": "Imagery & Base Maps", 
             "is_choice": true, 
             "identifier": "imageryBaseMapsEarthCover"
         }
@@ -143,8 +143,8 @@
         "pk": 7, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "inland water features, drainage systems and their characteristics. Examples: rivers and glaciers, salt lakes, water utilization plans, dams, currents, floods, water quality, hydrographic charts", 
-            "gn_description": "Inland Waters", 
+            "description": "Inland water features, drainage systems, and their characteristics. For example, resources describing rivers and glaciers, salt lakes, water use plans, dams, currents, floods, water quality, and hydrographic charts.", 
+            "gn_description": "Rivers,Streams,Lakes", 
             "is_choice": true, 
             "identifier": "inlandWaters"
         }
@@ -153,8 +153,8 @@
         "pk": 8, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Military bases, structures, activities. Examples: barracks, training grounds, military transportation, information collection", 
-            "gn_description": "Intelligence Military", 
+            "description": "Military bases, structures, and activities. For example, resources describing barracks, training grounds, military transportation, and information collection.", 
+            "gn_description": "Military Intelligence", 
             "is_choice": true, 
             "identifier": "intelligenceMilitary"
         }
@@ -163,7 +163,7 @@
         "pk": 5, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Features and characteristics of salt water bodies (excluding inland waters). Examples: tides, tidal waves, coastal information, reefs", 
+            "description": "Features and characteristics of salt water bodies excluding inland waters. For example, resources describing tides, tidal waves, coastal information, and reefs.", 
             "gn_description": "Oceans", 
             "is_choice": true, 
             "identifier": "oceans"
@@ -173,8 +173,8 @@
         "pk": 10, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Positional information and services. Examples: addresses, geodetic networks, control points, postal zones and services, place names", 
-            "gn_description": "Location", 
+            "description": "Positional information and services. For example, resources describing addresses, geodetic networks, postal zones and services, control points, and place names.", 
+            "gn_description": "Place Locations", 
             "is_choice": true, 
             "identifier": "location"
         }
@@ -184,7 +184,7 @@
         "model": "base.topiccategory", 
         "fields": {
             "description": "Information used for appropriate actions for future use of the land. Examples: land use maps, zoning maps, cadastral surveys, land ownership", 
-            "gn_description": "Planning Cadastre", 
+            "gn_description": "Planning & Cadastral Data", 
             "is_choice": true, 
             "identifier": "planningCadastre"
         }
@@ -193,8 +193,8 @@
         "pk": 17, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Characteristics of society and cultures. Examples: settlements, anthropology, archaeology, education, traditional beliefs, manners and customs, demographic data, recreational areas and activities, social impact assessments, crime and justice, census information", 
-            "gn_description": "Society", 
+            "description": "Characteristics of societies and cultures. For example, resources describing natural settlements, anthropology, archaeology, education, traditional beliefs, manners and customs, demographic data, crime and justice, recreational areas and activities, social impact assessments, and census information.", 
+            "gn_description": "Society & Demographics", 
             "is_choice": true, 
             "identifier": "society"
         }
@@ -203,7 +203,7 @@
         "pk": 18, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Man-made construction. Examples: buildings, museums, churches, factories, housing, monuments, shops, towers", 
+            "description": "Man-made construction. For example, resources describing buildings, museums, churches, factories, housing, monuments, and towers.", 
             "gn_description": "Structure", 
             "is_choice": true, 
             "identifier": "structure"
@@ -213,7 +213,7 @@
         "pk": 16, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Means and aids for conveying persons and/or goods. Examples: roads, airports/airstrips, shipping routes, tunnels, nautical charts, vehicle or vessel location, aeronautical charts, railways", 
+            "description": "Means and aids for conveying people and goods. For example, resources describing roads, airports and airstrips, shipping routes, tunnels, nautical charts, vehicle or vessel location, aeronautical charts, and railways.", 
             "gn_description": "Transportation", 
             "is_choice": true, 
             "identifier": "transportation"
@@ -223,8 +223,8 @@
         "pk": 4, 
         "model": "base.topiccategory", 
         "fields": {
-            "description": "Energy, water and waste systems and communications infrastructure and services. Examples: hydroelectricity, geothermal, solar and nuclear sources of energy, water purification and distribution, sewage collection and disposal, electricity and gas distribution, data communication, telecommunication, radio, communication networks", 
-            "gn_description": "Utilities Communication", 
+            "description": "Energy, water and waste systems, and communications infrastructure and services. For example, resources describing hydroelectricity, geothermal, solar, and nuclear sources of energy, water purification and distribution, sewage collection and disposal, electricity and gas distribution, data communication, telecommunication, radio, and communication networks.", 
+            "gn_description": "Utilities & Infrastructure", 
             "is_choice": true, 
             "identifier": "utilitiesCommunication"
         }

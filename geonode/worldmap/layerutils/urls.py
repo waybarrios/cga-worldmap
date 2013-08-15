@@ -24,7 +24,6 @@ import geonode.layers.views
 urlpatterns = patterns(
     'geonode.worldmap.layerutils.views',
     (r'^addgeonodelayer/?$', 'addLayerJSON'),
-    url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata',
-        name="layer_metadata"),
+    url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata',name="layer_metadata"),
     (r'', include('geonode.layers.urls')),
 )
