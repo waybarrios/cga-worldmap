@@ -5,9 +5,9 @@ from django.conf.urls.static import static
 from geonode.sitemap import LayerSitemap, MapSitemap
 import geonode.proxy.urls
 import geonode.maps.urls
-import geonode.gazetteer.urls
-import geonode.mapnotes.urls
-import geonode.capabilities.urls
+import geonode.worldmap.gazetteer.urls
+import geonode.worldmap.mapnotes.urls
+import geonode.worldmap.capabilities.urls
 
 
 # Uncomment the next two lines to enable the admin:

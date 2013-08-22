@@ -45,7 +45,9 @@ sitemaps = {
     "map": MapSitemap
 }
 
-urlpatterns = patterns('',
+
+urlpatterns = worldmap.urls.urlpatterns
+urlpatterns += patterns('',
 
     # Static pages
     url(r'^$', 'geonode.views.index', name='home'),
@@ -53,12 +55,12 @@ urlpatterns = patterns('',
     url(r'^developer/$', TemplateView.as_view(template_name='developer.html'), name='developer'),
     url(r'^about/$', TemplateView.as_view(template_name='about.html'), name='about'),
 
-    # Layer views
-    (r'^layers/', include('geonode.worldmap.layerutils.urls')),
-
     # Map views
-    (r'^maps/', include('geonode.worldmap.maputils.urls')),
-
+#     (r'^maps/', include('geonode.maps.urls')),
+#     
+#     # Layer views
+#     (r'^layers/', include('geonode.layers.urls')),
+    
     # Catalogue views
     (r'^catalogue/', include('geonode.catalogue.urls')),
 
@@ -109,7 +111,7 @@ urlpatterns += geonode.proxy.urls.urlpatterns
 # Serve static files
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += worldmap.urls.urlpatterns
+
 
 handler403 = 'geonode.views.err403'
 

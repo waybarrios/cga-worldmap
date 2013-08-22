@@ -18,12 +18,16 @@
 #
 #########################################################################
 
-from django.conf.urls.defaults import patterns, url, include
+from django.conf.urls.defaults import *
 import geonode.layers.views
+
 
 urlpatterns = patterns(
     'geonode.worldmap.layerutils.views',
     (r'^addgeonodelayer/?$', 'addLayerJSON'),
     url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata',name="layer_metadata"),
+    url(r'^create_pg_layer', 'create_pg_layer', name='create_pg_layer'),
+    url(r'^upload/?', 'layer_upload', name='layer_upload'),
     (r'', include('geonode.layers.urls')),
 )
+

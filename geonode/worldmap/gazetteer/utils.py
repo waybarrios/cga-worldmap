@@ -70,7 +70,7 @@ def formatSourceLink(layer_name):
     if layer is None:
         layer = Layer.objects.get(name=layer_name)
         cache.add("layerinfo_" + layer_name, layer)
-    return "<a href='{0}data/{1}' target='_blank'>{2}</a>".format(settings.SITEURL, layer.typename, layer.name)
+    return "<a href='{0}layers/{1}' target='_blank'>{2}</a>".format(settings.SITEURL, layer.typename, layer.name)
 
 
 def getGazetteerResults(place_name, map=None, layer=None, start_date=None, end_date=None, project=None):
