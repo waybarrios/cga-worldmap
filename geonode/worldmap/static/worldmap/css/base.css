@@ -30,3 +30,11 @@
     text-indent: -9999em;
     width: 180px;
 }
+
+#worldmap_update_panel .x-panel-body {
+	overflow-y: scroll;
+}
+
+.content-wrap form .form-actions {
+    text-align: center;
+}

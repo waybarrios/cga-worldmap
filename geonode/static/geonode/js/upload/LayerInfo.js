@@ -143,7 +143,7 @@ define(function (require, exports) {
      *  @returns {FromData}
      */
     LayerInfo.prototype.prepareFormData = function (form_data) {
-        var i, ext, file, perm, geogit, time;
+        var i, ext, file, perm, geogit, geogit_store, time;
 
         if (!form_data) {
             form_data = new FormData();
@@ -157,7 +157,13 @@ define(function (require, exports) {
         }
 
         if (geogit_enabled) {
-            geogit = $('#' + this.main.name.slice(0, -4) + '-geogit').is(':checked');
+            geogit = $('#' + this.main.name.slice(0, -4) + '\\:geogit_toggle').is(':checked');
+            if (geogit) {
+                geogit_store = $('#' + this.main.name.slice(0, -4) + '\\:geogit_store').val();
+                form_data.append('geogit_store', geogit_store);
+            } else {
+                form_data.append('geogit_store', "");
+            }
             form_data.append('geogit', geogit);
         }
         if (time_enabled) {
@@ -250,7 +256,13 @@ define(function (require, exports) {
 //            msg: '<p> Your layer was successfully uploaded<br/><br/>' + a + '&nbsp;&nbsp;&nbsp;' + b + '&nbsp;&nbsp;&nbsp;' + c + '</p>',
 //            level: 'alert-success'
 //        });
-        window.location.href = resp.url + '/metadata';
+    	var redirect = resp.url + '/metadata';
+    	var tab = $("#worldmap_update_panel .x-panel-body");
+    	if (tab) {
+    		redirect += "?tab=true";
+            tab.load(redirect);
+    	} else
+    		document.location.href = redirect;
     };
  
     /** Function to deal with the final step in the upload process 
@@ -366,6 +378,29 @@ define(function (require, exports) {
         });
     };
 
+    LayerInfo.prototype.setupGeogitDropdown = function(selector){
+        function format(item){return item.name;};
+        $(selector).select2({
+           data: {results:geogit_stores, text:'name'},
+           formatSelection: format,
+           formatResult: format,
+           placeholder: 'Select or create a Geogit repository.',
+
+            id: function(object) {
+             return object.name;
+           },
+            createSearchChoice:function(term, data) {
+             if ($(data).filter( function() {
+               return this.name.localeCompare(term)===0;
+             }).length===0) {
+               return {name:term};
+             }
+           }
+          });
+
+
+    }
+
     /** Function to display the layers collected from the files
      * selected for uploading 
      *
@@ -387,6 +422,15 @@ define(function (require, exports) {
         this.displayFiles();
         this.displayErrors();
         this.element = $(this.selector);
+
+        $('#' + this.name + '\\:geogit_toggle').on('change', this.doGeoGitToggle);
+
+        // Add values to the geogit store dropdown and hide.
+        if (geogit_enabled) {
+            this.setupGeogitDropdown($('#' + this.main.name.slice(0, -4) + '\\:geogit_store'));
+            $("#s2id_" + this.name + "\\:geogit_store").hide();	
+        }
+
         return li;
     };
 
@@ -480,6 +524,19 @@ define(function (require, exports) {
         this.errors = this.collectErrors();
         this.displayFiles();
         this.displayErrors();
+    };
+
+    LayerInfo.prototype.doGeoGitToggle = function () {
+        var id = event.srcElement.id;
+        var base_name = id.split(':')[0];
+        var geogit = $('#' + id.replace(':', '\\:')).is(':checked');
+        if (geogit) {
+            $('#' + base_name + '\\:geogit_store').show();
+            $("#s2id_" + base_name + "\\:geogit_store").show()
+        } else {
+            $("#s2id_" + base_name + "\\:geogit_store").hide()
+            $('#' + base_name + '\\:geogit_store').hide();
+        }
     };
 
     return LayerInfo;

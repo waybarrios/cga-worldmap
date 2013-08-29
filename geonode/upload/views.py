@@ -34,7 +34,7 @@ This needs to be made more stateful by adding a model.
 from geonode.upload.forms import LayerUploadForm
 from geonode.utils import json_response as do_json_response
 from geonode.upload import forms
-from geonode.upload.models import Upload, UploadFile, CHARSETS
+from geonode.upload.models import Upload, UploadFile
 from geonode.upload import upload
 from geonode.upload.utils import rename_and_prepare, find_sld, get_upload_type
 from geonode.upload.forms import UploadFileForm
@@ -206,8 +206,7 @@ def save_step_view(req, session):
         return render_to_response('upload/layer_upload.html',
             RequestContext(req, {
             'async_upload' : _ASYNC_UPLOAD,
-            'incomplete' : Upload.objects.get_incomplete_uploads(req.user),
-            'charsets': CHARSETS
+            'incomplete' : Upload.objects.get_incomplete_uploads(req.user)
         }))
 
     assert session is None
@@ -234,6 +233,7 @@ def save_step_view(req, session):
             import_sld_file = sld,
             upload_type = upload_type,
             geogit=form.cleaned_data['geogit'],
+            geogit_store=form.cleaned_data['geogit_store'],
             time=form.cleaned_data['time']
         )
         return _next_step_response(req, upload_session, force_ajax=True)

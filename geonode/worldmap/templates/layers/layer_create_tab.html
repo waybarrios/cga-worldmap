@@ -1,34 +1,36 @@
-
+{% extends "tab_base.html" %}
 {% load i18n %}
 
-<style>h3{font-size:1.5em;line-height:1;margin-bottom:1em;margin-top:1em}p{margin-bottom:0.5em}strong{font-weight:bold}caption{background:#ffc}</style>
+{% block title %} {% trans "Upload Layer"  %} - {{ block.super }} {% endblock %}
 
-<div id="tabContainerCreate" style="padding:20px;">
+{% block head %}
+{% include "geonode/ext_header.html" %}
+{% include "geonode/app_header.html" %}
+{% include "geonode/geo_header.html" %}
 
-<div style="position:relative;float:left;width:500px;">
+{{ block.super }}
+<script type="text/javascript">
+    Ext.onReady(function() {});
+</script>
+{% endblock %}
 
-<h3>{%trans "Create a new layer"  %}</h3>
+{% block main %}
+<div class="twocol">
+    <h2>{% trans "Create new layer" %}</h2>
+  {% if errors %}
+    <div id="errors">
+      {% for error in errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-
-<div id="create_form"></div>
-
-</div>
-
-<div style="position:relative;float:left;padding-left:20px;">
-
-
-
-<h3>{%trans "Permissions"  %}</h3>
- <div id="create_permissions_form"></div>
-
-</div>
-
-</div>
-
-
+  <div id="create_form">
+  </div>
+    </div>
 <script type="text/javascript">
 {% autoescape off %}
-
+Ext.onReady(function(){
     Ext.QuickTips.init();
 
 
@@ -36,34 +38,28 @@
     var xml_unsafe = /(^[^a-zA-Z\._]+)|([^a-zA-Z0-9\._])/g;
 
     var layer_name = new Ext.form.TextField({
-      id: 'create_name',
-      fieldLabel:  '{% trans "Name" %}',
+      id: 'name',
+      fieldLabel: "{% trans 'Name' %}",
       name: 'name',
-      emptyText:  '{% trans "Letters & numbers only, no spaces" %}',
+      emptyText: "{% trans 'Letters & numbers only, no spaces' %}",
       maskRe: /[A-Za-z0-9]+/,
       regex: /[A-Za-z0-9]+/,
-      regexText: '{% trans "Only letters and numbers are allowed" %}',
-      validateOnBlur: true,
-      allowBlank: false
+      regexText: "{% trans 'Only letters and numbers are allowed' %}",
+      validateOnBlur: true
     });
 
-    var map_id = new Ext.form.Hidden({
-    	id: 'create_mapid',
-        name: 'mapid',
-    	value:  'tab'
-    });
 
     var layer_title = new Ext.form.TextField({
-      id: 'create_title',
-      fieldLabel:  '{% trans "Title" %}',
+      id: 'title',
+      fieldLabel: "{% trans 'Title' %}",
       name: 'title',
       allowBlank: false
     });
 
     var layer_type = new Ext.form.ComboBox({
-        id: 'create_type',
-        name: 'type',
-        fieldLabel:  '{% trans "Data Type" %}',
+        id: 'type',
+        name: ' type',
+        fieldLabel: "{% trans 'Data Type' %}",
         hiddenName: 'geom',
         displayField:'description',
         valueField: 'geom',
@@ -78,38 +74,36 @@
     });
 
     var srs = new Ext.form.TextField({
-      id: 'create_srs',
-      fieldLabel: '{% trans "Projection" %}',
+      id: 'srs',
+      fieldLabel: "{% trans 'Projection' %}",
       name: 'srs',
       value: 'EPSG:4326',
-      emptyText: '{% trans "Example: EPSG:4326" %}',
+      emptyText: "{% trans 'Example: EPSG:4326' %}",
       allowBlank: false
     });
 
-    var abstract_Field = new Ext.form.TextArea({
-        id: 'create_abstract',
-        fieldLabel: '{% trans "Abstract" %}',
+    var abstractField = new Ext.form.TextArea({
+        id: 'abstract',
+        fieldLabel: "{% trans 'Abstract' %}",
         name: 'abstract',
         allowBlank: false
     });
 
     var keywordsField = new Ext.form.TextArea({
-        id: 'create_keywords',
-        fieldLabel: '{% trans "Keywords" %}',
+        id: 'keywords',
+        fieldLabel: "{% trans 'Keywords' %}",
         name: 'keywords',
-        emptyText: '{% trans "Use spaces to separate keywords" %}',
+        emptyText: "{% trans 'Use spaces to separate keywords' %}",
         allowBlank: false,
         vtype: 'keyword'
     });
 
-    var permissionsFieldCreate = new Ext.form.Hidden({
-        name: "permissions",
-        id: "permissions_create"
+    var permissionsField = new Ext.form.Hidden({
+        name: "permissions"
     });
 
     var termsAgreeCheck = new Ext.form.Checkbox({
-        id: 'create_agreeCheck',
-        name: 'agreeCheck',
+        id: 'agreeCheck',
         fieldLabel: '{% trans "I agree to the " %}<a href="" onclick="javascript:showTOC();return false;">{% trans "Terms and Conditions" %}</a>',
         handler: function(){
                 if (this.checked) {
@@ -117,44 +111,38 @@
                 } else
                     Ext.getCmp('createButton').disable();
         },
-        labelStyle: 'position:absolute;float:left;left:110px;width:400px',
+        labelStyle: 'position:absolute;float:left;left:150px;width:200px',
         labelSeparator : ''
     });
 
 
     var fp = new Ext.FormPanel({
-        id: 'ext_create_form',
-        formId: 'c_form',
         renderTo: 'create_form',
-        fileUpload: true,
         width: 500,
-        height:500,
         frame: true,
-        title:  '{% trans "Create Layer Data" %}',
         autoHeight: true,
-        bodyStyle: 'padding: 10px 10px 0 10px;',
-        labelWidth: 75,
+        labelWidth: 100,
+        unstyled:true,
         defaults: {
             anchor: '95%',
             msgTarget: 'side'
         },
-        items: [map_id, layer_name, layer_title, layer_type, srs, abstract_Field, keywordsField, termsAgreeCheck, permissionsFieldCreate, {
+        items: [layer_name, layer_title, layer_type, srs, abstractField, keywordsField, termsAgreeCheck, permissionsField, {
             xtype: "hidden",
             name: "csrfmiddlewaretoken",
             value: "{{ csrf_token }}"
         }],
         buttons: [{
             id: 'createButton',
-            text: gettext('Create'),
+            text: "{% trans 'Create' %}",
             disabled: true,
             handler: function(){
                 if (fp.getForm().isValid()) {
                     fp.getForm().submit({
                         url: form_target,
-                        waitMsg: '{% trans "Creating your layer..." %}',
+                        waitMsg: "{% trans 'Creating your layer...' %}",
                         success: function(fp, o) {
-                            var uPanel = Ext.getCmp("worldmap_create_panel");
-                            uPanel.load({url:o.result.redirect_to});
+                            document.location = o.result.redirect_to;
                         },
                         failure: function(fp, o) {
                             error_message = '<ul>';
@@ -179,14 +167,13 @@
     });
 
 
-    var permissionsEditorCreate = new GeoNode.WorldMapPermissionsEditor({
-        id: "create_permissions_editor",
-        renderTo: "create_permissions_form",
+    var permissionsEditor = new GeoNode.WorldMapPermissionsEditor({
+        renderTo: "permissions_form",
         userLookup: "{% url geonode.views.ajax_lookup_email %}",
-        customGroup: "{{ CUSTOM_GROUP_NAME }}",
+        customGroup: "{{ customGroup }}",
         listeners: {
             updated: function(pe) {
-                permissionsFieldCreate.setValue(Ext.util.JSON.encode(pe.writePermissions()));
+                permissionsField.setValue(Ext.util.JSON.encode(pe.writePermissions()));
             }
         },
         permissions: {
@@ -195,20 +182,21 @@
             users:[]
         }
     });
-    permissionsEditorCreate.fireEvent("updated", permissionsEditorCreate);
+    permissionsEditor.fireEvent("updated", permissionsEditor);
 
+});
 
     var showTOC = function() {
         var TOCPanel = new Ext.Panel({
             id: 'worldmap_mapshare_panel',
-            title: '{% trans "Share Map" %}',
+            title: "{% trans 'Share Map' %}",
             header: false,
             autoLoad: {url: '/upload_terms'},
             autoScroll: true
         });
 
         var TOCWindow = new Ext.Window({
-            title:  '{% trans "WorldMap Terms and Conditions" %}',
+            title: "{% trans 'WorldMap Terms and Conditions' %}",
             closeAction: 'destroy',
             layout: 'fit',
             width: 400,
@@ -219,7 +207,7 @@
             bodyStyle: 'background-color:#FFF',
             buttons: [
                 {
-                    text: 'Close',
+                    text: "{% trans 'Close' %}",
                     handler: function() {TOCWindow.close();}
                 }
             ]
@@ -230,21 +218,28 @@
     };
 
     Ext.apply(Ext.form.VTypes, {
-         'keyword': function(value, field) {
+        'keyword': function(value, field) {
             trimValue = value.trim();
             if (trimValue.length == 0) {
-                field.markInvalid('{% trans "You must enter a keyword" %}');
+                field.markInvalid("{% trans 'You must enter a keyword' %}");
                 return false;
             }
             return true;
         },
-        'keywordText' : '{% trans "You must enter at least one keyword" %}'
+        'keywordText' : "{% trans 'You must enter at least one keyword' %}"
     });
-
-
 
 {% endautoescape %}
 </script>
 
 
+{% endblock %}
 
+
+{% block sidebar %}
+<div class="threecol">
+<h3>{%trans "Permissions"  %}</h3>
+ <div id="permissions_form"></div>
+</div>
+
+{% endblock %}

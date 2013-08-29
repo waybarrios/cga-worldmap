@@ -1,5 +1,6 @@
 # Create your views here.
-
+import logging
+import re
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
@@ -20,16 +21,18 @@ from geonode.worldmap.layerutils.models import SearchAttribute
 from geonode.worldmap.stats.models import LayerStats
 from geonode.geoserver.helpers import get_sld_for
 from django.utils import simplejson as json
-import logging
-import re
 from geonode.layers.views import _resolve_layer, _PERMISSION_MSG_METADATA
 from django.forms.models import inlineformset_factory
 from geonode.worldmap.layerutils.forms import SearchAttributeForm
 from geonode.worldmap.layerutils.forms import WorldMapLayerForm
 from geonode.worldmap.maputils.encode import XssCleaner, despam
 from django.core.cache import cache
+from geonode.worldmap.uploadutils.views import CHARSETS
+from geonode.upload.models import Upload
 
 logger = logging.getLogger("geonode.worldmap.maputils.views")
+
+_ASYNC_UPLOAD = settings.DB_DATASTORE == True
 
 def addLayerJSON(request):
     logger.debug("Enter addLayerJSON")
@@ -429,7 +432,7 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
         
     #Deal with a form submission via ajax
     if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
-            data = render_to_response("layerutils/layer_describe_tab.html", RequestContext(request, {
+            data = render_to_response("layers/layer_metadata_tab.html", RequestContext(request, {
                 "layer": layer,
                 "layer_form": layer_form,
                 "attribute_form": attribute_form,
@@ -445,7 +448,7 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
 
     #Display the view in a panel tab
     if 'tab' in request.GET:
-        return render_to_response("layerutils/layer_describe_tab.html", RequestContext(request, {
+        return render_to_response("layers/layer_metadata_tab.html", RequestContext(request, {
             "layer": layer,
             "layer_form": layer_form,
             "attribute_form": attribute_form,
@@ -475,10 +478,18 @@ def layer_upload(request, template='upload/layer_upload.html'):
     if request.method == 'GET':
         if 'tab' in request.GET:
             return render_to_response('upload/layer_upload_tab.html',
-                                  RequestContext(request, {}))            
+            RequestContext(request, {
+            'async_upload' : _ASYNC_UPLOAD,
+            'incomplete' : Upload.objects.get_incomplete_uploads(request.user),
+            'charsets': CHARSETS
+        }))            
         else:
             return render_to_response(template,
-                                  RequestContext(request, {}))
+             RequestContext(request, {
+            'async_upload' : _ASYNC_UPLOAD,
+            'incomplete' : Upload.objects.get_incomplete_uploads(request.user),
+            'charsets': CHARSETS
+        }))
     elif request.method == 'POST':
         return geonode_upload(request)
 

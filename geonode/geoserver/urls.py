@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #########################################################################
 #
 # Copyright (C) 2012 OpenPlans
@@ -17,21 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
-
 from django.conf.urls.defaults import *
-import geonode.layers.views
 
-
-urlpatterns = patterns(
-    'geonode.worldmap.layerutils.views',
-    (r'^addgeonodelayer/?$', 'addLayerJSON'),
-    url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata',name="layer_metadata"),
-    url(r'^create_pg_layer', 'create_pg_layer', name='create_pg_layer'),
-    (r'', include('geonode.layers.urls')),
+urlpatterns = patterns('geonode.geoserver.views',
+    url(r'^rest/stores/(?P<store_type>\w+)/$', 'stores', name="stores"),
 )
-
-urlpatterns += patterns(
-    'geonode.worldmap.uploadutils.views',
-    (r'', include('geonode.layers.urls')),
-)
-
