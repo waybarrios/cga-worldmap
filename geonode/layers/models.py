@@ -63,15 +63,14 @@ class Style(models.Model):
     workspace = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return "%s" % self.name
+        return "%s" % self.name.encode('utf-8')
 
 class LayerManager(ResourceBaseManager):
 
     def __init__(self):
         models.Manager.__init__(self)
-        url = "%srest" % settings.GEOSERVER_BASE_URL
-        #self.gs_catalog = WorldmapCatalog(url, _user, _password)
-        self.gs_catalog = WorldmapCatalog(url, _user, _password)
+        url = "%srest" % settings.OGC_SERVER['default']['LOCATION']
+        self.gs_catalog = Catalog(url, _user, _password)
 
 def add_bbox_query(q, bbox):
     '''modify the queryset q to limit to the provided bbox
@@ -133,7 +132,7 @@ class Layer(ResourceBase):
         # with the WMS parser.
         p = "&".join("%s=%s"%item for item in params.items())
 
-        return settings.GEOSERVER_BASE_URL + "wms/reflect?" + p
+        return settings.OGC_SERVER['default']['LOCATION'] + "wms/reflect?" + p
 
 
     def verify(self):
@@ -266,7 +265,7 @@ class Attribute(models.Model):
     objects = AttributeManager()
 
     def __str__(self):
-        return "%s" % self.attribute_label if self.attribute_label else self.attribute
+        return "%s" % self.attribute_label.encode("utf-8") if self.attribute_label else self.attribute.encode("utf-8")
 
     def unique_values_as_list(self):
         return self.unique_values.split(',')
@@ -330,7 +329,7 @@ def geoserver_pre_save(instance, sender, **kwargs):
         * Metadata Links,
         * Point of Contact name and url
     """
-    url = "%srest" % settings.GEOSERVER_BASE_URL
+    url = "%srest" % settings.OGC_SERVER['default']['LOCATION']
     try:
         gs_catalog = Catalog(url, _user, _password)
         gs_resource = gs_catalog.get_resource(instance.name)
@@ -338,7 +337,7 @@ def geoserver_pre_save(instance, sender, **kwargs):
         gs_resource = None
         msg = ('Could not connect to geoserver at "%s"'
                'to save information for layer "%s"' % (
-                settings.GEOSERVER_BASE_URL, instance.name)
+                settings.OGC_SERVER['default']['LOCATION'], instance.name)
               )
         logger.warn(msg, e)
         # If geoserver is not online, there is no need to continue
@@ -405,7 +404,7 @@ def geoserver_post_save(instance, sender, **kwargs):
        The way keywords are implemented require the layer
        to be saved to the database before accessing them.
     """
-    url = "%srest" % settings.GEOSERVER_BASE_URL
+    url = "%srest" % settings.OGC_SERVER['default']['LOCATION']
 
     try:
         gs_catalog = Catalog(url, _user, _password)
@@ -413,7 +412,7 @@ def geoserver_post_save(instance, sender, **kwargs):
     except (FailedRequestError, EnvironmentError) as e:
         msg = ('Could not connect to geoserver at "%s"'
                'to save information for layer "%s"' % (
-                settings.GEOSERVER_BASE_URL, instance.name)
+                settings.OGC_SERVER['default']['LOCATION'], instance.name)
               )
         logger.warn(msg, e)
         # If geoserver is not online, there is no need to continue
@@ -442,7 +441,7 @@ def geoserver_post_save(instance, sender, **kwargs):
 
     # Set download links for WMS, WCS or WFS and KML
 
-    links = wms_links(settings.GEOSERVER_BASE_URL + 'wms?',
+    links = wms_links(settings.OGC_SERVER['default']['LOCATION'] + 'wms?',
                     instance.typename, instance.bbox_string,
                     instance.srid, height, width)
 
@@ -458,7 +457,7 @@ def geoserver_post_save(instance, sender, **kwargs):
                         )
 
     if instance.storeType == "dataStore":
-        links = wfs_links(settings.GEOSERVER_BASE_URL + 'wfs?', instance.typename)
+        links = wfs_links(settings.OGC_SERVER['default']['LOCATION'] + 'wfs?', instance.typename)
         for ext, name, mime, wfs_url in links:
             Link.objects.get_or_create(resource= instance.resourcebase_ptr,
                             url=wfs_url,
@@ -480,7 +479,7 @@ def geoserver_post_save(instance, sender, **kwargs):
         permissions['authenticated'] = instance.get_gen_level(AUTHENTICATED_USERS)
         instance.set_gen_level(ANONYMOUS_USERS,'layer_readonly')
 
-        links = wcs_links(settings.GEOSERVER_BASE_URL + 'wcs?', instance.typename, 
+        links = wcs_links(settings.OGC_SERVER['default']['LOCATION'] + 'wcs?', instance.typename, 
             bbox=instance.bbox[:-1], crs=instance.bbox[-1], height=height, width=width)
         for ext, name, mime, wcs_url in links:
             Link.objects.get_or_create(resource= instance.resourcebase_ptr,
@@ -496,7 +495,7 @@ def geoserver_post_save(instance, sender, **kwargs):
         instance.set_gen_level(ANONYMOUS_USERS,permissions['anonymous'])
         instance.set_gen_level(AUTHENTICATED_USERS,permissions['authenticated'])
 
-    kml_reflector_link_download = settings.GEOSERVER_BASE_URL + "wms/kml?" + urllib.urlencode({
+    kml_reflector_link_download = settings.OGC_SERVER['default']['LOCATION'] + "wms/kml?" + urllib.urlencode({
         'layers': instance.typename,
         'mode': "download"
     })
@@ -511,7 +510,7 @@ def geoserver_post_save(instance, sender, **kwargs):
                         )
                     )
 
-    kml_reflector_link_view = settings.GEOSERVER_BASE_URL + "wms/kml?" + urllib.urlencode({
+    kml_reflector_link_view = settings.OGC_SERVER['default']['LOCATION'] + "wms/kml?" + urllib.urlencode({
         'layers': instance.typename,
         'mode': "refresh"
     })
@@ -526,7 +525,7 @@ def geoserver_post_save(instance, sender, **kwargs):
                         )
                     )
 
-    tile_url = ('%sgwc/service/gmaps?' % settings.GEOSERVER_BASE_URL +
+    tile_url = ('%sgwc/service/gmaps?' % settings.OGC_SERVER['default']['LOCATION'] +
                 'layers=%s' % instance.typename +
                 '&zoom={z}&x={x}&y={y}' +
                 '&format=image/png8'
@@ -559,7 +558,7 @@ def geoserver_post_save(instance, sender, **kwargs):
 
     for link in instance.link_set.all():
         if not urlparse(settings.SITEURL).hostname == urlparse(link.url).hostname and not \
-                    urlparse(settings.GEOSERVER_BASE_URL).hostname == urlparse(link.url).hostname:
+                    urlparse(settings.OGC_SERVER['default']['LOCATION']).hostname == urlparse(link.url).hostname:
             link.delete()
 
     #Save layer attributes
@@ -633,12 +632,12 @@ def set_attributes(layer):
     #Appending authorizations seems necessary to avoid 'layer not found' from GeoServer
     http = httplib2.Http()
     http.add_credentials(_user, _password)
-    _netloc = urlparse(settings.GEOSERVER_BASE_URL).netloc
+    _netloc = urlparse(settings.OGC_SERVER['default']['LOCATION']).netloc
     http.authorizations.append(
         httplib2.BasicAuthentication(
             (_user, _password),
             _netloc,
-            settings.GEOSERVER_BASE_URL,
+            settings.OGC_SERVER['default']['LOCATION'],
                 {},
             None,
             None,
@@ -648,7 +647,7 @@ def set_attributes(layer):
 
     attribute_map = []
     if layer.storeType == "dataStore":
-        dft_url = settings.GEOSERVER_BASE_URL + "wfs?" + urllib.urlencode({
+        dft_url = settings.OGC_SERVER['default']['LOCATION'] + "wfs?" + urllib.urlencode({
             "service": "wfs",
             "version": "1.0.0",
             "request": "DescribeFeatureType",
@@ -662,7 +661,7 @@ def set_attributes(layer):
         except Exception:
             attribute_map = []
     elif layer.storeType == "coverageStore":
-        dc_url = settings.GEOSERVER_BASE_URL + "wcs?" + urllib.urlencode({
+        dc_url = settings.OGC_SERVER['default']['LOCATION'] + "wcs?" + urllib.urlencode({
             "service": "wcs",
             "version": "1.1.0",
             "request": "DescribeCoverage",

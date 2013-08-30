@@ -39,23 +39,6 @@ logger = logging.getLogger("geonode.proxy.views")
 
 HGL_URL = 'http://hgl.harvard.edu:8080/HGL'
 
-
-_user, _password = settings.GEOSERVER_CREDENTIALS
-h = httplib2.Http()
-h.add_credentials(_user, _password)
-_netloc = urlparse(settings.GEOSERVER_BASE_URL).netloc
-h.authorizations.append(
-    httplib2.BasicAuthentication(
-        (_user, _password),
-        _netloc,
-        settings.GEOSERVER_BASE_URL,
-            {},
-        None,
-        None,
-        h
-    )
-)
-
 @csrf_exempt
 def proxy(request):
     if 'url' not in request.GET:
@@ -102,10 +85,10 @@ def geoserver_rest_proxy(request, proxy_path, downstream_path):
         return path[len(prefix):]
 
     path = strip_prefix(request.get_full_path(), proxy_path)
-    url = "".join([settings.GEOSERVER_BASE_URL, downstream_path, path])
+    url = "".join([settings.OGC_SERVER['default']['LOCATION'], downstream_path, path])
 
     http = httplib2.Http()
-    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
+    http.add_credentials(*(settings.OGC_SERVER['default']['USER'], settings.OGC_SERVER['default']['PASSWORD']))
     headers = dict()
 
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:

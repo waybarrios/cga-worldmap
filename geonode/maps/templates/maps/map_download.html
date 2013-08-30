@@ -21,10 +21,6 @@
         </li>
       {% endfor %} 
     </ul>
-<<<<<<< HEAD:src/GeoNodePy/geonode/templates/maps/download.html
-=======
-   
->>>>>>> gncore/master:geonode/maps/templates/maps/map_download.html
     {% if locked_layers %}
       {% blocktrans %}
         Additionally, the map contains these layers which will not be downloaded
@@ -36,18 +32,7 @@
         {% endfor %} 
       </ul>
     {% endif %}
-<<<<<<< HEAD:src/GeoNodePy/geonode/templates/maps/download.html
-    <ul>
-      {% for layer in locked_layers %} 
-      <li>{{ layer.name }}</li>
-      {% endfor %}
-    </ul>
-    {% if remote_layers %}
-    {% blocktrans %}
-    Finally, the map contains these layers which will not be downloaded
-    because they are not available directly from this GeoNode:
-    {% endblocktrans %}
-=======
+
 
 	  {% if remote_layers %}
       {% blocktrans %}
@@ -59,7 +44,6 @@
           <li>{{ layer }}</li>
         {% endfor %} 
       </ul>
->>>>>>> gncore/master:geonode/maps/templates/maps/map_download.html
     {% endif %}
 
     {% if map_status %} 

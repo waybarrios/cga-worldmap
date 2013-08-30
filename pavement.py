@@ -317,7 +317,8 @@ def start_geoserver(options):
     Start GeoServer with GeoNode extensions
     """
 
-    from geonode.settings import GEOSERVER_BASE_URL
+    from geonode.settings import OGC_SERVER 
+    GEOSERVER_BASE_URL = OGC_SERVER['default']['LOCATION']
 
     url = "http://localhost:8080/geoserver/"
     if GEOSERVER_BASE_URL != url:
@@ -497,14 +498,14 @@ def deb(options):
             # A local installable package
             sh('debuild -uc -us -A')
         elif key is None and ppa is not None:
-            # A sources package, signed by daemon
-            sh('debuild -S')
+                # A sources package, signed by daemon
+                sh('debuild -S')
         elif key is not None and ppa is None:
-            # A signed installable package
-            sh('debuild -k%s -A' % key)
+                # A signed installable package
+                sh('debuild -k%s -A' % key)
         elif key is not None and ppa is not None:
-            # A signed, source package
-            sh('debuild -k%s -S' % key)
+                # A signed, source package
+                sh('debuild -k%s -S' % key)
 
     if ppa is not None:
         sh('dput ppa:%s geonode_%s_source.changes' % (ppa, simple_version))

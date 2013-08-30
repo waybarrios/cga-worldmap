@@ -63,11 +63,12 @@ logger = logging.getLogger(__name__)
 
 _SESSION_KEY = 'geonode_upload_session'
 _ALLOW_TIME_STEP = getattr(settings, "UPLOADER_SHOW_TIME_STEP", False)
-_ASYNC_UPLOAD = settings.DB_DATASTORE == True
+_ASYNC_UPLOAD = 'DATASTORE' in settings.OGC_SERVER['default']['OPTIONS'] and \
+                bool(settings.OGC_SERVER['default']['OPTIONS'].get('DATASTORE', str()))
 
 # at the moment, the various time support transformations require the database
 if _ALLOW_TIME_STEP and not _ASYNC_UPLOAD:
-    raise Exception("To support the time step, you must enable DB_DATASTORE")
+    raise Exception("To support the time step, you must enable the OGC_SERVER DATASTORE option")
 
 
 def _is_async_step(upload_session):
@@ -247,10 +248,13 @@ def save_step_view(req, session):
 def data_upload_progress(req):
     """This would not be needed if geoserver REST did not require admin role
     and is an inefficient way of getting this information"""
-    upload_session = req.session[_SESSION_KEY]
-    import_session = upload_session.import_session
-    progress = import_session.tasks[0].items[0].get_progress()
-    return json_response(progress)
+    if _SESSION_KEY in req.session:
+        upload_session = req.session[_SESSION_KEY]
+        import_session = upload_session.import_session
+        progress = import_session.tasks[0].items[0].get_progress()
+        return json_response(progress)
+    else:
+        return json_response({'state': 'NONE'})
 
 
 def srs_step_view(req, upload_session):

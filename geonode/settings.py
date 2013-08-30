@@ -49,7 +49,7 @@ DEBUG = TEMPLATE_DEBUG = True
 
 
 # Set to True to load non-minified versions of (static) client dependencies
-DEBUG_STATIC = False
+DEBUG_STATIC = True 
 
 
 # This is needed for integration tests, they require
@@ -65,7 +65,16 @@ DATABASES = {
         'USER': 'wm_user',
         'PASSWORD': 'wm_password',
         'HOST': 'localhost', 'PORT': '5432'
-        }
+    },
+    # vector datastore for uploads
+    #'datastore' : {
+    #    'ENGINE': 'django.contrib.gis.db.backends.postgis',
+    #    'NAME': '',
+    #    'USER' : '',
+    #    'PASSWORD' : '',
+    #    'HOST' : '',
+    #    'PORT' : '',
+    #}
 }
 
 # Local time zone for this installation. Choices can be found here:
@@ -401,6 +410,9 @@ SOUTH_TESTS_MIGRATE=False
 AUTH_PROFILE_MODULE = 'profile.WorldMapProfile'
 REGISTRATION_OPEN = True
 
+# Email for users to contact admins.
+THEME_ACCOUNT_CONTACT_EMAIL = 'admin@example.com'
+
 #
 # Test Settings
 #
@@ -421,17 +433,41 @@ NOSE_ARGS = [
 
 SITEURL = "http://localhost:8000/"
 
-# Email for users to contact admins.
-THEME_ACCOUNT_CONTACT_EMAIL = 'admin@example.com'
+# Default TopicCategory to be used for resources. Use the slug field here
+DEFAULT_TOPICCATEGORY = 'location'
 
-# GeoServer information
+MISSING_THUMBNAIL = 'geonode/img/missing_thumb.png'
 
-# The FULLY QUALIFIED url to the GeoServer instance for this GeoNode.
-GEOSERVER_BASE_URL = "http://localhost:8080/geoserver/"
+# Search Snippet Cache Time in Seconds
+CACHE_TIME=0
 
-# The username and password for a user that can add and
-# edit layer details on GeoServer
-GEOSERVER_CREDENTIALS = "admin", "geoserver"
+# OGC (WMS/WFS/WCS) Server Settings
+OGC_SERVER = {
+    'default' : {
+        'BACKEND' : 'geonode.geoserver',
+        'LOCATION' : 'http://localhost:8080/geoserver/',
+        'USER' : 'admin',
+        'PASSWORD' : 'geoserver',
+        'OPTIONS' : {
+            'MAPFISH_PRINT_ENABLED' : True,
+            'PRINTNG_ENABLED' : True,
+            'GEONODE_SECURITY_ENABLED' : True,
+            'GEOGIT_ENABLED' : False,
+            'WMST_ENABLED' : False,
+            # Set to name of database in DATABASES dictionary to enable
+            'DATASTORE': '', #'datastore',
+        }
+    }
+}
+
+# Uploader Settings
+UPLOADER = {
+    'BACKEND' : 'geonode.rest',
+    'OPTIONS' : {
+        'TIME_ENABLED': False,
+        'GEOGIT_ENABLED': False,
+    }
+}
 
 # CSW settings
 CATALOGUE = {
@@ -514,7 +550,7 @@ DEFAULT_MAP_ZOOM = 0
 MAP_BASELAYERS = [{
     "source": {
         "ptype": "gxp_wmscsource",
-        "url": GEOSERVER_BASE_URL + "wms",
+        "url": OGC_SERVER['default']['LOCATION'] + "wms",
         "restUrl": "/gs/rest"
      }
   },{
@@ -619,14 +655,15 @@ DB_DATASTORE_ENGINE = 'django.contrib.gis.db.backends.postgis'
 #The name of the store in Geoserver
 DB_DATASTORE_NAME = ''
 
+
 LEAFLET_CONFIG = {
     'TILES_URL': 'http://{s}.tile2.opencyclemap.org/transport/{z}/{x}/{y}.png'
 }
 
-# Default TopicCategory to be used for resources. Use the slug field here
-DEFAULT_TOPICCATEGORY = 'location'
 
-MISSING_THUMBNAIL = 'geonode/img/missing_thumb.png'
+# Require users to authenticate before using Geonode
+LOCKDOWN_GEONODE = False
+
 
 USE_GAZETTEER = False
 ##### START GAZETTEER SETTINGS #####
@@ -697,6 +734,13 @@ CACHE_BACKEND = 'dummy://'
 ACCOUNT_EMAIL_UNIQUE = True
 
 CACHE_TIME=0
+
+# Add additional paths (as regular expressions) that don't require authentication.
+AUTH_EXEMPT_URLS = ()
+
+if LOCKDOWN_GEONODE:
+    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + ('geonode.security.middleware.LoginRequiredMiddleware',)
+
 
 # Load more settings from a file called local_settings.py if it exists
 try:
