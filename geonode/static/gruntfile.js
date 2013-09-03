@@ -77,7 +77,8 @@ module.exports = function(grunt) {
             'datatables/media/css/jquery.dataTables.css',
             'select2/select2.css', 
             'multi-select/css/multi-select.css',
-            'qunit/qunit/qunit.css'
+            'qunit/qunit/qunit.css',
+            'jquery-ui/themes/smoothness/jquery-ui.css'
           ]
         }, {
           expand: true,
@@ -89,7 +90,8 @@ module.exports = function(grunt) {
             'select2/*.png', 'select2/spinner.gif',
             'raty/img/*.png',
             'multi-select/img/switch.png',
-            'datatables/media/images/*.png'
+            'datatables/media/images/*.png',
+            'jquery-ui/themes/smoothness/images/animated-overlay.gif',
           ]
         }, {
           expand: true,
@@ -102,6 +104,7 @@ module.exports = function(grunt) {
             'jquery-timeago/jquery.timeago.js',
             'tinysort/src/jquery.tinysort.js',
             'raty/js/jquery.raty.js',
+            'raty/lib/jquery.raty.js',
             'jquery-waypoints/waypoints.js',
             'jquery-ui/ui/jquery-ui.custom.js',
             'jquery-ajaxprogress/jquery.ajaxprogress.js',
@@ -150,7 +153,8 @@ module.exports = function(grunt) {
           'lib/css/assets.min.css': [
             'lib/css/jquery.dataTables.css',
             'lib/css/select2.css',
-            'lib/css/multi-select.css'
+            'lib/css/multi-select.css',
+            'lib/css/jquery-ui.css'
           ]
         }
       }

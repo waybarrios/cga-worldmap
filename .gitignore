@@ -33,10 +33,13 @@ geonode/static/node_modules/
 node_modules/
 # Listing all of them instead of putting geonode/static/lib out of version control.
 geonode/local_settings.py
+geonode/static/lib/css/jquery-ui.css
 geonode/static/lib/css/jquery.dataTables.css
 geonode/static/lib/css/multi-select.css
 geonode/static/lib/css/qunit.css
 geonode/static/lib/css/select2.css
+geonode/static/lib/css/assets.min.css
+geonode/static/lib/js/assets.min.js
 geonode/static/lib/js/bootstrap-datepicker.js
 geonode/static/lib/js/bootstrap.js
 geonode/static/lib/js/jquery-ui.custom.js
@@ -49,11 +52,17 @@ geonode/static/lib/js/jquery.timeago.js
 geonode/static/lib/js/jquery.tinysort.js
 geonode/static/lib/js/json2.js
 geonode/static/lib/js/qunit.js
+geonode/static/lib/js/require.js
 geonode/static/lib/js/select2.js
+geonode/static/lib/js/text.js
+geonode/static/lib/js/underscore.js
 geonode/static/lib/js/waypoints.js
 
+<<<<<<< HEAD
 >>>>>>> 50cbce22b687cf7118b9ade3e90eba036563db39
 
+=======
+>>>>>>> gncore/master
 # Uploaded files
 geonode/uploaded
 

@@ -34,6 +34,8 @@ from geonode.layers.models import Layer
 from geonode.worldmap.stats.models import LayerStats
 import re
 import random
+from geonode.utils import ogc_server_settings
+
 
 logger = logging.getLogger("geonode.proxy.views")
 
@@ -85,10 +87,10 @@ def geoserver_rest_proxy(request, proxy_path, downstream_path):
         return path[len(prefix):]
 
     path = strip_prefix(request.get_full_path(), proxy_path)
-    url = "".join([settings.OGC_SERVER['default']['LOCATION'], downstream_path, path])
+    url = "".join([ogc_server_settings.LOCATION, downstream_path, path])
 
     http = httplib2.Http()
-    http.add_credentials(*(settings.OGC_SERVER['default']['USER'], settings.OGC_SERVER['default']['PASSWORD']))
+    http.add_credentials(*(ogc_server_settings.credentials))
     headers = dict()
 
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
@@ -201,6 +203,28 @@ def youtube(request):
     return HttpResponse(feed_response, mimetype="text/xml")
 
 def download(request, service, layer, format):
+    
+
+    h = httplib2.Http()
+
+## TODO: This needs reworking to use new geoserver credentials in settings?
+    GEOSERVER_USER, GEOSERVER_PASSWD, GEOSERVER_URL = settings.OGC_SERVER['default']['USER'], \
+        settings.OGC_SERVER['default']['PASSWORD'], \
+        settings.OGC_SERVER['default']['LOCATION']
+    h.add_credentials(GEOSERVER_USER, GEOSERVER_PASSWD)
+    _netloc = urlparse(settings.GEOSERVER_BASE_URL).netloc
+    h.authorizations.append(httplib2.BasicAuthentication(
+        (GEOSERVER_USER, GEOSERVER_PASSWD),
+        _netloc,
+        settings.GEOSERVER_BASE_URL,
+        {},
+        None,
+        None,
+        h
+        )
+    )
+
+    
     params = request.GET
     #mimetype = params.get("outputFormat") if service == "wfs" else params.get("format")
 
