@@ -70,7 +70,7 @@ def check_geonode_is_up():
     assert resp['status'] == '200', msg
        
 
-def get_wms(workspace,layer):
+def get_wms():
     global _wms
     wms_url = settings.OGC_SERVER['default']['LOCATION'] + "wms?request=GetCapabilities&version=1.1.0"
     netloc = urlparse(wms_url).netloc

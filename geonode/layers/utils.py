@@ -306,8 +306,9 @@ def cleanup(name, uuid):
                        'import for layer: %s', name)
 
 
-def save(layer, base_file, user, overwrite = True, title=None,
-         abstract=None, permissions=None, keywords = (), charset = 'ISO-8859-1', sldfile = None):
+
+def save(layer, base_file, user, overwrite=True, title=None,
+         abstract=None, permissions=None, keywords=(), charset='UTF-8'):
     """Upload layer data to Geoserver and registers it with Geonode.
 
        If specified, the layer given is overwritten, otherwise a new layer
@@ -425,8 +426,8 @@ def save(layer, base_file, user, overwrite = True, title=None,
     try:
         store, gs_resource = create_store_and_resource(name,
                                                        data,
-                                                       overwrite=overwrite,
-                                                       charset=charset)
+                                                       charset=charset,
+                                                       overwrite=overwrite)
     except UploadError, e:
         msg = _('Could not save the layer %s, there was an upload '
                'error: %s' % (name, "Invalid/missing projection information in image" 
@@ -763,19 +764,19 @@ def upload(incoming, user=None, overwrite=False,
 
 
 
-def _create_featurestore(name, data, overwrite, charset):
+def _create_featurestore(name, data, overwrite=False, charset="UTF-8"):
     cat = Layer.objects.gs_catalog
     cat.create_featurestore(name, data, overwrite=overwrite, charset=charset)
     return cat.get_store(name), cat.get_resource(name)
 
 
-def _create_coveragestore(name, data, overwrite, charset=None):
+def _create_coveragestore(name, data, overwrite=False, charset="UTF-8"):
     cat = Layer.objects.gs_catalog
     cat.create_coveragestore(name, data, overwrite=overwrite)
     return cat.get_store(name), cat.get_resource(name)
 
 
-def _create_db_featurestore(name, data, overwrite=False, charset=None):
+def _create_db_featurestore(name, data, overwrite=False, charset="UTF-8"):
     """Create a database store then use it to import a shapefile.
 
     If the import into the database fails then delete the store

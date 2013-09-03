@@ -114,7 +114,7 @@ def layer_tag(request, slug, template='layers/layer_list.html'):
 @login_required
 def layer_upload(request, template='upload/layer_upload.html'):
     if request.method == 'GET':
-        return render_to_response('template',
+        return render_to_response(template,
                                   RequestContext(request, {}))
     elif request.method == 'POST':
         form = NewLayerUploadForm(request.POST, request.FILES)
