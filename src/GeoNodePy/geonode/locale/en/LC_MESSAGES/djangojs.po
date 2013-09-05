@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-06 15:56-0400\n"
+"POT-Creation-Date: 2013-09-05 15:24-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -218,6 +217,7 @@ msgstr ""
 
 #: templates/lang.js:50 templates/lang.js.c:126 templates/lang.js.c:135
 #: templates/lang.js:188 templates/lang.js.c:210 templates/lang.js.c:247
+#: templates/profiles/certifications.js:27
 msgid "Title"
 msgstr ""
 
@@ -680,4 +680,8 @@ msgid ""
 "Press OK to print this page as is.  \t\t\t If you would like to adjust the "
 "map extent, press Cancel, \t\t\t then use your browser's print button when "
 "you are ready"
+msgstr ""
+
+#: templates/profiles/certifications.js:26
+msgid "Type"
 msgstr ""

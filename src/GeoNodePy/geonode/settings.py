@@ -51,7 +51,10 @@ LANGUAGE_CODE = 'en'
 LANGUAGES = (
     ('en', 'English'),
     ('fr', 'Français'),
+    ('zh', 'Chinese'),
 )
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -124,6 +127,7 @@ INSTALLED_APPS = (
     'autocomplete_light',
     'djcelery',
     'djkombu',
+    'modeltranslation',
 
     # GeoNode internal apps
     'geonode.core',

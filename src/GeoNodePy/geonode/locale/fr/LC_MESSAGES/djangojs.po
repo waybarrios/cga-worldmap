@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-06 15:57-0400\n"
+"POT-Creation-Date: 2013-09-05 15:23-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -226,6 +226,7 @@ msgstr "Enregistrer"
 
 #: templates/lang.js:50 templates/lang.js.c:126 templates/lang.js.c:135
 #: templates/lang.js:188 templates/lang.js.c:210 templates/lang.js.c:247
+#: templates/profiles/certifications.js:27
 msgid "Title"
 msgstr "Titre"
 
@@ -708,6 +709,10 @@ msgstr ""
 "Cliquez sur OK si vous souhaitez imprimer cette page telle qu'elle est.\t\t"
 "\t Si vous souhaitez changer la zone de la carte, cliquez sur Annuler\t\t\t "
 "et utiliser le bouton Imprimer de votre navigateur quand vous êtes prêt. "
+
+#: templates/profiles/certifications.js:26
+msgid "Type"
+msgstr ""
 
 #~ msgid "Get Feature Info"
 #~ msgstr "Obtenir les informations"
