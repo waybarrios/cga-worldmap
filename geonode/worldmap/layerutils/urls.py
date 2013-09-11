@@ -30,8 +30,8 @@ urlpatterns = patterns(
     (r'', include('geonode.layers.urls')),
 )
 
-urlpatterns += patterns(
-    'geonode.worldmap.uploadutils.views',
-    (r'', include('geonode.layers.urls')),
-)
+# urlpatterns += patterns(
+#     'geonode.worldmap.uploadutils.views',
+#     (r'', include('geonode.layers.urls')),
+# )
 

@@ -105,7 +105,7 @@ class Layer(ResourceBase):
     styles = models.ManyToManyField(Style, related_name='layer_styles')
 
     def update_thumbnail(self, save=True):
-        self.save_thumbnail(self._thumbnail_url(width=198, height=98), save)
+        self.save_thumbnail(self._thumbnail_url(width=200, height=150), save)
 
 
     def _render_thumbnail(self, spec):
@@ -617,6 +617,8 @@ def get_attribute_statistics(layer_name, field):
 
     logger.debug('Deriving aggregate statistics for attribute %s', field)
 
+    if not ogc_server_settings.WPS_ENABLED:
+        return None
     try:
         return wps_execute_layer_attribute_statistics(layer_name, field)
     except Exception:

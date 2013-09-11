@@ -76,7 +76,7 @@ class OGC_Server(object):
         """
         The Open Web Service url for the server.
         """
-        return self.LOCATION + 'wms' if not self.OWS_LOCATION else self.OWS_LOCATION
+        return self.LOCATION + 'ows' if not self.OWS_LOCATION else self.OWS_LOCATION
 
     @property
     def rest(self):
@@ -115,7 +115,7 @@ class OGC_Servers_Handler(object):
         for option in ['MAPFISH_PRINT_ENABLED', 'PRINTING_ENABLED', 'GEONODE_SECURITY_ENABLED']:
             server.setdefault(option, True)
 
-        for option in ['GEOGIT_ENABLED', 'WMST_ENABLED']:
+        for option in ['GEOGIT_ENABLED', 'WMST_ENABLED', 'WPS_ENABLED']:
             server.setdefault(option, False)
 
     def __getitem__(self, alias):
@@ -560,7 +560,7 @@ class GXPLayerBase(object):
 
         The "source" property will be left unset; the layer is not aware of the
         name assigned to its source plugin.  See
-        :method:`geonode.maps.models.Map.viewer_json` for an example of
+        geonode.maps.models.Map.viewer_json for an example of
         generating a full map configuration.
         """
         try:
