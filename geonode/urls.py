@@ -27,7 +27,6 @@ from django.views.generic import TemplateView
 import geonode.proxy.urls
 import worldmap.urls
 
-
 # Import *_signals.py
 import geonode.social_signals
 
@@ -55,12 +54,12 @@ urlpatterns += patterns('',
     url(r'^developer/$', TemplateView.as_view(template_name='developer.html'), name='developer'),
     url(r'^about/$', TemplateView.as_view(template_name='about.html'), name='about'),
 
-    # Map views
-#     (r'^maps/', include('geonode.maps.urls')),
-#     
-#     # Layer views
-#     (r'^layers/', include('geonode.layers.urls')),
-    
+    # # Layer views
+    # (r'^layers/', include('geonode.layers.urls')),
+    #
+    # # Map views
+    # (r'^maps/', include('geonode.maps.urls')),
+
     # Catalogue views
     (r'^catalogue/', include('geonode.catalogue.urls')),
 
@@ -68,14 +67,14 @@ urlpatterns += patterns('',
     (r'^search/', include('geonode.search.urls')),
 
     # Upload views
-    #(r'^upload/', include('geonode.upload.urls')),
+    # (r'^upload/', include('geonode.upload.urls')),
 
     # GeoServer Helper Views 
     (r'^gs/', include('geonode.geoserver.urls')),
 
     # Social views
-    #(r"^account/", include("account.urls")),
-    #(r'^people/', include('geonode.people.urls')),
+    # (r"^account/", include("account.urls")),
+    # (r'^people/', include('geonode.people.urls')),
     (r'^avatar/', include('avatar.urls')),
     (r'^comments/', include('dialogos.urls')),
     (r'^ratings/', include('agon_ratings.urls')),
@@ -98,8 +97,6 @@ urlpatterns += patterns('',
                                   {'sitemaps': sitemaps}, name='sitemap'),
     (r'^i18n/', include('django.conf.urls.i18n')),
     (r'^admin/', include(admin.site.urls)),
-    
-    
 
     )
 
@@ -114,7 +111,4 @@ urlpatterns += geonode.proxy.urls.urlpatterns
 # Serve static files
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
 handler403 = 'geonode.views.err403'
-

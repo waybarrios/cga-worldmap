@@ -262,9 +262,9 @@ define(function (require, exports) {
 //        });
     	var redirect = resp.url + '/metadata';
     	var tab = $("#worldmap_update_panel .x-panel-body");
-    	if (tab) {
+    	if (tab.length > 0) {
     		redirect += "?tab=true";
-            tab.load(redirect);
+            tab[0].load(redirect);
     	} else
     		document.location.href = redirect;
     };
