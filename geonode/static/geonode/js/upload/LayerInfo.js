@@ -175,6 +175,7 @@ define(function (require, exports) {
         if (metadata_enabled) {
                 form_data.append("layer_title", $('#layer_title').val());
                 form_data.append("abstract", $('#abstract').val());
+                form_data.append("keywords", $('#keywords').val());
                 form_data.append("charset", $('#charset').val());   
         }
 

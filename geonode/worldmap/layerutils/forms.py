@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.utils import simplejson as json
-from geonode.layers.forms import LayerUploadForm, LayerForm
+from geonode.upload.forms import LayerUploadForm
 from geonode.layers.models import Layer
 from geonode.base.models import TopicCategory
 from geonode.worldmap.layerutils.models import SearchAttribute
@@ -81,15 +81,9 @@ class LayerCreateForm(forms.Form):
     permissions = JSONField()
 
 class WorldMapLayerUploadForm(LayerUploadForm):
-    sld_file = forms.FileField(required=False)
-    encoding = forms.ChoiceField(required=False)
-    layer_abstract = forms.CharField(required=False)
-    layer_keywords = forms.CharField(required=False)
-    layer_title = forms.CharField(required=False)
-    keywords = forms.CharField(required=False)
-    permissions = JSONField()
-
-    spatial_files = ("base_file", "dbf_file", "shx_file", "prj_file", "sld_file")
+    abstract = forms.CharField(required=True, error_messages={'required': 'Abstract is required'})
+    layer_title = forms.CharField(required=True, error_messages={'required': 'Title is required'})
+    keywords = forms.CharField(required=True, error_messages={'required': 'Keywords required'})
     
 class WorldMapLayerForm(forms.ModelForm):
     CONSTRAINT_HELP = _('''<p>Please choose the appropriate type of restriction (if any) for the use of your data. 

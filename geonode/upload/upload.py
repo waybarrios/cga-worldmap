@@ -79,7 +79,6 @@ class UploaderSession(object):
 
     # the uploader session object
     import_session = None
-    logger.info("Hello")
 
     # if provided, this file will be uploaded to geoserver and set as
     # the default
@@ -116,6 +115,9 @@ class UploaderSession(object):
 
     # the abstract
     layer_abstract = None
+
+    # the keywords
+    layer_keywords = None
 
     # computed target (dict since gsconfig objects do not pickle, but
     # attributes matching a datastore) of the import
@@ -246,7 +248,6 @@ def save_step(user, layer, base_file, overwrite=True):
         # which potentially may reset the id - hopefully prevent this...
         next_id = Upload.objects.all().aggregate(Max('import_id')).values()[0]
         next_id = next_id + 1 if next_id else 1
-        _log('WTF1')
 
         # @todo settings for use_url or auto detection if geoserver is
         # on same host
@@ -523,6 +524,7 @@ def final_step(upload_session, user):
 
     title = upload_session.layer_title
     abstract = upload_session.layer_abstract
+    keywords = upload_session.layer_keywords
 
     # @todo hacking - any cached layers might cause problems (maybe
     # delete hook on layer should fix this?)
@@ -541,6 +543,7 @@ def final_step(upload_session, user):
             title=title or resource.title,
             uuid=layer_uuid,
             abstract=abstract or '',
+            keywords=keywords or [],
             owner=user,
             )
         )

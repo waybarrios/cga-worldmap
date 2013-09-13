@@ -67,7 +67,7 @@ urlpatterns += patterns('',
     (r'^search/', include('geonode.search.urls')),
 
     # Upload views
-    # (r'^upload/', include('geonode.upload.urls')),
+    (r'^upload/', include('geonode.upload.urls')),
 
     # GeoServer Helper Views 
     (r'^gs/', include('geonode.geoserver.urls')),
