@@ -27,8 +27,8 @@ from geonode.worldmap.layerutils.forms import SearchAttributeForm
 from geonode.worldmap.layerutils.forms import WorldMapLayerForm
 from geonode.worldmap.maputils.encode import XssCleaner, despam
 from django.core.cache import cache
-from geonode.worldmap.uploadutils.views import CHARSETS
 from geonode.upload.models import Upload
+from geonode.base.enumerations import CHARSETS
 
 logger = logging.getLogger("geonode.worldmap.maputils.views")
 

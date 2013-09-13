@@ -90,10 +90,11 @@
 
               <div id="metadata-upload">
               <form id="metadata-uploader" method="post" enctype="multipart/form-data">
-              <label for="title">{% trans "Title" %}</label><input type="text" id="layer_title" label="Title" class="required"></input>
+              <label for="title">{% trans "Title" %}</label><input type="text" id="layer_title" label="Title" class="required" />
               <label for="abstract">{% trans "Abstract" %}</label><textarea rows="4" cols="50" id="abstract" label="Abstract" class="required"></textarea>
-              <label for="keywords">{% trans "Keywords" %}</label><input type="text" id="keywords" label="Title" class="required"></input>
+              <label for="keywords">{% trans "Keywords" %}</label><input type="text" id="keywords" label="Title" class="required" />
               <label for="charset">{% trans "Encoding" %}</label>
+
               <select id="charset">
               {% for charset in charsets %}
    				<option value="{{charset.0}}"
@@ -102,6 +103,9 @@
    					</option>
 			  {% endfor %}
               </select>
+
+              <p><input type="checkbox" id="termsAgreement" class="required" />{% trans "I agree to the <a href='' onclick='javascript:showTOC();return false;'>Terms and Conditions</a>" %} </p>
+
               </form>
               </div>
 

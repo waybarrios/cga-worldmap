@@ -78,7 +78,7 @@ class LayerUploadForm(forms.Form):
         if base_ext.lower() == '.zip':
             # for now, no verification, but this could be unified
             pass
-        elif base_ext.lower() not in (".shp", ".tif", ".tiff", ".geotif", ".geotiff", ".csv", ".kml"):
+        elif base_ext.lower() not in (".shp", ".tif", ".tiff", ".geotif", ".geotiff"):
             raise forms.ValidationError("Only Shapefiles and GeoTiffs are supported. You uploaded a %s file" % base_ext)
         if base_ext.lower() == ".shp":
             dbf_file = cleaned["dbf_file"]
@@ -122,19 +122,24 @@ class LayerUploadForm(forms.Form):
 class NewLayerUploadForm(LayerUploadForm):
     sld_file = forms.FileField(required=False)
     xml_file = forms.FileField(required=False)
-    charset = forms.CharField(required=False)
-    abstract = forms.CharField(required=False)
-    layer_title = forms.CharField(required=False)
+
+    abstract = forms.CharField(required=True, error_messages={'required': _('Abstract is required')})
+    layer_title = forms.CharField(required=True, error_messages={'required': _('Title is required')})
+
     permissions = JSONField()
     charset = forms.CharField(required=False)
 
     spatial_files = ("base_file", "dbf_file", "shx_file", "prj_file", "sld_file", "xml_file")
+    keywords = taggit.forms.TagField(required=True,
+                                     help_text=_("A space or comma-separated list of keywords"),
+                                     error_messages={'required': _('Keywords required')})
+    termsAgreement = forms.BooleanField(required=True,  error_messages={'required': _('You must agree to the terms and conditions')})
 
 
 class LayerDescriptionForm(forms.Form):
     title = forms.CharField(300)
-    abstract = forms.CharField(1000, widget=forms.Textarea, required=False)
-    keywords = forms.CharField(500, required=False)
+    abstract = forms.CharField(1000, widget=forms.Textarea, required=True)
+    keywords = forms.CharField(500, required=True)
 
 
 class LayerAttributeForm(forms.ModelForm):

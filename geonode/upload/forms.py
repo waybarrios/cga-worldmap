@@ -19,6 +19,7 @@
 from django import forms
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+import taggit
 from geonode.layers.forms import JSONField
 from geonode.upload.models import UploadFile 
 from geonode.utils import ogc_server_settings
@@ -49,7 +50,10 @@ class LayerUploadForm(forms.Form):
 
     abstract = forms.CharField(required=True, error_messages={'required': 'Abstract is required'})
     layer_title = forms.CharField(required=True, error_messages={'required': 'Title is required'})
-    keywords = forms.CharField(required=True, error_messages={'required': 'Keywords required'})
+    keywords = taggit.forms.TagField(required=True,
+                                     help_text=_("A space or comma-separated list of keywords"),
+                                     error_messages={'required': _('Keywords required')})
+    termsAgreement = forms.BooleanField(required=True,  error_messages={'required': _('You must agree to the terms and conditions')})
 
     def clean(self):
         requires_datastore = () if ogc_server_settings.DATASTORE else ('csv','kml')

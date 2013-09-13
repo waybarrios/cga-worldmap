@@ -176,7 +176,11 @@ define(function (require, exports) {
                 form_data.append("layer_title", $('#layer_title').val());
                 form_data.append("abstract", $('#abstract').val());
                 form_data.append("keywords", $('#keywords').val());
-                form_data.append("charset", $('#charset').val());   
+                form_data.append("charset", $('#charset').val());
+                if ($('#termsAgreement')[0].checked) {
+                    form_data.append("termsAgreement", $('#termsAgreement').val());
+                }
+
         }
 
         form_data.append('base_file', this.main);
@@ -252,15 +256,15 @@ define(function (require, exports) {
     };
 
     LayerInfo.prototype.displayUploadedLayerLinks = function(resp) {
-//        var self = this;
-//        var a = '<a href="' + resp.url + '" class="btn">Layer Info</a>';
-//        var b = '<a href="' + resp.url + '/metadata" class="btn">Edit Metadata</a>';
-//        var c = '<a href="' + resp.url + '/style/manage" class="btn">Manage Styles</a>';
-//        self.logStatus({
-//            msg: '<p> Your layer was successfully uploaded<br/><br/>' + a + '&nbsp;&nbsp;&nbsp;' + b + '&nbsp;&nbsp;&nbsp;' + c + '</p>',
-//            level: 'alert-success',
-//            empty: 'true'
-//        });
+        var self = this;
+        var a = '<a href="' + resp.url + '" class="btn">Layer Info</a>';
+        var b = '<a href="' + resp.url + '/metadata" class="btn">Edit Metadata</a>';
+        var c = '<a href="' + resp.url + '/style/manage" class="btn">Manage Styles</a>';
+        self.logStatus({
+            msg: '<p> Your layer was successfully uploaded </p>',
+            level: 'alert-success',
+            empty: 'true'
+        });
     	var redirect = resp.url + '/metadata';
     	var tab = $("#worldmap_update_panel .x-panel-body");
     	if (tab.length > 0) {

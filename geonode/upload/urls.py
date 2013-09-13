@@ -25,4 +25,5 @@ urlpatterns = patterns('geonode.upload.views',
     url(r'^(?P<step>\w+)?$', 'view', name='data_upload'),
     url(r'^delete/(?P<id>\d+)?$', 'delete', name='data_upload_delete'),
     url(r'^remove/(?P<pk>\d+)$', UploadFileDeleteView.as_view(), name='data_upload_remove'),
+    url(r'^tab/?(?P<step>\w+)?$', 'view'),
 )

@@ -524,6 +524,7 @@ def final_step(upload_session, user):
 
     title = upload_session.layer_title
     abstract = upload_session.layer_abstract
+
     keywords = upload_session.layer_keywords
 
     # @todo hacking - any cached layers might cause problems (maybe
@@ -543,7 +544,6 @@ def final_step(upload_session, user):
             title=title or resource.title,
             uuid=layer_uuid,
             abstract=abstract or '',
-            keywords=keywords or [],
             owner=user,
             )
         )
@@ -568,6 +568,10 @@ def final_step(upload_session, user):
                                            defaults={"name": user.username })
     saved_layer.poc = poc_contact
     saved_layer.metadata_author = author_contact
+
+    if keywords is not None:
+        saved_layer.keywords.add(*keywords)
+        saved_layer.save()
 
     # look for xml
     xml_file = find_file_re(upload_session.base_file, '.*\.xml')
