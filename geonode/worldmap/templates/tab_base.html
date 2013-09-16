@@ -1,0 +1,95 @@
+{% load i18n avatar_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+    {% block head %}
+      <link href="{{ STATIC_URL }}geonode/css/base.css" rel="stylesheet" />
+      <link href='{{ STATIC_URL }}geonode/font/lato_font.css' rel='stylesheet' type='text/css' />
+      <link href="{{ STATIC_URL }}geonode/css/ext-compatibility.css" rel="stylesheet" />
+      {% if DEBUG_STATIC %}
+      <link href="{{ STATIC_URL }}lib/css/jquery.dataTables.css" rel="stylesheet" />
+      <link href="{{ STATIC_URL }}lib/css/select2.css" rel="stylesheet"/>
+      {% else %}
+      <link href="{{ STATIC_URL }}lib/css/assets.min.css" rel="stylesheet"/>
+      {% endif %}
+      {% block extra_head %}{% endblock %}
+    {% endblock %}
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body class="{% block body_class %}{% endblock %}">
+    {% block header %}
+                <form class="input-append  pull-right" action="{% url "search" %}" method="GET">
+                {# csrf_token #}
+                <input id="search" type="text" name="q"/>
+              </form>
+    {% endblock header %}
+    {% block middle %}
+    <div class="content-wrap">
+        <div class="container">
+          <div class="row">
+            {% block body_outer %}
+              <div class="span8">
+                {% block body %}{% endblock %}
+              </div>
+              <div class="span4">
+                {% block sidebar %}{% endblock %}
+              </div>
+            {% endblock %}
+          </div>
+        </div>
+    </div>
+    {% endblock middle %}
+    {% block footer %}
+    {% endblock footer %}
+
+    <script>
+      $("#search").select2({
+        minimumInputLength: 1,
+        placeholder: 'Search...',
+        width: 'element',     
+        ajax: {
+          url: '{% url "search_api" %}',
+          data: function(term,page){
+            page = (page - 1) * 10;
+            return {
+              type: 'all',
+              limit: 10,
+              sort: 'none',
+              start: page,
+              q: term
+            }
+          },
+          results: function(data, page) {
+            var more = (page * 10) < data.total;
+            return {
+              results: $.map(data.results,function(object){
+                return {id: object.id, text: object.title};
+              }),
+              more: more
+            }
+          }          
+        },
+        createSearchChoice:function(term, data) { if ($(data).filter(function() { return this.text.localeCompare(term)===0; }).length===0) {return {id:term, text:term};} 
+        },
+        formatSelection: function(item){
+          $('#search').val(item.text);
+          $('#search').parent().submit();
+        }
+      });
+    </script>
+
+    {% block extra_script %}{% endblock extra_script %}
+
+    <script type="text/javascript" src="{% url "django.views.i18n.javascript_catalog" %}"></script>
+    <script type="text/javascript" src="{% url "lang" %}"></script>
+    <style type="text/css">
+      .select2-drop{
+        color: black;
+      }
+    </style>
+  </body>
+</html>
