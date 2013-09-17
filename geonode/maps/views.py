@@ -37,7 +37,7 @@ from django.views.decorators.http import require_POST
 from geonode.views import _handleThumbNail
 from geonode.utils import http_client
 from geonode.layers.models import Layer
-from geonode.maps.models import Map, MapLayer
+from geonode.maps.models import Map, MapLayer, MapSnapshot
 from geonode.utils import forward_mercator
 from geonode.utils import DEFAULT_TITLE
 from geonode.utils import DEFAULT_ABSTRACT
@@ -222,6 +222,7 @@ def map_json(request, mapid):
         map_obj = _resolve_map(request, mapid, 'maps.change_map')
         try:
             map_obj.update_from_viewer(request.raw_post_data)
+            MapSnapshot.objects.create(config=clean_config(request.raw_post_data),map=map_obj,user=request.user)
             return HttpResponse(json.dumps(map_obj.viewer_json()))
         except ValueError, e:
             return HttpResponse(
@@ -264,6 +265,7 @@ def new_map_json(request):
         map_obj.set_default_permissions()
         try:
             map_obj.update_from_viewer(request.raw_post_data)
+            MapSnapshot.objects.create(config=clean_config(request.raw_post_data),map=map_obj,user=request.user)
         except ValueError, e:
             return HttpResponse(str(e), status=400)
         else:
@@ -531,3 +533,16 @@ def maplayer_attributes(request, layername):
     #Return custom layer attribute labels/order in JSON format
     layer = Layer.objects.get(typename=layername)
     return HttpResponse(json.dumps(layer.attribute_config()), mimetype="application/json")
+
+def clean_config(conf):
+    if isinstance(conf, basestring):
+        config = json.loads(conf)
+        config_extras = ["tools", "rest", "homeUrl", "localGeoServerBaseUrl", "localCSWBaseUrl", "csrfToken", "db_datastore", "authorizedRoles"]
+        for config_item in config_extras:
+            if config_item in config:
+                del config[config_item ]
+            if config_item in config["map"]:
+                del config["map"][config_item ]
+        return json.dumps(config)
+    else:
+        return conf

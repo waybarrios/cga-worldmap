@@ -137,7 +137,7 @@
 			<table cellpadding="5" cellspacing="5" width="100%"><tr><th>{% trans "Attribute" %}</th><th>{% trans "Label" %}</th><th>{% trans "Display Order" %}</th><th>{% trans "Visible?" %}</th><th>{% trans "Searchable?" %}</th><th class="su_only_gaz">{% trans "Add to Gazetteer?" %}</th>
 	        {% for form in attribute_form.forms %}
 	        	{% if form.attribute %}
-	        	<tr><td>{{form.attribute}}</td><td><div style="display:none">{{form.attribute_ptr}}</div>{{form.attribute_label}}</td><td> {{form.display_order}}</td><td> {{form.visible}}</td><td> {{form.searchable}}</td></tr>
+	        	<tr><td>{{form.attribute}}</td><td><div style="display:none">{{form.id}}</div>{{form.attribute_label}}</td><td> {{form.display_order}}</td><td> {{form.visible}}</td><td> {{form.searchable}}</td></tr>
 	        	{% endif %}
 	        {% endfor %}
 	        </table>

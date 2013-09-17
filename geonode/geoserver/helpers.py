@@ -245,7 +245,8 @@ def get_postgis_bbox(resource_name):
     Doing it via Geoserver is too resource-intensive
     """
     import psycopg2
-    conn=psycopg2.connect("dbname='" + settings.DB_DATASTORE_DATABASE + "' user='" + settings.DB_DATASTORE_USER + "'  password='" + settings.DB_DATASTORE_PASSWORD + "' port=" + settings.DB_DATASTORE_PORT + " host='" + settings.DB_DATASTORE_HOST + "'")
+    db = ogc_server_settings.datastore_db
+    conn=psycopg2.connect("dbname='" + db['NAME'] + "' user='" + db['USER'] + "'  password='" + db['PASSWORD'] + "' port=" + db['PORT'] + " host='" + db['HOST'] + "'")
     try:
         cur = conn.cursor()
         cur.execute("select EXTENT(the_geom) as bbox, EXTENT(ST_Transform(the_geom,4326)) as llbbox from \"%s\"" %  resource_name)

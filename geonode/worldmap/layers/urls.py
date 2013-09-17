@@ -23,7 +23,7 @@ import geonode.layers.views
 
 
 urlpatterns = patterns(
-    'geonode.worldmap.layerutils.views',
+    'geonode.worldmap.layers.views',
     (r'^addgeonodelayer/?$', 'addLayerJSON'),
     url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata',name="layer_metadata"),
     url(r'^create_pg_layer', 'create_pg_layer', name='create_pg_layer'),

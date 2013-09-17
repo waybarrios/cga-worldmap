@@ -3,9 +3,8 @@
 from django import forms
 from django.utils import simplejson as json
 from geonode.upload.forms import LayerUploadForm
-from geonode.layers.models import Layer
+from geonode.layers.models import Layer, Attribute
 from geonode.base.models import TopicCategory
-from geonode.worldmap.layerutils.models import SearchAttribute
 import taggit
 from django.utils.translation import ugettext as _
 from re import escape
@@ -110,14 +109,14 @@ class WorldMapLayerForm(forms.ModelForm):
                    'popular_count', 'share_count', 'thumbnail', 'default_style', 'styles')
         
         
-class SearchAttributeForm(forms.ModelForm):
+class GazetteerAttributeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        super(SearchAttributeForm, self).__init__(*args, **kwargs)
+        super(GazetteerAttributeForm, self).__init__(*args, **kwargs)
         self.fields['attribute'].widget.attrs['readonly'] = True
         self.fields['display_order'].widget.attrs['size'] = 3
 
     class Meta:
-        model = SearchAttribute
+        model = Attribute
         exclude = ('attribute_type','count','min','max','average','median','stddev',
                    'sum','unique_values','last_stats_updated','objects')
     

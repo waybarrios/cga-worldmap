@@ -112,3 +112,11 @@ urlpatterns += geonode.proxy.urls.urlpatterns
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 handler403 = 'geonode.views.err403'
+
+#official site patterns
+urlpatterns += patterns('',
+                                      (r'^tweetmap/$', 'geonode.worldmap.maps.views.tweetview'),
+                                      (r'^(?P<site>[A-Za-z0-9_\-]+)/$', 'geonode.worldmap.maps.views.official_site'),
+                                      (r'^(?P<site>[A-Za-z0-9_\-]+)/mobile/?$', 'geonode.worldmap.maps.views.official_site_mobile'),
+                                      (r'^(?P<site>[A-Za-z0-9_\-]+)/info$', 'geonode.worldmap.maps.views.official_site_info'),
+                                      )

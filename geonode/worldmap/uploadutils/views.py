@@ -12,7 +12,7 @@
 #     get_previous_step, _next_step_response, _error_response
 # from geonode.upload.models import Upload
 # from geonode.upload.forms import LayerUploadForm
-# from geonode.worldmap.layerutils.forms import WorldMapLayerUploadForm
+# from geonode.worldmap.layers.forms import WorldMapLayerUploadForm
 # from django.utils.html import escape
 #
 #

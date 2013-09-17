@@ -36,7 +36,7 @@ def get_geometry_type(layer_name):
     """
 
     conn = psycopg2.connect(
-        "dbname='" + settings.DB_DATASTORE_DATABASE + "' user='" + settings.DB_DATASTORE_USER + "'  password='" + settings.DB_DATASTORE_PASSWORD + "' port=" + settings.DB_DATASTORE_PORT + " host='" + settings.DB_DATASTORE_HOST + "'")
+        "dbname='" + ogc_server_settings.DATASTORE_DATABASE + "' user='" + ogc_server_settings.DATASTORE_USER + "'  password='" + ogc_server_settings.DATASTORE_PASSWORD + "' port=" + ogc_server_settings.DATASTORE_PORT + " host='" + ogc_server_settings.DATASTORE_HOST + "'")
     try:
         cur = conn.cursor()
         cur.execute("select type, f_geometry_column, srid from geometry_columns where f_table_name = '%s'" % layer_name)
@@ -263,7 +263,7 @@ def add_to_gazetteer(layer_name, name_attributes, start_attribute=None, end_attr
             "fid not in (SELECT feature_fid from " + GAZETTEER_TABLE + " where layer_name = '" + layer_name + "' and layer_attribute = '" + attribute.attribute + "'))")
 
     conn = psycopg2.connect(
-        "dbname='" + settings.DB_DATASTORE_DATABASE + "' user='" + settings.DB_DATASTORE_USER + "'  password='" + settings.DB_DATASTORE_PASSWORD + "' port=" + settings.DB_DATASTORE_PORT + " host='" + settings.DB_DATASTORE_HOST + "'")
+        "dbname='" + ogc_server_settings.DATASTORE_DATABASE + "' user='" + ogc_server_settings.DATASTORE_USER + "'  password='" + ogc_server_settings.DATASTORE_PASSWORD + "' port=" + ogc_server_settings.DATASTORE_PORT + " host='" + ogc_server_settings.DATASTORE_HOST + "'")
 
     try:
         cur = conn.cursor()

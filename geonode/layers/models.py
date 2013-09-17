@@ -104,6 +104,15 @@ class Layer(ResourceBase):
     default_style = models.ForeignKey(Style, related_name='layer_default_style', null=True, blank=True)
     styles = models.ManyToManyField(Style, related_name='layer_styles')
 
+    downloadable = models.BooleanField(_('Downloadable?'), blank=False, null=False, default=True)
+    # Is the layer downloadable?
+
+    in_gazetteer = models.BooleanField(_('In Gazetteer?'), blank=False, null=False, default=False)
+    #Is the layer in the gazetteer?
+
+    gazetteer_project = models.CharField(_("Gazetteer Project"), max_length=128, blank=True, null=True)
+    # Gazetteer project that the layer is associated with
+
     def update_thumbnail(self, save=True):
         self.save_thumbnail(self._thumbnail_url(width=200, height=150), save)
 
@@ -261,6 +270,12 @@ class Attribute(models.Model):
     sum = models.CharField(_('sum'), help_text=_('sum value for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
     unique_values = models.TextField(_('unique values for this field'), null=True, blank=True, default='NA')
     last_stats_updated = models.DateTimeField(_('last modified'), default=datetime.now, help_text=_('date when attribute statistics were last updated')) # passing the method itself, not
+
+    searchable = models.BooleanField(_('Searchable?'), default=False)
+    in_gazetteer = models.BooleanField(_('In Gazetteer?'), default=False)
+    is_gaz_start_date = models.BooleanField(_('Gazetteer Start Date'), default=False)
+    is_gaz_end_date = models.BooleanField(_('Gazetteer End Date'), default=False)
+    date_format = models.CharField(_('Date Format'), max_length=255, blank=True, null=True)
 
     objects = AttributeManager()
 
@@ -441,7 +456,7 @@ def geoserver_post_save(instance, sender, **kwargs):
 
     # Set download links for WMS, WCS or WFS and KML
 
-    links = wms_links(ogc_server_settings.LOCATION + 'wms?',
+    links = wms_links(settings.SITEURL + 'download/wms?',
                     instance.typename.encode('utf-8'), instance.bbox_string,
                     instance.srid, height, width)
 
@@ -457,7 +472,7 @@ def geoserver_post_save(instance, sender, **kwargs):
                         )
 
     if instance.storeType == "dataStore":
-        links = wfs_links(ogc_server_settings.LOCATION + 'wfs?', instance.typename.encode('utf-8'))
+        links = wfs_links(settings.SITEURL + 'download/wfs?', instance.typename.encode('utf-8'))
         for ext, name, mime, wfs_url in links:
             Link.objects.get_or_create(resource= instance.resourcebase_ptr,
                             url=wfs_url,
@@ -479,7 +494,7 @@ def geoserver_post_save(instance, sender, **kwargs):
         permissions['authenticated'] = instance.get_gen_level(AUTHENTICATED_USERS)
         instance.set_gen_level(ANONYMOUS_USERS,'layer_readonly')
 
-        links = wcs_links(ogc_server_settings.LOCATION + 'wcs?', instance.typename.encode('utf-8'),
+        links = wcs_links(settings.SITEURL + 'download/wcs?', instance.typename.encode('utf-8'),
             bbox=instance.bbox[:-1], crs=instance.bbox[-1], height=height, width=width)
         for ext, name, mime, wcs_url in links:
             Link.objects.get_or_create(resource= instance.resourcebase_ptr,
@@ -495,7 +510,7 @@ def geoserver_post_save(instance, sender, **kwargs):
         instance.set_gen_level(ANONYMOUS_USERS,permissions['anonymous'])
         instance.set_gen_level(AUTHENTICATED_USERS,permissions['authenticated'])
 
-    kml_reflector_link_download = ogc_server_settings.LOCATION + "wms/kml?" + urllib.urlencode({
+    kml_reflector_link_download = settings.SITEURL + "download/wms_kml?" + urllib.urlencode({
         'layers': instance.typename.encode('utf-8'),
         'mode': "download"
     })
@@ -510,7 +525,7 @@ def geoserver_post_save(instance, sender, **kwargs):
                         )
                     )
 
-    kml_reflector_link_view = ogc_server_settings.LOCATION + "wms/kml?" + urllib.urlencode({
+    kml_reflector_link_view = settings.SITEURL + "download/wms_kml?" + urllib.urlencode({
         'layers': instance.typename.encode('utf-8'),
         'mode': "refresh"
     })
@@ -525,21 +540,21 @@ def geoserver_post_save(instance, sender, **kwargs):
                         )
                     )
 
-    tile_url = ('%sgwc/service/gmaps?' % ogc_server_settings.LOCATION +
-                'layers=%s' % instance.typename.encode('utf-8') +
-                '&zoom={z}&x={x}&y={y}' +
-                '&format=image/png8'
-                )
-
-    Link.objects.get_or_create(resource= instance.resourcebase_ptr,
-                        url=tile_url,
-                        defaults=dict(
-                            extension='tiles',
-                            name=_("Tiles"),
-                            mime='image/png',
-                            link_type='image',
-                            )
-                        )
+    # tile_url = ('%sgwc/service/gmaps?' % ogc_server_settings.LOCATION +
+    #             'layers=%s' % instance.typename.encode('utf-8') +
+    #             '&zoom={z}&x={x}&y={y}' +
+    #             '&format=image/png8'
+    #             )
+    #
+    # Link.objects.get_or_create(resource= instance.resourcebase_ptr,
+    #                     url=tile_url,
+    #                     defaults=dict(
+    #                         extension='tiles',
+    #                         name=_("Tiles"),
+    #                         mime='image/png',
+    #                         link_type='image',
+    #                         )
+    #                     )
 
 
     html_link_url = '%s%s' % (settings.SITEURL[:-1], instance.get_absolute_url())

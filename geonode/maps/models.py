@@ -22,6 +22,7 @@ import logging
 import math
 import errno
 import uuid
+from django.utils.html import escape
 import httplib2
 from urlparse import urlparse
 import urllib
@@ -38,6 +39,7 @@ from django.core.urlresolvers import reverse
 
 from geonode.layers.models import Layer
 from geonode.base.models import ResourceBase, resourcebase_post_save, resourcebase_post_delete
+from geonode.maps.encode import XssCleaner, despam, num_encode
 from geonode.maps.signals import map_changed_signal
 from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.utils import GXPMapBase
@@ -83,6 +85,22 @@ class Map(ResourceBase, GXPMapBase):
 
     popular_count = models.IntegerField(default=0)
     share_count = models.IntegerField(default=0)
+
+    urlsuffix = models.CharField(_('Site URL'), max_length=255, blank=True)
+    # Alphanumeric alternative to referencing maps by id, appended to end of URL instead of id, ie http://domain/maps/someview
+
+    officialurl = models.CharField(_('Official Harvard Site URL'), max_length=255, blank=True)
+    # Full URL for official/sponsored map view, ie http://domain/someview
+
+    content = models.TextField(_('Site Content'), blank=True, null=True)
+    # HTML content to be displayed in modal window on 1st visit
+
+    use_custom_template = models.BooleanField(_('Use a custom template'),default=False)
+    # Whether to show default banner/styles or custom ones.
+
+    group_params = models.TextField(_('Layer Category Parameters'), blank=True)
+    # Layer categories (names, expanded)
+
 
     def __unicode__(self):
         return '%s by %s' % (self.title, (self.owner.username if self.owner else "<Anonymous>"))
@@ -181,6 +199,17 @@ class Map(ResourceBase, GXPMapBase):
             ))
 
         self.set_bounds_from_layers(self.local_layers)
+
+        ## Start WorldMap customizations ##
+        self.urlsuffix = escape(conf['about']['urlsuffix'])
+        self.featured = conf['about'].get('featured', False)
+        x = XssCleaner()
+        self.content = despam(x.strip(conf['about']['introtext']))
+        logger.debug("Try to save treeconfig")
+        if 'groups' in conf['map']:
+            self.group_params = json.dumps(conf['map']['groups'])
+        logger.debug("Saved treeconfig")
+        ## End WorldMap customizations ##
 
         self.save()
 
@@ -391,6 +420,37 @@ class Map(ResourceBase, GXPMapBase):
     def class_name(self):
         return self.__class__.__name__
 
+    @property
+    def snapshots(self):
+        snapshots = MapSnapshot.objects.exclude(user=None).filter(map__id=self.map.id)
+        return [snapshot for snapshot in snapshots]
+
+    def viewer_json(self, user=None, *added_layers):
+        def uniqifydict(seq, item):
+            """
+            get a list of unique dictionary elements based on a certain  item (ie 'group').
+            """
+            results = []
+            items = []
+            for x in seq:
+                if x[item] not in items:
+                    items.append(x[item])
+                    results.append(x)
+            return results
+
+        config = GXPMapBase.viewer_json(self, *added_layers)
+        sejumps = self.jump_set.all()
+        config['about']['urlsuffix'] = self.urlsuffix
+        config['about']['introtext'] = self.content
+        config['about']['officialurl'] = self.officialurl
+        config['social_explorer'] =[se.json() for se in sejumps]
+
+        if self.group_params:
+            #config["treeconfig"] = json.loads(self.group_params)
+            config["map"]["groups"] = uniqifydict(json.loads(self.group_params), 'group')
+
+        return config
+
 class MapLayer(models.Model, GXPLayerBase):
     """
     The MapLayer model represents a layer included in a map.  This doesn't just
@@ -496,6 +556,50 @@ class MapLayer(models.Model, GXPLayerBase):
 
     def __unicode__(self):
         return '%s?layers=%s' % (self.ows_url, self.name)
+
+
+class MapSnapshot(models.Model):
+    map = models.ForeignKey(Map, related_name="snapshot_set")
+    """
+    The ID of the map this snapshot was generated from.
+    """
+
+    config = models.TextField(_('JSON Configuration'))
+    """
+    Map configuration in JSON format
+    """
+
+    created_dttm = models.DateTimeField(auto_now_add=True)
+    """
+    The date/time the snapshot was created.
+    """
+
+    user = models.ForeignKey(User, blank=True, null=True)
+    """
+    The user who created the snapshot.
+    """
+
+    def json(self):
+        return {
+            "map": self.map.id,
+            "created": self.created_dttm.isoformat(),
+            "user": self.user.username if self.user else None,
+            "url": num_encode(self.id)
+        }
+
+class SocialExplorerLocation(models.Model):
+    map = models.ForeignKey(Map, related_name="jump_set")
+    url = models.URLField(_("Jump URL"), blank=False, null=False, default='http://www.socialexplorer.com/pub/maps/map3.aspx?g=0&mapi=SE0012&themei=B23A1CEE3D8D405BA2B079DDF5DE9402')
+    title = models.TextField(_("Jump Site"), blank=False, null=False)
+
+    def json(self):
+        logger.debug("JSON url: %s", self.url)
+        return {
+            "url": self.url,
+            "title" :  self.title
+        }
+
+
 
 def pre_save_maplayer(instance, sender, **kwargs):
     # If this object was saved via fixtures,

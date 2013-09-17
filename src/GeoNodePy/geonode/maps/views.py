@@ -365,7 +365,7 @@ def newmap(request):
         'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
         'GEONETWORK_BASE_URL' : settings.GEONETWORK_BASE_URL,
         'maptitle': settings.SITENAME,
-        'DB_DATASTORE' : settings.DB_DATASTORE
+        'DB_DATASTORE' : ogc_server_settings.DATASTORE
     }))
 
 def newmapJSON(request):
@@ -784,7 +784,7 @@ def view(request, mapid, snapshot=None):
         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
         'GEONETWORK_BASE_URL' : settings.GEONETWORK_BASE_URL,
         'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
-        'DB_DATASTORE' : settings.DB_DATASTORE,
+        'DB_DATASTORE' : ogc_server_settings.DATASTORE,
         'maptitle': map_obj.title,
         'urlsuffix': get_suffix_if_custom(map_obj),
         'editmap': config['edit_map']
@@ -920,7 +920,7 @@ def layer_metadata(request, layername):
 
         topic_category = layer.topic_category
         layerAttSet = inlineformset_factory(Layer, LayerAttribute, extra=0, form=LayerAttributeForm, )
-        show_gazetteer_form = request.user.is_superuser and layer.store == settings.DB_DATASTORE_NAME
+        show_gazetteer_form = request.user.is_superuser and layer.store == ogc_server_settings.DATASTORE_NAME
 
         fieldTypes = {}
         attributeOptions = layer.attribute_set.filter(attribute_type__in=['xsd:dateTime','xsd:date','xsd:int','xsd:string','xsd:bigint', 'xsd:double'])
@@ -1186,7 +1186,7 @@ def upload_layer(request):
                 return render_to_response('maps/layer_upload_tab.html',
                                   RequestContext(request, {'charsets': CHARSETS}))
     elif request.method == 'POST':
-        from geonode.worldmap.layerutils.forms import WorldMapLayerUploadForm
+        from geonode.worldmap.layers.forms import WorldMapLayerUploadForm
         from geonode.layers.utils import save
         from django.utils.html import escape
         import os, shutil
@@ -2492,41 +2492,7 @@ def _send_permissions_email(user_email, map_layer_title, map_layer_url, map_laye
 
     send_mail(subject, message, settings.NO_REPLY_EMAIL, [user.email])
 
-def get_suffix_if_custom(map):
-    if map.use_custom_template:
-        if map.officialurl:
-            return map.officialurl
-        elif map.urlsuffix:
-            return map.urlsuffix
-        else:
-            return None
-    else:
-        return None
 
-def official_site(request, site):
-    """
-    The view that returns the map composer opened to
-    the map with the given official site url.
-    """
-    map_obj = get_object_or_404(Map,officialurl=site)
-    return view(request, str(map_obj.id))
-
-def official_site_mobile(request, site):
-    """
-    The view that returns the map composer opened to
-    the map with the given official site url.
-    """
-    map_obj = get_object_or_404(Map,officialurl=site)
-    return mobilemap(request, str(map_obj.id))
-
-
-def official_site_controller(request, site):
-    '''
-    main view for map resources, dispatches to correct
-    view based on method and query args.
-    '''
-    map_obj = get_object_or_404(Map,officialurl=site)
-    return map_controller(request, str(map_obj.id))
 
 def snapshot_create(request):
     """
@@ -2633,9 +2599,9 @@ def create_pg_layer(request):
                 return HttpResponse(msg, status='400')
 
             # Assume datastore used for PostGIS
-            store = settings.DB_DATASTORE_NAME
+            store = ogc_server_settings.DATASTORE_NAME
             if store is None:
-                msg = 'Specified store [%s] not found' % settings.DB_DATASTORE_NAME
+                msg = 'Specified store [%s] not found' % ogc_server_settings.DATASTORE_NAME
                 return HttpResponse(msg, status='400')
 
             #TODO: Let users create their own schema
@@ -2660,7 +2626,7 @@ def create_pg_layer(request):
             try:
                 logger.info("Create layer %s", name)
                 layer = cat.create_native_layer(settings.DEFAULT_WORKSPACE,
-                                          settings.DB_DATASTORE_NAME,
+                                          ogc_server_settings.DATASTORE_NAME,
                                           name,
                                           name,
                                           escape(layer_form.cleaned_data['title']),
@@ -2810,7 +2776,7 @@ def mobilemap(request, mapid=None, snapshot=None):
         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
         'GEONETWORK_BASE_URL' : settings.GEONETWORK_BASE_URL,
         'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
-        'DB_DATASTORE' : settings.DB_DATASTORE,
+        'DB_DATASTORE' : ogc_server_settings.DATASTORE,
         'maptitle': map_obj.title,
         'urlsuffix': get_suffix_if_custom(map_obj),
     }))

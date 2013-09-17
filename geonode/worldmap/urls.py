@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
 from geonode.sitemap import LayerSitemap, MapSitemap
-import geonode.proxy.urls
+import geonode.worldmap.proxy.urls
 
 import autocomplete_light
 autocomplete_light.autodiscover()
@@ -14,8 +14,8 @@ urlpatterns = patterns('',
                                        name='account_ajax_lookup_email'),
     (r"^account/", include("geonode.worldmap.register.urls")),
     (r'^people/', include('geonode.worldmap.profile.urls')),
-    (r'^layers/', include('geonode.worldmap.layerutils.urls')),
-    (r'^maps/', include('geonode.worldmap.maputils.urls')),
+    (r'^layers/', include('geonode.worldmap.layers.urls')),
+    (r'^maps/', include('geonode.worldmap.maps.urls')),
     #(r'^upload/', include('geonode.worldmap.uploadutils.urls')),
     (r'^annotations/', include('geonode.worldmap.mapnotes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
@@ -25,3 +25,5 @@ urlpatterns = patterns('',
     (r'^bostonhoods/?', include('geonode.worldmap.hoods.urls')),
           
 )
+
+urlpatterns += geonode.worldmap.proxy.urls.urlpatterns

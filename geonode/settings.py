@@ -237,9 +237,10 @@ INSTALLED_APPS = (
     'geonode.worldmap.register',
     'geonode.worldmap.mapnotes',
     'geonode.worldmap.capabilities',    
-    'geonode.worldmap.layerutils',
-    'geonode.worldmap.maputils',
-    'geonode.worldmap.securityutils',
+    'geonode.worldmap.layers',
+    'geonode.worldmap.maps',
+    'geonode.worldmap.proxy',
+    'geonode.worldmap.security',
     'geonode.worldmap.stats',
     'geonode.worldmap.hoods',
     
@@ -456,6 +457,7 @@ OGC_SERVER = {
         'WPS_ENABLED' : False,
         # Set to name of database in DATABASES dictionary to enable
         'DATASTORE': '', #'datastore',
+        'DOWNLOAD_URL' : 'http://localhost:8080/geoserver/'
     }
 }
 

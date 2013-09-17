@@ -33,6 +33,8 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
 /**
  *  Add GetFeedFeatureInfo tool to GeoExplorer.Viewer
  */
+
+
  GeoExplorer.Composer.prototype.loadConfig = function(config) {
          config.tools.splice(0, 0, {
              ptype: "gxp_getfeedfeatureinfo",
@@ -49,7 +51,12 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              printService: config.printService,
              actionTarget: "paneltbar",
              showButtonText: true
-         }, {
+         },{
+            ptype: "gxp_linkembedmaptool",
+            text: '<span class="x-btn-text">{% trans "Link" %}</span>',
+            actionTarget: "paneltbar"
+         },
+         {
              actions: ["-"],
              actionTarget: "paneltbar"
          },             {

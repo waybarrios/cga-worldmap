@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 import logging
 from urlparse import urlparse
 import psycopg2
-from geonode.worldmap.maputils.models import WorldMap
+from geonode.maps.models import Map
 from geonode.worldmap.stats.models import LayerStats
 from geonode.layers.models import Layer
 from geonode.maps.views import *
@@ -32,7 +32,7 @@ def get_hood_center(resource_name, block_ids):
     Do a PostGIS query to calculate the center coordinates of the selected census blocks
     """
     layer = settings.HOODS_TEMPLATE_LAYER
-    conn=psycopg2.connect("dbname='" + settings.DB_DATASTORE_DATABASE + "' user='" + settings.DB_DATASTORE_USER + "'  password='" + settings.DB_DATASTORE_PASSWORD + "' port=" + settings.DB_DATASTORE_PORT + " host='" + settings.DB_DATASTORE_HOST + "'")
+    conn=psycopg2.connect("dbname='" + ogc_server_settings.DATASTORE_DATABASE + "' user='" + ogc_server_settings.DATASTORE_USER + "'  password='" + ogc_server_settings.DATASTORE_PASSWORD + "' port=" + ogc_server_settings.DATASTORE_PORT + " host='" + ogc_server_settings.DATASTORE_HOST + "'")
     try:
         cur = conn.cursor()
         query = "select ST_AsGeoJSON(ST_Centroid(EXTENT(ST_Transform(the_geom,900913)))) as center from \"" + layer + "\" where \"" + settings.HOODS_TEMPLATE_ATTRIBUTE + "\" IN (" + block_ids + ")"
@@ -67,7 +67,7 @@ def create_hood(request):
         return HttpResponseRedirect('/accounts/login?next=' + request.get_full_path())
 
     mapid = settings.HOODS_TEMPLATE_ID
-    mapTemplate= get_object_or_404(WorldMap,pk=mapid)
+    mapTemplate= get_object_or_404(Map,pk=mapid)
     config = mapTemplate.viewer_json(request.user)
     config['edit_map'] = True
 
@@ -101,7 +101,7 @@ def create_hood(request):
         'config': json.dumps(config),
         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
         'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
-        'DB_DATASTORE' : settings.DB_DATASTORE,
+        'DB_DATASTORE' : ogc_server_settings.DATASTORE,
         'maptitle': mapTemplate.title,
         }))
 
