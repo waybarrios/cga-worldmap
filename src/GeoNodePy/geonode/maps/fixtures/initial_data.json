@@ -153,7 +153,11 @@
             "name": "farming",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description": "Rearing of animals or cultivation of plants. For example, resources describing irrigation, aquaculture, herding, and pests and diseases affecting crops and livestock."
+            "description": "Rearing of animals or cultivation of plants. For example, resources describing irrigation, aquaculture, herding, and pests and diseases affecting crops and livestock.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         }
 
     },
@@ -163,7 +167,11 @@
             "name": "biota",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Naturally occurring flora and fauna. For example, resources describing wildlife, biological sciences, ecology, wilderness, sea life, wetlands, and habitats."
+            "description" : "Naturally occurring flora and fauna. For example, resources describing wildlife, biological sciences, ecology, wilderness, sea life, wetlands, and habitats.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 2
@@ -174,7 +182,11 @@
             "name": "boundaries",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Legal land descriptions"
+            "description" : "Legal land descriptions",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 3
@@ -185,7 +197,11 @@
             "name": "climatologyMeteorologyAtmosphere",
             "description": "Atmospheric processes and phenomena. For example, resources describing cloud cover, weather, atmospheric conditions, climate change, and precipitation.",
             "created_dttm": "2011-01-01",
-            "last_modified": "2011-01-01"
+            "last_modified": "2011-01-01",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 4
@@ -196,7 +212,11 @@
             "name": "economy",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Economic activities or employment. For example, resources describing labor, revenue, commerce, industry, tourism and ecotourism, forestry, fisheries, commercial or subsistence hunting, and exploration and exploitation of resources such as minerals, oil, and gas."
+            "description" : "Economic activities or employment. For example, resources describing labor, revenue, commerce, industry, tourism and ecotourism, forestry, fisheries, commercial or subsistence hunting, and exploration and exploitation of resources such as minerals, oil, and gas.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 5
@@ -207,7 +227,11 @@
             "name": "elevation",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description": "Height above or below sea level. For example, resources describing altitude, bathymetry, digital elevation models, slope, and products derived from this information."
+            "description": "Height above or below sea level. For example, resources describing altitude, bathymetry, digital elevation models, slope, and products derived from this information.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 6
@@ -218,7 +242,11 @@
             "name": "health",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Health services, human ecology, and safety. For example, resources describing human disease and illness, factors affecting health, hygiene, mental and physical health, substance abuse, and health services."
+            "description" : "Health services, human ecology, and safety. For example, resources describing human disease and illness, factors affecting health, hygiene, mental and physical health, substance abuse, and health services.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 7
@@ -229,7 +257,11 @@
             "name": "environment",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Environmental resources, protection, and conservation. For example, resources describing pollution, waste storage and treatment, environmental impact assessment, environmental risk, and nature reserves."
+            "description" : "Environmental resources, protection, and conservation. For example, resources describing pollution, waste storage and treatment, environmental impact assessment, environmental risk, and nature reserves.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
 
         },
         "model": "maps.layercategory",
@@ -241,7 +273,11 @@
             "name": "geoscientificInformation",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Earth sciences. For example, resources describing geophysical features and processes, minerals, the composition, structure and origin of the earth’s rocks, earthquakes, volcanic activity, landslides, gravity information, soils, permafrost, hydrogeology, and erosion."
+            "description" : "Earth sciences. For example, resources describing geophysical features and processes, minerals, the composition, structure and origin of the earth’s rocks, earthquakes, volcanic activity, landslides, gravity information, soils, permafrost, hydrogeology, and erosion.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 9
@@ -252,7 +288,11 @@
             "name": "imageryBaseMapsEarthCover",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Base maps. For example, resources describing land cover, topographic maps, and classified and unclassified images."
+            "description" : "Base maps. For example, resources describing land cover, topographic maps, and classified and unclassified images.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 10
@@ -263,7 +303,11 @@
             "name": "inlandWaters",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Inland water features, drainage systems, and their characteristics. For example, resources describing rivers and glaciers, salt lakes, water use plans, dams, currents, floods, water quality, and hydrographic charts."
+            "description" : "Inland water features, drainage systems, and their characteristics. For example, resources describing rivers and glaciers, salt lakes, water use plans, dams, currents, floods, water quality, and hydrographic charts.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 11
@@ -274,7 +318,11 @@
             "name": "location",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "positional information and services. For example, resources describing addresses, geodetic networks, postal zones and services, control points, and place names."
+            "description" : "positional information and services. For example, resources describing addresses, geodetic networks, postal zones and services, control points, and place names.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 12
@@ -285,7 +333,11 @@
             "name": "oceans",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Features and characteristics of salt water bodies excluding inland waters. For example, resources describing tides, tidal waves, coastal information, and reefs."
+            "description" : "Features and characteristics of salt water bodies excluding inland waters. For example, resources describing tides, tidal waves, coastal information, and reefs.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk":13
@@ -296,7 +348,11 @@
             "name": "planningCadastre",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Land use. For example, resources describing zoning maps, cadastral surveys, and land ownership."
+            "description" : "Land use. For example, resources describing zoning maps, cadastral surveys, and land ownership.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 14
@@ -307,7 +363,11 @@
             "name": "society",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Characteristics of societies and cultures. For example, resources describing natural settlements, anthropology, archaeology, education, traditional beliefs, manners and customs, demographic data, crime and justice, recreational areas and activities, social impact assessments, and census information"
+            "description" : "Characteristics of societies and cultures. For example, resources describing natural settlements, anthropology, archaeology, education, traditional beliefs, manners and customs, demographic data, crime and justice, recreational areas and activities, social impact assessments, and census information",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 15
@@ -318,7 +378,11 @@
             "name": "structure",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Man-made construction. For example, resources describing buildings, museums, churches, factories, housing, monuments, and towers."
+            "description" : "Man-made construction. For example, resources describing buildings, museums, churches, factories, housing, monuments, and towers.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 16
@@ -329,7 +393,11 @@
             "name": "transportation",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Means and aids for conveying people and goods. For example, resources describing roads, airports and airstrips, shipping routes, tunnels, nautical charts, vehicle or vessel location, aeronautical charts, and railways."
+            "description" : "Means and aids for conveying people and goods. For example, resources describing roads, airports and airstrips, shipping routes, tunnels, nautical charts, vehicle or vessel location, aeronautical charts, and railways.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 17
@@ -340,7 +408,11 @@
             "name": "utilitiesCommunication",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : " Energy, water and waste systems, and communications infrastructure and services. For example, resources describing hydroelectricity, geothermal, solar, and nuclear sources of energy, water purification and distribution, sewage collection and disposal, electricity and gas distribution, data communication, telecommunication, radio, and communication networks."
+            "description" : " Energy, water and waste systems, and communications infrastructure and services. For example, resources describing hydroelectricity, geothermal, solar, and nuclear sources of energy, water purification and distribution, sewage collection and disposal, electricity and gas distribution, data communication, telecommunication, radio, and communication networks.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 18
@@ -351,7 +423,11 @@
             "name": "intelligenceMilitary",
             "created_dttm": "2011-01-01",
             "last_modified": "2011-01-01",
-            "description" : "Military bases, structures, and activities. For example, resources describing barracks, training grounds, military transportation, and information collection."
+            "description" : "Military bases, structures, and activities. For example, resources describing barracks, training grounds, military transportation, and information collection.",
+            "title_fr": null,
+            "title_zh": null,
+            "description_fr": null,
+            "description_zh": null
         },
         "model": "maps.layercategory",
         "pk": 19
