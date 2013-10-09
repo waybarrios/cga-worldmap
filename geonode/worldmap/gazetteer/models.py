@@ -27,4 +27,4 @@ class GazetteerEntry(models.Model):
 
     class Meta:
         unique_together = (("layer_name", "layer_attribute", "feature_fid"))
-
+        app_label = 'gazetteer'

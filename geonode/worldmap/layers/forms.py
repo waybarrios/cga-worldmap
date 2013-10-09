@@ -106,14 +106,19 @@ class WorldMapLayerForm(forms.ModelForm):
                    'bbox_x0', 'bbox_x1', 'bbox_y0', 'bbox_y1', 'srid','topic_category', 'category',
                    'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type',
                    'csw_wkt_geometry', 'metadata_uploaded', 'metadata_xml', 'csw_anytext',
-                   'popular_count', 'share_count', 'thumbnail', 'default_style', 'styles')
+                   'popular_count', 'share_count', 'thumbnail', 'default_style', 'styles',
+                    'gazetteer_project', 'in_gazetteer')
         
         
 class GazetteerAttributeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(GazetteerAttributeForm, self).__init__(*args, **kwargs)
+        instance = getattr(self, 'instance', None)
+        if instance and instance.attribute_type != 'xsd:string':
+            self.fields['searchable'].widget.attrs['disabled'] = True
         self.fields['attribute'].widget.attrs['readonly'] = True
         self.fields['display_order'].widget.attrs['size'] = 3
+        self.fields['display_order'].widget.attrs['style'] = "width:50px;"
 
     class Meta:
         model = Attribute

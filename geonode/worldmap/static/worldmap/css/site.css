@@ -44,7 +44,6 @@ body {
 
 a {
     color: #18469C;
-    text-decoration: underline;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -1003,4 +1002,27 @@ Comments
 	padding: 10px;
 	background-color: #ced9e7;
 	border: 1px solid #000;
+}
+
+
+.x-panel-header {
+    background: #123456 center left repeat-x;
+    text-align: center;
+    border-color: #000;
+}
+
+.x-window-header {
+    background: #123456 center left repeat-x;
+    text-align: center;
+    border-color: #000;
+}
+
+.x-panel-body {
+    border-color: #000;
+    background-color: #fafad2;
+}
+
+.x-panel-header-text {
+    font: bold 14px Consolas, Arial, san-serif;
+    color: #eee;
 }

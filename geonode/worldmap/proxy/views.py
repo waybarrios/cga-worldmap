@@ -229,12 +229,17 @@ def download(request, service):
 
     if "format" in params:
         format = params["format"]
-    elif "outputormat" in params:
+    elif "outputFormat" in params:
         format = params["outputFormat"]
     elif "mode" in params:
         format = "kml"
     else:
         format = "unknown"
+
+    if "/" in format:
+        format = format.split("/")[1]
+
+    format = format.replace("excel","xls").replace("gml2","xml")
 
     layer_obj = Layer.objects.get(typename=layer)
 

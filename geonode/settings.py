@@ -220,6 +220,10 @@ INSTALLED_APPS = (
     'actstream',
     'user_messages',
 
+    #queue
+    'djcelery',
+    'djkombu',
+
     # GeoNode internal apps
     'geonode.people',
     'geonode.base',
@@ -236,20 +240,19 @@ INSTALLED_APPS = (
     'geonode.worldmap.profile',
     'geonode.worldmap.register',
     'geonode.worldmap.mapnotes',
-    'geonode.worldmap.capabilities',    
+    'geonode.worldmap.capabilities',
     'geonode.worldmap.layers',
     'geonode.worldmap.maps',
     'geonode.worldmap.proxy',
     'geonode.worldmap.security',
     'geonode.worldmap.stats',
     'geonode.worldmap.hoods',
-    
+    'geonode.worldmap.gazetteer',
+    'geonode.worldmap.queue',
+
     'modeltranslation',
     'autocomplete_light',
-    #'geonode.gazetteer',
-    #'geonode.queue',
-    #'djcelery',
-    #'djkombu',
+
     #'debug_toolbar',
 )
 
@@ -667,30 +670,7 @@ LOCKDOWN_GEONODE = False
 
 
 USE_GAZETTEER = False
-##### START GAZETTEER SETTINGS #####
-# Defines settings for multiple databases,
-# only use if PostGIS integration enabled
-# and USE_GAZETTEER = True
-#DATABASES = {
-#    'default': {
-#        'ENGINE': DATABASE_ENGINE,
-#        'NAME': DATABASE_NAME,
-#        'USER' : DATABASE_USER,
-#        'PASSWORD': DATABASE_PASSWORD,
-#        'PORT': DATABASE_PORT,
-#        'HOST': DATABASE_HOST
-#    },
-#    'wmdata': {
-#        'ENGINE': DB_DATASTORE_ENGINE,
-#        'NAME': DB_DATASTORE_DATABASE,
-#        'USER' : DB_DATASTORE_USER,
-#        'PASSWORD': DB_DATASTORE_PASSWORD,
-#        'PORT': DB_DATASTORE_PORT,
-#        'HOST': DATABASE_HOST
-#    }
-#
-#}
-#DATABASE_ROUTERS = ['geonode.utils.WorldmapDatabaseRouter']
+#DATABASE_ROUTERS = ['geonode.worldmap.utils.WorldmapDatabaseRouter']
 #SOUTH_DATABASE_ADAPTERS = {
 #    'default': "south.db.sqlite3",
 #    'wmdata' : "south.db.postgresql_psycopg2",
@@ -705,7 +685,7 @@ GAZETTEER_FULLTEXTSEARCH = False
 #and gazetteer updates
 USE_QUEUE = False
 QUEUE_INTERVAL = '*/10'
-CELERY_IMPORTS = ("geonode.queue", )
+CELERY_IMPORTS = ("geonode.worldmap.queue", )
 BROKER_URL = "django://"
 if USE_QUEUE:
     import djcelery

@@ -1,12 +1,9 @@
-{% include 'geonode/ext_header.html' %}
-{% include 'geonode/sdk_header.html' %}
+
 <style type="text/css">
 #aboutbutton {
     display: none;
 }
-#paneltbar {
-    margin-top: 90px;
-}
+
 button.logout {
     display: none;
 }
@@ -16,6 +13,12 @@ button.login {
 .map-title-header {
     margin-right: 10px;
 }
+
+{% if not urlsuffix %}
+#paneltbar {
+    margin-top: 90px;
+}
+{% endif %}
 </style>
 <script type="text/javascript">
 var app;

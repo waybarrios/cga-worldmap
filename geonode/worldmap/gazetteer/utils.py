@@ -4,6 +4,7 @@ from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 #from psycopg2 import extras
+from geonode.utils import ogc_server_settings
 from geonode.worldmap.gazetteer.models import GazetteerEntry
 from geopy import geocoders
 from django.conf import settings
@@ -13,12 +14,13 @@ from geonode.maps.models import MapLayer, Map
 from geonode.layers.models import Layer, Attribute
 from django.core.cache import cache
 import re
+from geonode.worldmap.queue.models import GazetteerUpdateJob
 
 GAZETTEER_TABLE = 'gazetteer_gazetteerentry'
 
 __author__ = 'mbertrand'
 
-logger = logging.getLogger("geonode.gazetteer.utils")
+logger = logging.getLogger("geonode.worldmap.gazetteer.utils")
 
 '''
 ALTER TABLE gazetteer_gazetteerentry ADD COLUMN placename_tsv tsvector;
@@ -35,11 +37,11 @@ def get_geometry_type(layer_name):
     Return the geometry type (POINT, POLYGON etc), geometry column name, and projection of a layer
     """
 
-    conn = psycopg2.connect(
-        "dbname='" + ogc_server_settings.DATASTORE_DATABASE + "' user='" + ogc_server_settings.DATASTORE_USER + "'  password='" + ogc_server_settings.DATASTORE_PASSWORD + "' port=" + ogc_server_settings.DATASTORE_PORT + " host='" + ogc_server_settings.DATASTORE_HOST + "'")
+    db = ogc_server_settings.datastore_db
+    conn=psycopg2.connect("dbname='" + db['NAME'] + "' user='" + db['USER'] + "'  password='" + db['PASSWORD'] + "' port=" + db['PORT'] + " host='" + db['HOST'] + "'")
     try:
         cur = conn.cursor()
-        cur.execute("select type, f_geometry_column, srid from geometry_columns where f_table_name = '%s'" % layer_name)
+        cur.execute("select type, f_geometry_column, srid from geometry_columns where f_table_name = '%s'" % layer_name + " LIMIT 1")
         result = cur.fetchone()
         return result
     except Exception, e:
@@ -204,9 +206,9 @@ def add_to_gazetteer(layer_name, name_attributes, start_attribute=None, end_attr
     updateQueries = []
     insertQueries = []
 
-    geom_query = "l." + geocolumn
+    geom_query = "l.\"" + geocolumn + "\""
 
-    if projection != "4326":
+    if projection not in ["4326","-1"]:
         geom_query = "ST_Transform(" + geom_query + ",4326)"
 
     coord_query = geom_query
@@ -258,15 +260,20 @@ def add_to_gazetteer(layer_name, name_attributes, start_attribute=None, end_attr
                 (julian_end.replace("l.","") if julian_end else 'null') + " as julian_end," +\
             ("'" + project + "'" if project else 'null') + " as project" +\
                 "," + geom_query + " as feature," +\
-            "ST_X(" + coord_query + "), ST_Y(" + coord_query + ") from " + layer_name +\
-            " as l WHERE  l.\"" + attribute.attribute + "\" is not null AND " +\
+            "ST_X(" + coord_query + "), ST_Y(" + coord_query + ") from \"" + layer_name +\
+            "\" as l WHERE  l.\"" + attribute.attribute + "\" is not null AND " +\
             "fid not in (SELECT feature_fid from " + GAZETTEER_TABLE + " where layer_name = '" + layer_name + "' and layer_attribute = '" + attribute.attribute + "'))")
 
-    conn = psycopg2.connect(
-        "dbname='" + ogc_server_settings.DATASTORE_DATABASE + "' user='" + ogc_server_settings.DATASTORE_USER + "'  password='" + ogc_server_settings.DATASTORE_PASSWORD + "' port=" + ogc_server_settings.DATASTORE_PORT + " host='" + ogc_server_settings.DATASTORE_HOST + "'")
+    db = ogc_server_settings.datastore_db
+    conn=psycopg2.connect("dbname='" + db['NAME'] + "' user='" + db['USER'] + "'  password='" + db['PASSWORD'] + "' port=" + db['PORT'] + " host='" + db['HOST'] + "'")
 
     try:
         cur = conn.cursor()
+
+        if projection == -1:
+            updateSridQuery = "SELECT UpdateGeometrySRID('%s','%s',4326)" % (layer_name, geocolumn)
+            cur.execute(updateSridQuery)
+            conn.commit()
         cur.execute(delete_query)
         logger.info(delete_query)
         for updateQuery in updateQueries:
@@ -357,3 +364,26 @@ def julianDate(year,month=1,day=1,hour=0,min=0,sec=0,utc=0):
          - 0.5*sign((100*year)+month-190002.5) + 0.5 + hour/24.0 + min/(60.0*24.0) + sec/(3600.0*24.0)
     return jd
 
+
+def update_gazetteer(layer_obj):
+    if not layer_obj.in_gazetteer:
+        delete_from_gazetteer(layer_obj.name)
+    else:
+        includedAttributes = []
+        gazetteerAttributes = layer_obj.attribute_set.filter(in_gazetteer=True)
+        for attribute in gazetteerAttributes:
+            includedAttributes.append(attribute.attribute)
+
+        startAttribute = layer_obj.attribute_set.filter(is_gaz_start_date=True)[
+            0].attribute if layer_obj.attribute_set.filter(is_gaz_start_date=True).exists() > 0 else None
+        endAttribute = layer_obj.attribute_set.filter(is_gaz_end_date=True)[0].attribute if layer_obj.attribute_set.filter(
+            is_gaz_end_date=True).exists() > 0 else None
+
+        add_to_gazetteer(layer_obj.name, includedAttributes, start_attribute=startAttribute, end_attribute=endAttribute,
+                         project=layer_obj.gazetteer_project)
+
+
+def queue_gazetteer_update(layer_obj):
+    if GazetteerUpdateJob.objects.filter(layer=layer_obj.id).exists() == 0:
+        newJob = GazetteerUpdateJob(layer=layer_obj)
+        newJob.save()

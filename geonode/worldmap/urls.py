@@ -23,6 +23,7 @@ urlpatterns = patterns('',
                            'geonode.worldmap.register.views.registercompleteOrganizationUser',
                            name='registration_complete'),
     (r'^bostonhoods/?', include('geonode.worldmap.hoods.urls')),
+    (r'^gazetteer/', include('geonode.worldmap.gazetteer.urls')),
           
 )
 

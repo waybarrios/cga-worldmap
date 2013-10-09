@@ -5,59 +5,62 @@
 {% block title %} {% trans "GeoExplorer" %} - {{ block.super }} {% endblock %}
 
 {% block head %}
+    {% include 'geonode/ext_header.html' %}
+    {% include 'geonode/sdk_header.html' %}
 {{ block.super }}
 {% include 'maps/map_sdk.js' %}
-<div id="dataTabs" class="x-hidden">
-	<div id="searchDiv" style="background-color:#fff;width:800px;">
-		<div style="float:left;position:relative;margin:10px;width:580px;">
-  			<div class="block">
-    			<h2>{% trans "Search" %} <span class="subtitle">{% trans "for geospatial data" %}</span></h2>
-    			<div id="search_results"></div>
-			</div>
-  			<div class="block wrap selfclear">
-  				<h3>Selected Data</h3>
-  				<div id="selection">
-    				<div id="data_cart"></div>
-    			</div>
-    			<div id="data_ops"></div>
-  			</div>
-		</div>
+{% endblock %}
 
-		<div style="position:relative;float:right;width:200px">
-  			<div id="refine" class="block">
-    			<h3>{% trans "Refine Search" %}</h3>
-    			<div class="bbox-controls">
-      				<div class="bbox-enabled"><input type="checkbox" /> {% trans "By area" %}</div>
-      				<p><span class="explain">{% blocktrans %}Limit the search to data that includes features in the displayed area.{% endblocktrans %}</span></p>
-      				<div class="bbox-expand"></div>
-    			</div>
-    			<div class="search-button">Refine</div>
-  			</div>
-		</div>
-	</div>
-    <div id="externalDiv"></div>
+{% block footer %}
+    <div id="dataTabs" class="x-hidden">
+        <div id="searchDiv" style="background-color:#fff;width:800px;">
+            <div style="float:left;position:relative;margin:10px;width:580px;">
+                <div class="block">
+                    <h2>{% trans "Search" %} <span class="subtitle">{% trans "for geospatial data" %}</span></h2>
+                    <div id="search_results"></div>
+                </div>
+                <div class="block wrap selfclear">
+                    <h3>Selected Data</h3>
+                    <div id="selection">
+                        <div id="data_cart"></div>
+                    </div>
+                    <div id="data_ops"></div>
+                </div>
+            </div>
+
+            <div style="position:relative;float:right;width:200px">
+                <div id="refine" class="block">
+                    <h3>{% trans "Refine Search" %}</h3>
+                    <div class="bbox-controls">
+                        <div class="bbox-enabled"><input type="checkbox" /> {% trans "By area" %}</div>
+                        <p><span class="explain">{% blocktrans %}Limit the search to data that includes features in the displayed area.{% endblocktrans %}</span></p>
+                        <div class="bbox-expand"></div>
+                    </div>
+                    <div class="search-button">Refine</div>
+                </div>
+            </div>
+        </div>
+        <div id="externalDiv"></div>
         {% if user.is_authenticated %}
             <div id="uploadDiv"></div>
-           	{% if DB_DATASTORE  %}
+            {% if DB_DATASTORE  %}
                 <div id="createDiv"></div>
             {% endif %}
         {% endif %}
-    <div id="warpDiv">
+        <div id="warpDiv">
             <div id="tabContainer" style="padding:20px;">
 
                 <div style="position:relative;float:left;">
 
 
-                    <h3>{%trans "Rectify Images"  %}</h3>    
-                    
+                    <h3>{%trans "Rectify Images"  %}</h3>
+
                     <p style="font-size: 14px">Use <a target="_blank" href="http://warp.worldmap.harvard.edu">WorldMap WARP</a> to upload and rectify scanned maps for use in WorldMap. <br/><br/> Maps rectified using this tool can be brought into WorldMap by following the instructions under Section 4.5 in <a href="{{ STATIC_URL }}worldmap/docs/WorldMap_Help.pdf">WorldMap Help</a>.</p>
                     <br/><br/>
                     <div align="center"><a target="_blank" href="http://warp.worldmap.harvard.edu"><img src="{{ STATIC_URL }}worldmap/img/warper-sample.jpg" border="0" /></a></div>
                 </div>
             </div>
+        </div>
     </div>
-</div>
-<div id="featuredetails" style="float:right; width: 300px"></div>
+    <div id="featuredetails" style="float:right; width: 300px"></div>
 {% endblock %}
-
-{% block footer %}{% endblock %}

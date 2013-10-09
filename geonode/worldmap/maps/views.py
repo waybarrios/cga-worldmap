@@ -9,11 +9,13 @@ from django.contrib.auth.decorators import login_required
 from django.utils import simplejson as json
 import logging
 import re
+from geonode.documents.models import get_related_documents
 import httplib2
 from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 from geonode.maps.models import Map, MapLayer
 from geonode.maps.views import _resolve_map, map_json as basemap_json, map_set_permissions, new_map_config, map_detail
 from geonode.maps.views import MAP_LEV_NAMES, _PERMISSION_MSG_GENERIC, _PERMISSION_MSG_LOGIN, _PERMISSION_MSG_VIEW
+from geonode.security.views import _perms_info
 from geonode.utils import resolve_object, ogc_server_settings
 from geonode.layers.models import Layer
 from geonode.worldmap.profile.forms import ContactProfileForm
@@ -55,8 +57,31 @@ def map_view(request, mapid, snapshot=None, template='maps/map_view.html'):
     config['db_datastore'] = ogc_server_settings.DATASTORE
     return render_to_response(template, RequestContext(request, {
         'config': json.dumps(config),
-        'DB_DATASTORE' : ogc_server_settings.DATASTORE
+        'title': map_obj.title,
+        'DB_DATASTORE' : ogc_server_settings.DATASTORE,
+        'urlsuffix': get_suffix_if_custom(map_obj)
     }))
+
+def map_detail(request, mapid, template='maps/map_detail.html'):
+    if not mapid.isdigit():
+        map_obj = _resolve_map_custom(request, mapid, 'urlsuffix', 'maps.view_map', _PERMISSION_MSG_VIEW)
+    else:
+        map_obj = _resolve_map(request, mapid, 'maps.view_map', _PERMISSION_MSG_VIEW)
+
+    map_obj.popular_count += 1
+    map_obj.save()
+
+    config = map_obj.viewer_json()
+    config = json.dumps(config)
+    layers = MapLayer.objects.filter(map=map_obj.id)
+    return render_to_response(template, RequestContext(request, {
+        'config': config,
+        'map': map_obj,
+        'layers': layers,
+        'permissions_json': json.dumps(_perms_info(map_obj, MAP_LEV_NAMES)),
+        "documents": get_related_documents(map_obj),
+        'urlsuffix': get_suffix_if_custom(map_obj)
+        }))
 
 
 def clean_config(conf):
