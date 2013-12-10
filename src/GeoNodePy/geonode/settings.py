@@ -2,7 +2,9 @@
 # Django settings for GeoNode project.
 import logging
 import os
-from django.utils.translation import ugettext as _
+
+gettext = lambda s: s
+
 #
 # General Django development settings
 #
@@ -48,13 +50,7 @@ LANGUAGE_CODE = 'en'
 
 LANGUAGES = (
     ('en', 'English'),
-    ('es', 'Español'),
-    ('it', 'Italiano'),
     ('fr', 'Français'),
-    ('de', 'Deutsch'),
-    ('el', 'Ελληνικά'),
-    ('id', 'Bahasa Indonesia'),
-    ('zh', '中國的'),
 )
 
 # If you set this to False, Django will make some optimizations so as not
@@ -126,6 +122,8 @@ INSTALLED_APPS = (
     'taggit',
     'south',
     'autocomplete_light',
+    'djcelery',
+    'djkombu',
 
     # GeoNode internal apps
     'geonode.core',
@@ -135,11 +133,10 @@ INSTALLED_APPS = (
     'geonode.register',
     'geonode.mapnotes',
     'geonode.capabilities',
+    'geonode.queue',
+    'geonode.certification',
     #'geonode.hoods',
     #'geonode.gazetteer',
-    #'geonode.queue',
-    #'djcelery',
-    #'djkombu',
     #'debug_toolbar',
 
 )
@@ -316,6 +313,7 @@ GOOGLE_SECRET_KEY = None
 GOOGLE_ANALYTICS_CODE=""
 
 YAHOO_API_KEY=""
+FLICKR_API_KEY=""
 
 # Where should newly created maps be focused?
 DEFAULT_MAP_CENTER = (0, 0)
@@ -342,14 +340,14 @@ MAP_BASELAYERS = [
  {
         "source": {"ptype": "gx_olsource"},
         "type": "OpenLayers.Layer",
-        "args": [_("No background")],
+        "args": [gettext("No background")],
         "visibility": False,
         "fixed": True,
         "group": "background"
     }, {
         "source": {"ptype": "gx_olsource"},
         "type": "OpenLayers.Layer.OSM",
-        "args": [_("OpenStreetMap")],
+        "args": [gettext("OpenStreetMap")],
         "visibility": False,
         "fixed": True,
         "group": "background"
@@ -428,6 +426,7 @@ USE_GAZETTEER = False
 # Defines settings for multiple databases,
 # only use if PostGIS integration enabled
 # and USE_GAZETTEER = True
+#GAZETTEER_DB_ALIAS = "wmdata"
 #DATABASES = {
 #    'default': {
 #        'ENGINE': DATABASE_ENGINE,
@@ -454,7 +453,7 @@ USE_GAZETTEER = False
 #
 #    }
 #SOUTH_TESTS_MIGRATE = False
-GAZETTEER_FULLTEXTSEARCH = False
+#GAZETTEER_FULLTEXTSEARCH = False
 ##### END GAZETTEER SETTINGS #####
 
 #Set to true to schedule asynchronous updates of
@@ -485,6 +484,9 @@ DEFAULT_WORKSPACE = 'geonode'
 HGL_VALIDATION_KEY='Contact Harvard Geospatial Library to request the validation key'
 CACHE_BACKEND = 'dummy://'
 
+# Regular expression to prevent uploading of SLD's containing links to external images,
+# for example: 'http://[a-zA-Z0-9\.\-]*harvard\.edu'.  Default will allow any link.
+VALID_SLD_LINKS = '.*'
 
 ### Boston neighborhood settings  ###
 ### These need to be set to the correct values for the worldmap instance ###

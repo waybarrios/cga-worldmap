@@ -8,9 +8,9 @@
 {% include "geonode/geo_header.html" %}
 {{ block.super }}
 {% if "gme-" in GOOGLE_API_KEY %}
-<script src="http://www.google.com/jsapi?client={{GOOGLE_API_KEY}}"></script>
+<script src="https://www.google.com/jsapi?client={{GOOGLE_API_KEY}}"></script>
 {% else %}
-<script src="http://www.google.com/jsapi?key={{GOOGLE_API_KEY}}"></script>
+<script src="https://www.google.com/jsapi?key={{GOOGLE_API_KEY}}"></script>
 {% endif %}
 <script type="text/javascript">
     google.load("earth", "1");
@@ -28,7 +28,18 @@ Ext.onReady(function() {
             format: "grid",
             actionTarget: "main.tbar",
             outputConfig: {width: 400, height: 200, panIn: false}
-        }],
+        },
+            {
+                ptype: "gxp_coordinatetool",
+                title: "<span class='x-btn-text'>{% trans 'Map Coordinates - longitude, latitude' %}</span>",
+                actionTarget:  {target: "main.tbar"}
+            },
+            {
+                ptype: "gxp_annotation",
+                user: "{{ user.id }}",
+                toggleGroup: 'featureGroup',
+                actionTarget:  {target: "main.tbar", index: 6}
+            }],
         createTools: function() {
             return [new Ext.Button({
                 tooltip: GeoExplorer.prototype.backgroundContainerText,

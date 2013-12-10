@@ -19,7 +19,7 @@
 #########################################################################
 
 from django.http import HttpResponse
-from httplib import HTTPConnection
+from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlsplit
 import httplib2
 import urllib
@@ -64,7 +64,7 @@ def proxy(request):
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
 
-    conn = HTTPConnection(url.hostname, url.port)
+    conn = HTTPConnection(url.hostname, url.port) if url.scheme == "http" else HTTPSConnection(url.hostname, url.port)
     conn.request(request.method, locator, request.raw_post_data, headers)
     result = conn.getresponse()
     response = HttpResponse(
@@ -133,6 +133,23 @@ def picasa(request):
     feed_response = urllib.urlopen(url).read()
     return HttpResponse(feed_response, mimetype="text/xml")
 
+
+def flickr(request):
+    url = "http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=%s" % settings.FLICKR_API_KEY
+    bbox = request.GET['bbox'] if request.method == 'GET' else request.POST['bbox']
+    query = request.GET['q'] if request.method == 'GET' else request.POST['q']
+    maxResults = request.GET['max-results'] if request.method == 'GET' else request.POST['max-results']
+    # coords = bbox.split(",")
+    # coords[0] = -180 if float(coords[0]) <= -180 else coords[0]
+    # coords[2] = 180 if float(coords[2])  >= 180 else coords[2]
+    # coords[1] = coords[1] if float(coords[1]) > -90 else -90
+    # coords[3] = coords[3] if float(coords[3])  < 90 else 90
+    # newbbox = str(coords[0]) + ',' + str(coords[1]) + ',' + str(coords[2]) + ',' + str(coords[3])
+    url = url + "&tags=%s&per_page=%s&has_geo=1&format=json&extras=geo,url_q&accuracy=1&nojsoncallback=1" % (query,maxResults)
+    feed_response = urllib.urlopen(url).read()
+    return HttpResponse(feed_response, mimetype="text/xml")
+
+
 def hglpoints (request):
     from xml.dom import minidom
     import re
@@ -176,6 +193,113 @@ def hglServiceStarter (request, layer):
     startUrl = HGL_URL + "/RemoteServiceStarter?ValidationKey=" + settings.HGL_VALIDATION_KEY + "&AddLayer=" + layer
     return HttpResponse(urllib.urlopen(startUrl).read())
 
+
+def tweetServerProxy(request,geopsip):
+    url = urlsplit(request.get_full_path())
+    if geopsip == "standard":
+        geopsip = settings.GEOPS_IP
+    tweet_url = "http://" + geopsip + "?" + url.query
+
+    identifyQuery = re.search("QUERY_LAYERS", tweet_url)
+
+    if identifyQuery is not None:
+        if re.search("%20limit%2010", tweet_url)is None:
+            return HttpResponse(status=403)
+
+    step1 = urllib.urlopen(tweet_url)
+    step2 = step1.read()
+    if 'content-type' in step1.info().dict:
+        response = HttpResponse(step2, mimetype= step1.info().dict['content-type'])
+    else:
+        response = HttpResponse(step2)
+    try :
+        cookie = step1.info().dict['set-cookie'].split(";")[0].split("=")[1]
+        response.set_cookie("tweet_count", cookie)
+    except:
+        pass
+    return response
+
+
+def tweetDownload (request):
+
+    if (not request.user.is_authenticated() or  not request.user.get_profile().is_org_member):
+        return HttpResponse(status=403)
+
+    proxy_url = urlsplit(request.get_full_path())
+    download_url = "http://" + settings.GEOPS_IP + "?" + proxy_url.query  + settings.GEOPS_DOWNLOAD
+
+    http = httplib2.Http()
+    response, content = http.request(
+        download_url, request.method)
+
+    response =  HttpResponse(
+        content=content,
+        status=response.status,
+        mimetype=response.get("content-type", "text/plain"))
+
+    response['Content-Disposition'] = response.get('Content-Disposition', 'attachment; filename="tweets"' + request.user.username + '.csv');
+    return response
+
+
+
+def tweetTrendProxy (request):
+
+    tweetUrl = "http://" + settings.AWS_INSTANCE_IP + "/?agg=trend&bounds=" + request.POST["bounds"] + "&dateStart=" + request.POST["dateStart"] + "&dateEnd=" + request.POST["dateEnd"];
+    resultJSON =""
+#    resultJSON = urllib.urlopen(tweetUrl).read()
+#    import datetime
+#
+#
+#    startDate = datetime.datetime.strptime(request.POST["dateStart"], "%Y-%b-%d")
+#    endDate = datetime.datetime.strptime(request.POST["dateEnd"], "%Y-%b-%d")
+#
+#    recString = "record: ["
+#
+#    while startDate <= endDate:
+#            recString += "{'date': '$date', 'Ebola$rnd5' : $rnd6, 'Malaria$rnd4' : $rnd7, 'Influenza$rnd3': $rnd8, 'Plague$rnd3': $rnd9, 'Lyme_Disease$rnd1': $rnd10},"
+#            recString = recString.replace("$rnd6", str(random.randrange(50,500,1)))
+#            recString = recString.replace("$rnd7", str(random.randrange(50,500,1)))
+#            recString = recString.replace("$rnd8", str(random.randrange(50,500,1)))
+#            recString = recString.replace("$rnd9", str(random.randrange(50,500,1)))
+#            recString = recString.replace("$rnd10", str(random.randrange(50,500,1)))
+#            recString = recString.replace("$date", datetime.datetime.strftime(startDate, '%b-%d-%Y'))
+#            startDate = startDate + datetime.timedelta(days=1)
+#
+#    recString += "]"
+#
+#    resultJSON = """
+#    {
+#    metaData: {
+#        root: "record",
+#        fields: [
+#            {name: 'date'},
+#            {name: 'Ebola$rnd5'},
+#            {name: 'Malaria$rnd4'},
+#            {name: 'Influenza$rnd3'},
+#            {name: 'Plague$rnd3'},
+#            {name: 'Lyme_Disease$rnd1'}
+#        ],
+#    },
+#    // Reader's configured root
+#    $recString
+#}
+#"""
+#
+#    resultJSON = resultJSON.replace("$recString", recString)
+#
+#
+#
+#    resultJSON = resultJSON.replace("$rnd1", str(random.randrange(50,500,1)))
+#    resultJSON = resultJSON.replace("$rnd2", str(random.randrange(50,500,1)))
+#    resultJSON = resultJSON.replace("$rnd3", str(random.randrange(50,500,1)))
+#    resultJSON = resultJSON.replace("$rnd4", str(random.randrange(50,500,1)))
+#    resultJSON = resultJSON.replace("$rnd5", str(random.randrange(50,500,1)))
+
+#    resultJSON = '{"metaData":{"fields":[{"name":"Tuberculosis"},{"name":"STD"},{"name":"Gastroenteritis"},{"name":"Influenza"},{"name":"Common_Cold"},{"name":"date"}],"root":"record"},"record":[{"Common_Cold":18,"Gastroenteritis":104,"Influenza":76,"STD":121,"Tuberculosis":236,"date":"2012-01-26"},{"Common_Cold":19,"Gastroenteritis":115,"Influenza":114,"STD":146,"Tuberculosis":397,"date":"2012-01-27"},{"Common_Cold":26,"Gastroenteritis":104,"Influenza":83,"STD":137,"Tuberculosis":402,"date":"2012-01-28"},{"Common_Cold":25,"Gastroenteritis":96,"Influenza":76,"STD":141,"Tuberculosis":358,"date":"2012-01-29"},{"Common_Cold":30,"Gastroenteritis":106,"Influenza":87,"STD":158,"Tuberculosis":372,"date":"2012-01-30"},{"Common_Cold":12,"Gastroenteritis":74,"Influenza":44,"STD":116,"Tuberculosis":222,"date":"2012-01-31"}]}'
+
+    return HttpResponse(resultJSON, mimetype="application/json")
+
+>>>>>>> d32884f49f01881a2ec03d6b13bbd66e8a063299:src/GeoNodePy/geonode/proxy/views.py
 
 def youtube(request):
     url = "http://gdata.youtube.com/feeds/api/videos?v=2&prettyprint=true&"

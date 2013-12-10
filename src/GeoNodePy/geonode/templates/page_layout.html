@@ -7,7 +7,7 @@
 <head>
   <title>{% block title %} {{ SITENAME }} {% endblock %}</title>
   <link rel="shortcut icon" href="{{ STATIC_URL }}theme/img/favicon.ico"/>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js" type="text/javascript"></script>
   <script type="text/javascript" src="{{ GEONODE_CLIENT_LOCATION }}externals/ext/adapter/jquery/ext-jquery-adapter.js"></script>
   {% include 'autocomplete_light/static.html' %}    
   {% block head_extra_meta %}{% endblock %}
@@ -99,7 +99,7 @@
       {% block footer %}
       
    <!-- Only show the language form if the csrf_token is present -->
-   {% if csrf_token != "NOTPROVIDED" %}       
+   {% if csrf_token != "NOTPROVIDED" and False %}       
    {% get_current_language as LANGUAGE %}
     <form class="langbar" id="target" action="/i18n/setlang/" method="post">
       {% csrf_token %}

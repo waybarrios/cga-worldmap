@@ -25,7 +25,7 @@
 {% include "geonode/geo_header.html" %}
 <script type="text/javascript" src="{{ GEONODE_CLIENT_LOCATION }}externals/misc/nicEdit.js"></script>
 
-<script src="http://www.google.com/jsapi?client={{GOOGLE_API_KEY}}"></script>
+<script src="https://www.google.com/jsapi?client={{GOOGLE_API_KEY}}"></script>
 
 <script type="text/javascript">
     google.load("earth", "1");
@@ -35,6 +35,8 @@
 
 
 <link rel="stylesheet" type="text/css" href="{{ GEONODE_CLIENT_LOCATION }}theme/ux/colorpicker/color-picker.ux.css"/>
+<link rel="stylesheet" type="text/css" href="{{ GEONODE_CLIENT_LOCATION }}theme/ux/spinner/Spinner.css" />
+
 <style type="text/css">
     #templates {
         display: none;
@@ -46,7 +48,7 @@
 <script type="text/javascript">
 {% autoescape off %}
 
-host = "http://{{GEOPS_IP}}";
+host = "/tweetserver/{{GEOPS_IP}}";
 
 Ext.sequence(Ext.form.SliderField.prototype, 'initComponent', function () {
     this.slider.on('change', this.fireEvent.createDelegate(this, 'change', 0));
@@ -329,7 +331,7 @@ var updateCQL = function (layers) {
 
 
     var keywordFilter = "";
-    var searchFilter = tweetFilterField.getValue().replace(/'/g, "''");
+    var searchFilter = tweetFilterField.getValue().replace(/'/g, "''").replace("&","");
     var keywords = searchFilter.match(/[^"\s]+|"[^"]+"/g);
     if (keywords) {
         for (var k = 0; k < keywords.length; k++) {
@@ -392,7 +394,7 @@ function getUrlParams(url) {
 var getDownloadLink = function () {
     var params = getUrlParams(tweetPointRecord.getLayer().grid[0][0].url);
     var layerName = Ext.getCmp("lsh_checkbox").checked ? "lsh_point" : "point";
-    return "/tweetDownload/?LAYERS=POINT&SQL=" + params.SQL.replace(/goog_x%2C(%20)+goog_y%2C(%20)+tweet_text/g, "lat%2C%20lon%2C%20sender_name%2C%20time%2C%20tweet_id%2C%20tweet_text") + "&BBOX=" + params.BBOX;
+    return "/tweetDownload/?LAYERS=POINT&SQL=" + params.SQL.replace(/goog_x%2C(%20)+goog_y%2C(%20)+tweet_text/g, "goog_x%2C%20goog_y%2C%20sender_name%2C%20time%2C%20tweet_id%2C%20tweet_text") + "&BBOX=" + params.BBOX;
 }
 
 var setCurrentTime = function () {
@@ -664,7 +666,7 @@ var graphWindow = new Ext.Window({
 });
 
 var tweetConfig = {title:"{% trans 'Twitter Trends' %}", source:"local", group:"Twitter", name:"heatmap",
-    url:"http://{{GEOPS_IP}}", srs:"EPSG:900913", format:"image/png", bbox:[-180, -90, 180, 90],
+    url:"/tweetserver/{{GEOPS_IP}}/", srs:"EPSG:900913", format:"image/png", bbox:[-180, -90, 180, 90],
     singleTile:true, tiled:false, ratio:1, opacity:1, visibility:true, queryable:true
 };
 

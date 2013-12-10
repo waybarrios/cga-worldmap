@@ -675,6 +675,26 @@ LOCKDOWN_GEONODE = False
 
 
 USE_GAZETTEER = False
+#GAZETTEER_DB_ALIAS = "wmdata"
+#DATABASES = {
+#    'default': {
+#        'ENGINE': DATABASE_ENGINE,
+#        'NAME': DATABASE_NAME,
+#        'USER' : DATABASE_USER,
+#        'PASSWORD': DATABASE_PASSWORD,
+#        'PORT': DATABASE_PORT,
+#        'HOST': DATABASE_HOST
+#    },
+#    'wmdata': {
+#        'ENGINE': DB_DATASTORE_ENGINE,
+#        'NAME': DB_DATASTORE_DATABASE,
+#        'USER' : DB_DATASTORE_USER,
+#        'PASSWORD': DB_DATASTORE_PASSWORD,
+#        'PORT': DB_DATASTORE_PORT,
+#        'HOST': DATABASE_HOST
+#    }
+#
+#}
 #DATABASE_ROUTERS = ['geonode.worldmap.utils.WorldmapDatabaseRouter']
 #SOUTH_DATABASE_ADAPTERS = {
 #    'default': "south.db.sqlite3",
@@ -682,7 +702,7 @@ USE_GAZETTEER = False
 #
 #    }
 #SOUTH_TESTS_MIGRATE = False
-GAZETTEER_FULLTEXTSEARCH = False
+#GAZETTEER_FULLTEXTSEARCH = False
 ##### END GAZETTEER SETTINGS #####
 
 #Set to true to schedule asynchronous updates of

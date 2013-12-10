@@ -35,7 +35,7 @@ import sys
 from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
 from django.conf import settings
-from xml.etree.ElementTree import XML
+from xml.etree.ElementTree import XML, ParseError
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 # Geonode functionality
@@ -497,8 +497,15 @@ def save(layer, base_file, user, overwrite=True, title=None,
         sld = f.read()
         f.close()
         try:
-            XML(sld)
-        except Exception, e:
+            sldxml = XML(sld)
+            valid_url = re.compile(settings.VALID_SLD_LINKS)
+            for elem in sldxml.iter(tag='{http://www.opengis.net/sld}OnlineResource'):
+                if '{http://www.w3.org/1999/xlink}href' in elem.attrib:
+                    link = elem.attrib['{http://www.w3.org/1999/xlink}href']
+                    if valid_url.match(link) is None:
+                        raise Exception(_("External images in your SLD file are not permitted.  Please contact us if you would like your SLD images hosted on %s") % (settings.SITENAME))
+            
+        except ParseError, e:
             msg =_('Your SLD file contains invalid XML')
             logger.warn("%s - %s" % (msg, str(e)))
             e.args = (msg,)

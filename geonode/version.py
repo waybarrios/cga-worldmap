@@ -1,3 +1,4 @@
+
 #########################################################################
 #
 # Copyright (C) 2012 OpenPlans
@@ -99,3 +100,12 @@ class WorldmapDatabaseRouter(object):
         elif model._meta.app_label == 'gazetteer':
             return False
         return None
+
+    def allow_migrate(self, db, model):
+        "Make sure the myapp app only appears on the 'other' db"
+        if db == 'wmdata':
+            return model._meta.app_label == 'gazetteer'
+        elif model._meta.app_label == 'gazetteer':
+            return False
+        return None
+

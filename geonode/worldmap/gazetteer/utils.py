@@ -13,6 +13,7 @@ from django.db.models import Q
 from geonode.maps.models import MapLayer, Map
 from geonode.layers.models import Layer, Attribute
 from django.core.cache import cache
+from geonode.flexidates import parse_julian_date
 import re
 from geonode.worldmap.queue.models import GazetteerUpdateJob
 
@@ -37,8 +38,7 @@ def get_geometry_type(layer_name):
     Return the geometry type (POINT, POLYGON etc), geometry column name, and projection of a layer
     """
 
-    db = ogc_server_settings.datastore_db
-    conn=psycopg2.connect("dbname='" + db['NAME'] + "' user='" + db['USER'] + "'  password='" + db['PASSWORD'] + "' port=" + db['PORT'] + " host='" + db['HOST'] + "'")
+    conn = getConnection()
     try:
         cur = conn.cursor()
         cur.execute("select type, f_geometry_column, srid from geometry_columns where f_table_name = '%s'" % layer_name + " LIMIT 1")
@@ -51,18 +51,17 @@ def get_geometry_type(layer_name):
         conn.close()
 
 
-def getGazetteerEntry(id):
+def getGazetteerEntry(input_id):
 
     try:
-        results = GazetteerEntry.objects.filter(id__exact=id)
+        results = GazetteerEntry.objects.filter(id=input_id)
         posts = []
         for entry in results:
-            #(result[0] + ':' + str(result[1]) + ':' + str(result[2]) + ':' + str(result[3]))
             posts.append({'placename': entry.place_name, 'coordinates': (entry.longitude, entry.latitude),
                           'source': formatSourceLink(entry.layer_name), 'id': entry.id})
         return posts
     except Exception, e:
-        logger.error("Error retrieving results for gazetteer by id %d:%s", id, str(e))
+        logger.error("Error retrieving results for gazetteer by id %d:%s", input_id, str(e))
         raise
 
 
@@ -107,12 +106,15 @@ def getGazetteerResults(place_name, map=None, layer=None, start_date=None, end_d
         criteria =  criteria & Q(layer_name__in=layers)
 
     if start_date:
-        start_date = parseDate(start_date)
+        start_date = parse_julian_date(start_date)
+        print("START DATE: %s" % start_date)
 
     if end_date:
-        end_date = parseDate(end_date)
+        end_date = parse_julian_date(end_date)
+        print("END DATE: %s" % end_date)
 
     if start_date and end_date:
+        print ("BOTH DATES")
         #Return all placenames that ended after the start date or started before the end date
         criteria = criteria & (Q(julian_end__gte=start_date) &  Q(julian_start__lte=end_date) |\
                                (Q(julian_start__isnull=True) & Q(julian_end__gte=start_date)) |\
@@ -122,17 +124,19 @@ def getGazetteerResults(place_name, map=None, layer=None, start_date=None, end_d
 
 
     elif start_date:
-        #Return all placenames that started before this date
+        print ("START DATE ONLY")
+        #Return all placenames that existed on this date or afterward
         #End_date >= the specified start date or start_date <= the specified date or both are null
-        criteria = criteria & ((Q(julian_end__gte=start_date) & Q(julian_start__lte=start_date)) |\
+        criteria = criteria & ((Q(julian_end__gte=start_date)) |\
                                (Q(julian_end__isnull=True) & Q(julian_start__lte=start_date)) |\
                                (Q(julian_start__isnull=True) & Q(julian_end__gte=start_date)) |\
                                (Q(julian_start__isnull=True) & Q(julian_end__isnull=True)))
 
     elif end_date:
-        #Return all placenames that started before this date
+        print ("END DATE ONLY")
+        #Return all placenames that existed on this date or before
         #End_date >= the specified end date or start_date <= the specified date or both are null
-        criteria = criteria & ((Q(julian_end__gte=end_date) & Q(julian_start__lte=end_date)) |\
+        criteria = criteria & ((Q(julian_start__lte=end_date)) |\
                                (Q(julian_start__isnull=True) & Q(julian_end__gte=end_date)) |\
                                (Q(julian_end__isnull=True) & Q(julian_start__lte=end_date)) |\
                                (Q(julian_start__isnull=True) & Q(julian_end__isnull=True)))
@@ -142,14 +146,15 @@ def getGazetteerResults(place_name, map=None, layer=None, start_date=None, end_d
 
     matchingEntries=(GazetteerEntry.objects.extra(
         where=['placename_tsv @@ to_tsquery(%s)'],
-        params=[re.sub("\s+"," & ",place_name.strip()) + ":*"]).filter(criteria))[:500] if settings.GAZETTEER_FULLTEXTSEARCH else GazetteerEntry.objects.filter(criteria)
+        params=[re.sub("\s+"," & ",place_name.strip()) + ":*"]).filter(criteria))[:500] \
+        if settings.GAZETTEER_FULLTEXTSEARCH else GazetteerEntry.objects.filter(criteria)
 
 
     posts = []
 
 
     for entry in matchingEntries:
-        posts.append({'placename': entry.place_name, 'coordinates': (entry.latitude, entry.longitude),
+        posts.append({'placename': entry.place_name, 'coordinates': {'lat': entry.latitude, 'lon': entry.longitude},
             'source': formatSourceLink(entry.layer_name), 'start_date': entry.start_date, 'end_date': entry.end_date,
             'gazetteer_id': entry.id})
     return posts
@@ -264,8 +269,7 @@ def add_to_gazetteer(layer_name, name_attributes, start_attribute=None, end_attr
             "\" as l WHERE  l.\"" + attribute.attribute + "\" is not null AND " +\
             "fid not in (SELECT feature_fid from " + GAZETTEER_TABLE + " where layer_name = '" + layer_name + "' and layer_attribute = '" + attribute.attribute + "'))")
 
-    db = ogc_server_settings.datastore_db
-    conn=psycopg2.connect("dbname='" + db['NAME'] + "' user='" + db['USER'] + "'  password='" + db['PASSWORD'] + "' port=" + db['PORT'] + " host='" + db['HOST'] + "'")
+    conn = getConnection()
 
     try:
         cur = conn.cursor()
@@ -333,6 +337,15 @@ def getYahooResults(place_name):
     except:
         return []
 
+def getConnection():
+    db = ogc_server_settings.datastore_db
+    return psycopg2.connect(
+        #"dbname='" + settings.DB_DATASTORE_DATABASE + "' user='" + settings.DB_DATASTORE_USER + "'  password='" + settings.DB_DATASTORE_PASSWORD + "' port=" + settings.DB_DATASTORE_PORT + " host='" + settings.DB_DATASTORE_HOST + "'")
+        "dbname='" + db[settings.GAZETTEER_DB_ALIAS]['NAME'] + "' user='" + \
+        db[settings.GAZETTEER_DB_ALIAS]['USER'] + "'  password='" + \
+        db[settings.GAZETTEER_DB_ALIAS]['PASSWORD'] + "' port=" + \
+        db[settings.GAZETTEER_DB_ALIAS]['PORT'] + " host='" + \
+        db[settings.GAZETTEER_DB_ALIAS]['HOST'] + "'")
 
 def getGeonamesResults(place_name):
     g = geocoders.GeoNames()
@@ -350,19 +363,7 @@ def formatExternalGeocode(geocoder, geocodeResult):
     return {'placename': geocodeResult[0], 'coordinates': geocodeResult[1], 'source': geocoder, 'start_date': 'N/A', \
             'end_date': 'N/A', 'gazetteer_id': 'N/A'}
 
-def parseDate(dateString):
-    from datautil.date import DateutilDateParser
-    from jdcal import gcal2jd
-    parser = DateutilDateParser()
-    flexdate = parser.parse(dateString)
-    julian = gcal2jd(int(flexdate.year), int(flexdate.month if flexdate.month is not '' else '1'), \
-        int(flexdate.day if flexdate.day is not '' else '1'))
-    return julian[0] + julian[1]
 
-def julianDate(year,month=1,day=1,hour=0,min=0,sec=0,utc=0):
-    jd = (367*year) - (7*(year+((month+9)/12))/4) + (275*month/9)+ day + 1721013.5 + utc/24 \
-         - 0.5*sign((100*year)+month-190002.5) + 0.5 + hour/24.0 + min/(60.0*24.0) + sec/(3600.0*24.0)
-    return jd
 
 
 def update_gazetteer(layer_obj):

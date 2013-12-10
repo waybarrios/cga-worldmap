@@ -85,6 +85,7 @@ if (window.GeoExplorer) {
         saveFailTitle: gettext("Error While Saving"),
         saveMapText: gettext("Save Map"),
         saveMapBtnText: gettext("Save"),
+        saveMapAsText: gettext("Copy"),
         saveNotAuthorizedMessage: gettext("You must be logged in to save this map."),
         shareLayerText: gettext("Share Layer"),
         shareMapText: gettext("Share Map"),
@@ -111,6 +112,7 @@ if (window.GeoExplorer) {
         zoomSliderTipText: gettext("Zoom Level"),
         zoomToLayerExtentText: gettext("Zoom to Layer Extent"),
         zoomVisibleButtonText: gettext("Zoom to Original Map Extent"),
+        flickrText: gettext("Flickr"),
         picasaText: gettext("Picasa"),
         youTubeText: gettext("YouTube"),
         hglText: gettext("Harvard Geospatial Library"),
@@ -120,7 +122,7 @@ if (window.GeoExplorer) {
         rectifyLayerText: gettext('Rectify Layer'),
         worldmapDataText:  gettext('WorldMap Data'),
         externalDataText: gettext('External Data'),
-        leavePageWarningText: gettext('If you leave this page, unsaved changes will be lost.'),
+        leavePageWarningText: gettext('If you leave this page, unsaved changes will be lost.')
     });
 }
 
@@ -287,7 +289,7 @@ if (window.GeoExplorer && GeoExplorer.ViewerPrint) {
 		printMsg: gettext("Press OK to print this page as is.  \
 			 If you would like to adjust the map extent, press Cancel, \
 			 then use your browser's print button when you are ready"),
-		printTitle: gettext("Print"),
+		printTitle: gettext("Print")
 	});
 }
 

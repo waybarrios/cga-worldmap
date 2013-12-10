@@ -137,6 +137,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     connErrorText: "UT:The server returned an error",
     connErrorDetailsText: "UT:Details...",
     feedAdditionLabel: "UT:Add feeds",
+    flickrText: "UT:Flickr",
     googleEarthBtnText: "UT:Google Earth",
     heightLabel: 'UT: Height',
     helpLabel: 'UT: Help',
@@ -163,6 +164,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     metadataFormCancelText : "UT:Cancel",
     metadataFormSaveAsCopyText : "UT:Save as Copy",
     metadataFormSaveText : "UT:Save",
+    metadataFormCopyText : "UT:Copy",
     metaDataHeader: 'UT:About this Map View',
     metaDataMapAbstract: 'UT:Abstract (brief description)',
     metaDataMapIntroText: 'UT:Introduction (tell visitors more about your map view)',
@@ -192,7 +194,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     saveFailTitle: "UT: Error While Saving",
     saveMapText: "UT: Save Map",
     saveMapBtnText: "UT: Save",
-    saveMapAsText: "UT: Save Map As",
+    saveMapAsText: "UT: Copy",
     saveNotAuthorizedMessage: "UT: You Must be logged in to save this map.",
     shareLayerText: 'UT: Share Layer',
     smallSizeLabel: 'UT: Small',
@@ -276,7 +278,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 }
                 // use the proxy for all non-local requests
                 if(this.proxy && options.url.indexOf(this.proxy) !== 0 &&
-                    options.url.indexOf(window.location.protocol) === 0) {
+                    options.url.indexOf("http") === 0) {
                     var parts = options.url.replace(/&$/, "").split("?");
                     var params = Ext.apply(parts[1] && Ext.urlDecode(
                         parts[1]) || {}, options.params);
@@ -796,6 +798,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         this.busyMask.show();
 
         var addLayerButton = new Ext.Button({
+        	id: "worldmap_addlayers_button",
             tooltip : this.addLayersButtonText,
             disabled: false,
             text: '<span class="x-btn-text">' + this.addLayersButtonText + '</span>',
@@ -869,7 +872,6 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             anchor: "100% 5%",
             items: [this.gxSearchBar]
         });
-
 
 
         //needed for Safari
@@ -1371,9 +1373,10 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                             sourceComboBox.onSelect(record, 0);
                             newSourceWindow.hide();
                         },
-                        failure: function() {
+                        fallback: function() {
                             // TODO: wire up success/failure
                             newSourceWindow.setError("Error contacting server.\nPlease check the url and try again.");
+                            app.busyMask.hide();
                         },
                         scope: app
                     });
@@ -1585,10 +1588,24 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         });
 
 
+        var flickrMenuItem = {
+            text: this.flickrText,
+            iconCls: "icon-flickr",
+            scope:this,
+            disabled: false,
+            hidden: false,
+            handler: function() {
+                this.showFeedDialog('gx_flickrsource')
+            },
+            scope: this
+        };
+
         var picasaMenuItem = {
             text: this.picasaText,
             iconCls: "icon-picasa",
             scope:this,
+            disabled: true,
+            hidden: true,
             handler: function() {
                 this.showFeedDialog('gx_picasasource')
             },
@@ -1600,6 +1617,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             text: this.youTubeText,
             iconCls: "icon-youtube",
             scope:this,
+            disabled: true,
+            hidden: true,
             handler: function() {
                 this.showFeedDialog('gx_youtubesource')
             },
@@ -1622,6 +1641,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             id: 'moreBtn',
             menu: {
                 items: [
+                    flickrMenuItem,
                     picasaMenuItem,
                     youtubeMenuItem,
                     hglMenuItem
@@ -1638,10 +1658,11 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         	cls: "language-overlay-element"
         };
 
-        this.mapPanel.add(languageSelect);
+        //this.mapPanel.add(languageSelect);
 
 
         var publishAction = new Ext.Action({
+        	id: 'worldmap_publish_tool',
             tooltip: this.publishActionText,
             handler: this.makeExportDialog,
             scope: this,
@@ -1649,21 +1670,22 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             disabled: !this.mapID
         });
 
+        var saveText = (this.config["edit_map"] || this.about["urlsuffix"] !== "boston") ? this.saveMapBtnText : this.saveMapAsText;
         var tools = [
             new Ext.Button({
-                tooltip: this.saveMapText,
+                tooltip: saveText,
                 handler: this.showMetadataForm,
                 scope: this,
-                disabled: !this.config["edit_map"],
-                text: '<span class="x-btn-text">' + this.saveMapBtnText + '</span>'
+                disabled: !this.config["edit_map"] && this.about["urlsuffix"] !== "boston",
+                text: '<span class="x-btn-text">' + saveText + '</span>'
             }),
             publishAction,
             infoButton,
             "->"
         ];
         
-        //Only show this for Boston map
-        if (this.urlsuffix == 31) {
+        //Only show this for Boston map; silly hack
+        if (this.about["urlsuffix"] == 'boston') {
         	tools.splice(13,0,new GeoExplorer.SocialExplorer(this));
         }        
 
@@ -1741,14 +1763,14 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         var titleField = new Ext.form.TextField({
             width: '95%',
             fieldLabel: this.metaDataMapTitle,
-            value: this.about.title,
+            value: this.config["edit_map"] ? this.about.title : "",
             allowBlank: false,
             enableKeyEvents: true,
             listeners: {
                 "valid": function() {
                     if (urlField.isValid()) {
-                        //saveAsButton.enable();
-                        saveButton.enable();
+                        if (this.config["edit_map"])
+                        	saveButton.enable();
                         if (!saveAsButton.hidden)
                         	saveAsButton.enable();
                     }
@@ -1758,7 +1780,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     saveButton.disable();
                     if (!saveAsButton.hidden)
                     	saveAsButton.disable();
-                }
+                },
+                scope: this
             }
         });
 
@@ -1816,12 +1839,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             vtype: 'UniqueUrl',
             itemCls:'x-form-field-inline',
             ctCls:'x-form-field-inline',
-            value: this.about["urlsuffix"],
+            value: this.config["edit_map"] ? this.about["urlsuffix"] : "",
             listeners: {
                 "valid": function() {
                     if (titleField.isValid()) {
-                        //saveAsButton.enable();
-                        saveButton.enable();
+                    	if (this.config["edit_map"])
+                    		saveButton.enable();
                         if (!saveAsButton.hidden)
                         	saveAsButton.enable();
                     }
@@ -1831,7 +1854,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     saveButton.disable();
                     if (!saveAsButton.hidden)
                     	saveAsButton.disable();
-                }
+                },
+                scope: this
             }
         });
 
@@ -1920,7 +1944,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             id: 'gx_saveButton',
             text: this.metadataFormSaveText,
             cls:'x-btn-text',
-            disabled: !this.about.title,
+            disabled: !this.about.title || !this.config["edit_map"],
             handler: function(e) {
                 checkUrlBeforeSave(false);
             },

@@ -28,6 +28,7 @@ from urlparse import urlparse
 import unicodedata
 from django.db.models import Q
 import logging
+from geonode.flexidates import FlexiDateFormField
 import taggit
 from geonode.maps.utils import forward_mercator
 from geonode.maps.owslib_csw import CswRecord
@@ -68,6 +69,8 @@ def default_map_config():
         zoom=settings.DEFAULT_MAP_ZOOM
     )
     def _baselayer(lyr, order):
+        if "args" in lyr:
+            lyr["args"][0] = _(lyr["args"][0])
         return MapLayer.objects.from_viewer_config(
             map_model = _default_map,
             layer = lyr,
@@ -117,7 +120,7 @@ class LayerContactForm(forms.Form):
         label = _("Metadata Author"), required=False,
         queryset = Contact.objects.exclude(user=None),
         widget=autocomplete_light.ChoiceWidget('ContactAutocomplete'))
-    
+
     class Meta:
         model = Contact
 
@@ -147,8 +150,8 @@ class LayerForm(forms.ModelForm):
     date = forms.DateTimeField(label='*' + (_('Date')), widget=forms.SplitDateTimeWidget)
     date.widget.widgets[0].attrs = {"class":"date"}
     date.widget.widgets[1].attrs = {"class":"time"}
-    temporal_extent_start = forms.DateField(required=False,label= _('Temporal Extent Start Date'), widget=forms.DateInput(attrs={"class":"date"}))
-    temporal_extent_end = forms.DateField(required=False,label= _('Temporal Extent End Date'), widget=forms.DateInput(attrs={"class":"date"}))
+    temporal_extent_start = FlexiDateFormField(required=False,label= _('Temporal Extent Start Date'))
+    temporal_extent_end = FlexiDateFormField(required=False,label= _('Temporal Extent End Date'))
     title = forms.CharField(label = '*' + _('Title'), max_length=255)
     abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea(attrs={'cols': 60}))
     constraints_use = forms.ChoiceField(label= _('Contraints'), choices=CONSTRAINT_OPTIONS, 
@@ -288,37 +291,9 @@ def newmap_config(request):
             return HttpResponse(status=405)
 
         if 'layer' in params:
-            bbox = None
-            groups = set()
             map_obj = Map(projection="EPSG:900913")
-            layers = []
-            for layer_name in params.getlist('layer'):
-                try:
-                    layer = Layer.objects.get(typename=layer_name)
-                except ObjectDoesNotExist:
-                    # bad layer, skip
-                    continue
+            layers, groups, bbox = additional_layers(request,map_obj, params.getlist('layer'))
 
-                if not request.user.has_perm('maps.view_layer', obj=layer):
-                    # invisible layer, skip inclusion
-                    continue
-
-                #layer_bbox = layer.resource.latlon_bbox
-                # assert False, str(layer_bbox)
-                bbox = layer.llbbox_coords()
-
-                layers.append(MapLayer(
-                    map = map_obj,
-                    name = layer.typename,
-                    ows_url = settings.GEOSERVER_BASE_URL + "wms",
-                    visibility = True,
-                    styles='',
-                    group=layer.topic_category.title if layer.topic_category else None,
-                    source_params = u'{"ptype": "gxp_gnsource"}',
-                    layer_params= u'{"tiled":true, "title":" '+ layer.title + '", "format":"image/png","queryable":true}')
-                )
-                if layer.topic_category:
-                    groups.add(layer.topic_category.title)
 
             if bbox is not None:
                 minx, miny, maxx, maxy = [float(c) for c in bbox]
@@ -343,9 +318,10 @@ def newmap_config(request):
                 map_obj.zoom = math.ceil(min(width_zoom, height_zoom))
 
             config = map_obj.viewer_json(request.user, *(DEFAULT_BASE_LAYERS + layers))
-            config['treeconfig'] = []
-            for group in groups:
-                config['treeconfig'].append({"expanded":True, "group":group})
+            config['map']['groups'] = []
+            for group in groups:             
+                if group not in json.dumps(config['map']['groups']):
+                    config['map']['groups'].append({"expanded":"true", "group":group})
 
             config['fromLayer'] = True
         else:
@@ -740,6 +716,39 @@ def map_controller(request, mapid):
     else:
         return mapdetail(request, map_obj.id)
 
+
+def additional_layers(request, map_obj, layerlist):
+
+    groups = set()
+    layers = []
+    bbox = None
+    for layer_name in layerlist:
+        try:
+            layer = Layer.objects.get(typename=layer_name)
+        except ObjectDoesNotExist:
+            # bad layer, skip
+            continue
+
+        #layer_bbox = layer.resource.latlon_bbox
+        # assert False, str(layer_bbox)
+        bbox = layer.llbbox_coords()
+
+        group = layer.topic_category.title if layer.topic_category else "General"
+        if group not in groups:
+            groups.add(group)
+                
+        layers.append(MapLayer(
+                    map = map_obj,
+                    name = layer.typename,
+                    ows_url = settings.GEOSERVER_BASE_URL + "wms",
+                    visibility = request.user.has_perm('maps.view_layer', obj=layer),
+                    styles='',
+                    group=group,
+                    source_params = u'{"ptype": "gxp_gnsource"}',
+                    layer_params= u'{"tiled":true, "title":" '+ layer.title + '", "format":"image/png","queryable":true}')
+                )    
+    return layers, groups, bbox
+
 def view(request, mapid, snapshot=None):
     """
     The view that returns the map composer opened to
@@ -754,10 +763,18 @@ def view(request, mapid, snapshot=None):
             RequestContext(request, {'error_message':
                 _("You are not allowed to view this map.")})), status=401)
 
-    if snapshot is None:
+
+    if 'layer' in request.GET:
+        addedlayers, groups, bbox = additional_layers(request,map_obj, request.GET.getlist('layer'))
+        config = map_obj.viewer_json(request.user, *addedlayers)
+        for group in groups:             
+            if group not in json.dumps(config['map']['groups']):
+                config['map']['groups'].append({"expanded":"true", "group":group})
+    elif snapshot is None:
         config = map_obj.viewer_json(request.user)
     else:
         config = snapshot_config(snapshot, map_obj, request.user)
+
 
     first_visit = True
     if request.session.get('visit' + str(map_obj.id), False):
@@ -779,7 +796,12 @@ def view(request, mapid, snapshot=None):
     config['uid'] = request.user.id
     config['edit_map'] = request.user.has_perm('maps.change_map', obj=map_obj)
     config['topic_categories'] = category_list()
-    return render_to_response('maps/view.html', RequestContext(request, {
+    
+    template_page = 'maps/view.html'
+    if map_obj.template_page:
+        template_page = map_obj.template_page
+    
+    return render_to_response(template_page, RequestContext(request, {
         'config': json.dumps(config),
         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
         'GEONETWORK_BASE_URL' : settings.GEONETWORK_BASE_URL,
@@ -812,6 +834,47 @@ def ajax_start_twitter(request):
             status=500
         )
 
+# def chawellness(request, snapshot=None):
+#     '''
+#         Custom view for a particular map
+#     '''
+#     map_obj = get_object_or_404(Map,urlsuffix="CHAwellness")
+#     config = map_obj.viewer_json(request.user)  
+#     
+#     if snapshot is None:
+#         config = map_obj.viewer_json(request.user)
+#     else:
+#         config = snapshot_config(snapshot, map_obj, request.user)
+# 
+#     first_visit = True
+#     if request.session.get('visit' + str(map_obj.id), False):
+#         first_visit = False
+#     else:
+#         request.session['visit' + str(map_obj.id)] = True
+# 
+#     mapstats, created = MapStats.objects.get_or_create(map=map_obj)
+#     mapstats.visits += 1
+#     if created or first_visit:
+#             mapstats.uniques+=1
+#     mapstats.save()
+# 
+#     #Remember last visited map
+#     request.session['lastmap'] = map_obj.id
+#     request.session['lastmapTitle'] = map_obj.title
+# 
+#     config['first_visit'] = first_visit
+#     config['uid'] = request.user.id
+#     config['edit_map'] = request.user.has_perm('maps.change_map', obj=map_obj)
+#     config['topic_categories'] = category_list()    
+#     
+#     return render_to_response("maps/CHAwellness.html", RequestContext(request, {
+#         'config': json.dumps(config),
+#         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
+#         'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
+#         'maptitle': map_obj.title,
+#         'urlsuffix': get_suffix_if_custom(map_obj)
+#         }))      
+
 def tweetview(request):
     map = get_object_or_404(Map,urlsuffix="tweetmap")
     config = map.viewer_json(request.user)
@@ -838,18 +901,18 @@ def tweetview(request):
     config['first_visit'] = first_visit
     config['edit_map'] = request.user.has_perm('maps.change_map', obj=map)
 
-    geops_ip = settings.GEOPS_IP
+    geops_ip = "standard"
     if "geopsip" in request.GET:
         geops_ip = request.GET["geopsip"]
 
     try:
         conn = httplib2.Http(timeout=10)
-        testUrl = "http://" +  settings.GEOPS_IP  + "?REQUEST%3DGetFeatureInfo%26SQL%3Dselect%20min(time)%2Cmax(time)%20from%20tweets"
+        testUrl = settings.SITEURL  + "tweetserver/" +  geops_ip  + "/?REQUEST%3DGetFeatureInfo%26SQL%3Dselect%20min(time)%2Cmax(time)%20from%20tweets"
         #testUrl = "http://worldmap.harvard.edu"
         resp, content = conn.request(testUrl, 'GET')
-        timerange = json.loads(content)
-        
+        timerange = json.loads(content)  
     except:
+        timerange = None
         redirectPage = "maps/tweetstartup.html"
 
     return render_to_response(redirectPage, RequestContext(request, {
@@ -860,8 +923,8 @@ def tweetview(request):
         'GEOPS_IP': geops_ip,
         'urlsuffix': get_suffix_if_custom(map),
         'tweetdownload': request.user.is_authenticated() and request.user.get_profile().is_org_member,
-        'min_date': timerange["results"][0]["min"]*1000,
-        'max_date': timerange["results"][0]["max"]*1000
+        'min_date': timerange["results"][0]["min"]*1000 if timerange is not None else 0,
+        'max_date': timerange["results"][0]["max"]*1000 if timerange is not None else 0
         }))
 
 def embed(request, mapid=None, snapshot=None):
@@ -1667,7 +1730,24 @@ def _metadata_search(query, start, limit, sortby, sortorder, **kw):
     if sortby:
         sortby = 'dc:' + sortby
 
-    csw.getrecords(keywords=keywords, startposition=start+1, maxrecords=limit, bbox=kw.get('bbox', None), sortby=sortby, sortorder=sortorder)
+    #Filter by category if present
+    category = kw.get('topic_category', None)
+    profile = kw.get('profile', None)
+
+    cql = None
+    if category or profile:
+        cql = ""
+        if category:
+            cql += "topicCat = \'%s\'" % category
+        if profile:
+            cql += " and " if category else ""
+            cql += "csw:AnyText like '%%profiles/%s/'" % profile
+
+        for keyword in keywords:
+            cql += " and csw:AnyText like '%%%s%%'" % keyword
+
+
+    csw.getrecords(keywords=keywords, startposition=start+1, maxrecords=limit, bbox=kw.get('bbox', None), sortby=sortby, sortorder=sortorder, cql=cql)
 
     # build results
     # XXX this goes directly to the result xml doc to obtain
