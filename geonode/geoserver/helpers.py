@@ -238,7 +238,6 @@ def delete_from_postgis(resource_name):
     finally:
         conn.close()
 
-
 def gs_slurp(ignore_errors=True, verbosity=1, console=None, owner=None, workspace=None, store=None, filter=None, skip_unadvertised=False):
     """Configure the layers available in GeoServer in GeoNode.
 
@@ -340,7 +339,6 @@ def gs_slurp(ignore_errors=True, verbosity=1, console=None, owner=None, workspac
     td = finish - start
     output['stats']['duration_sec'] = td.microseconds / 1000000 + td.seconds + td.days * 24 * 3600
     return output
-
 
 def get_stores(store_type = None):
     cat = Catalog(ogc_server_settings.rest, _user, _password)
