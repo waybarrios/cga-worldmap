@@ -127,7 +127,7 @@ def _get_all_keywords():
 def search_api(request, format='json', **kwargs):
     if request.method not in ('GET','POST'):
         return HttpResponse(status=405)
-    debug = logger.isEnabledFor(logging.DEBUG)
+    debug = True
     if debug:
         connection.queries = []
     ts = time()
@@ -141,8 +141,8 @@ def search_api(request, format='json', **kwargs):
             results = _search_json(query, items, facets, ts1)
         if debug:
             ts2 = time() - ts
-            logger.debug('generated combined search results in %s, %s',ts1,ts2)
-            logger.debug('with %s db queries',len(connection.queries))
+            logger.info('generated %d combined search results in %s, %s', len(items), ts1,ts2)
+            logger.info('with %s db queries',len(connection.queries))
         if format == 'html':
             return items, facets, query
         else:

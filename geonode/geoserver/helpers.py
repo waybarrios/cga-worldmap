@@ -43,7 +43,7 @@ _default_style_names = ["point", "line", "polygon", "raster"]
 
 def _add_sld_boilerplate(symbolizer):
     """
-    Wrap an XML snippet representing a single symbolizer in the approperiate
+    Wrap an XML snippet representing a single symbolizer in the appropriate
     elements to make it a valid SLD which applies that symbolizer to all features,
     including format strings to allow interpolating a "name" variable in.
     """
@@ -136,7 +136,7 @@ def get_sld_for(layer):
     name = layer.default_style.name if layer.default_style is not None else "point"
 
     # FIXME: When gsconfig.py exposes the default geometry type for vector
-    # layers we should use that rather than guessing based on the autodetected
+    # layers we should use that rather than guessing based on the auto-detected
     # style.
 
     if name in _style_templates:
@@ -191,7 +191,7 @@ def cascading_delete(cat, layer_name):
         # If there is no associated resource,
         # this method can not delete anything.
         # Let's return and make a note in the log.
-        logger.debug('cascading_delete was called with a non existant resource')
+        logger.debug('cascading_delete was called with a non existent resource')
         return
     resource_name = resource.name
     lyr = cat.get_layer(resource_name)
@@ -239,31 +239,16 @@ def delete_from_postgis(resource_name):
         conn.close()
 
 
-def get_postgis_bbox(resource_name):
-    """
-    Update the native and latlong bounding box for a layer via PostGIS.
-    Doing it via Geoserver is too resource-intensive
-    """
-    import psycopg2
-    db = ogc_server_settings.datastore_db
-    conn=psycopg2.connect("dbname='" + db['NAME'] + "' user='" + db['USER'] + "'  password='" + db['PASSWORD'] + "' port=" + db['PORT'] + " host='" + db['HOST'] + "'")
-    try:
-        cur = conn.cursor()
-        cur.execute("select EXTENT(the_geom) as bbox, EXTENT(ST_Transform(the_geom,4326)) as llbbox from \"%s\"" %  resource_name)
-        rows = cur.fetchall()
-        return rows
-    except Exception, e:
-        logger.info("Error retrieving bbox for PostGIS table %s:%s", resource_name, str(e))
-    finally:
-        conn.close()
-
-
-def gs_slurp(ignore_errors=True, verbosity=1, console=None, owner=None, workspace=None, store=None, filter=None):
+def gs_slurp(ignore_errors=True, verbosity=1, console=None, owner=None, workspace=None, store=None, filter=None, skip_unadvertised=False):
     """Configure the layers available in GeoServer in GeoNode.
 
        It returns a list of dictionaries with the name of the layer,
        the result of the operation and the errors and traceback if it failed.
     """
+
+    # avoid circular import problem
+    from geonode.layers.models import set_attributes
+
     if console is None:
         console = open(os.devnull, 'w')
 
@@ -281,16 +266,17 @@ def gs_slurp(ignore_errors=True, verbosity=1, console=None, owner=None, workspac
     if filter:
         resources = [k for k in resources if filter in k.name]
 
-    # filter out layers explicitly disabled by geoserver
+    # filter out layers depending on enabled, advertised status:
     resources = [k for k in resources if k.enabled == "true"]
-   
+    if skip_unadvertised: resources = [k for k in resources if k.advertised == "true" or k.advertised == None]
+    
     # TODO: Should we do something with these?
     # i.e. look for matching layers in GeoNode and also disable? 
     disabled_resources = [k for k in resources if k.enabled == "false"]
     
     number = len(resources)
     if verbosity > 1:
-        msg =  "Found %d layers, starting processing" % number
+        msg = "Found %d layers, starting processing" % number
         print >> console, msg
     output = {
         'stats': {
@@ -319,6 +305,8 @@ def gs_slurp(ignore_errors=True, verbosity=1, console=None, owner=None, workspac
                 "uuid": str(uuid.uuid4())
             })
             layer.save()
+            # recalculate the layer statistics
+            set_attributes(layer, overwrite=True)
 
         except Exception, e:
             if ignore_errors:

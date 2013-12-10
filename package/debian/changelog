@@ -1,3 +1,217 @@
+geonode (2.0.0+beta63) precise; urgency=high
+
+  [ Tyler Garner ]
+  * [3e55e0] Adds the GEOGIT_DATASTORE_DIR settings variable to specify a default location for geogit stores.
+  * [7707c2] Remove PUBLIC_LOCATION from the OGC_SERVER settings test case.
+
+  [ Ariel Nunez ]
+  * [d36d16] GEOSERVER_BASE_URL should point to the public_url
+
+  [ Simone Dalmasso ]
+  * [70192f] put back the PUBLIC_LOCATION to 8080 for dev mode
+
+  [ Ariel Nunez ]
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Wed, 25 Sep 2013 14:48:33 +0000
+
+geonode (2.0.0+beta62) precise; urgency=high
+
+  [ Tom Kralidis ]
+  * [c2e4ec] add xsd:double (#1128)
+
+  [ Tyler Garner ]
+  * [7c4fc1] Added missing string formatter.
+
+  [ Ariel Nunez ]
+  * [fd3ff1] Fixed location of geoserver in settings.py
+  * [935125] Fixed geoserver url retrieving in local settings
+  * [59e100] Do not set a default for  PUBLIC_LOCATION, instead the code should default to LOCATION if PUBLIC_LOCATION is not set
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Tue, 24 Sep 2013 15:43:04 +0000
+
+geonode (2.0.0+beta61) precise; urgency=high
+
+  [ mwengren ]
+  * [d1c9ca] Added an option to updatelayers to check for 'advertised' status of GeoServer layers and skip if false.  Requires modified gsconfig.py
+  * [65d800] Change to --skip-unadvertised filter to accept 'None' values: in some cases there will be no 'advertised' property in REST API representations
+  * [30f09e] Change --skip-unadvertised option help msg
+
+  [ Christian Spanring ]
+  * [a54a7d] adds group layer publishing for local map layers to maps
+  * [931303] adds grunt watch for CSS development
+
+  [ Micah Wengren ]
+  * [c4f7a9] Change geoserver_post_save to use correct url reference
+  * [3caae7] Bump gsconfig version requirement to 0.6.4
+
+  [ Tyler Garner ]
+  * [8497ef] Fixes issue 951.
+
+  [ Ariel Nunez ]
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Fri, 20 Sep 2013 19:01:38 +0000
+
+geonode (2.0.0+beta60) precise; urgency=high
+
+  [ Ariel Nunez ]
+  * [ab44b2] Added link to ticket in django-admin workaround
+
+  [ Simone Dalmasso ]
+  * [9f8ed9] make geonode.binary use the available django-admin
+  * [1f89b6] use the geonode binary in the install script
+
+  [ vdeparday ]
+  * [8bbfb6] Moving most of the integration section to the relevant user and admin sections; fixes #1163
+
+  [ Ariel Nunez ]
+  * [081ff0] Added jetty speedups from #1071, thanks Ian.
+  * [950e26] Bumped version to 0.6.4
+
+  [ Michael Weisman ]
+  * [946bf2] Don't hardcode git branch and ppa
+
+  [ Ariel Núñez ]
+  * [1c6182] Update AUTHORS
+
+  [ Michael Weisman ]
+  * [93887b] Check out  on geoserver-ext not geonode
+
+  [ Jeffrey Johnson ]
+  * [5662bd] More work on docs
+
+  [ Ariel Nunez ]
+  * [0eb192] Remove trailing slash in ALLOWED_HOSTS via updateip, fixes #1184
+
+  [ Michael Weisman ]
+  * [23408b] Stop building opengeo suite geondoe ext
+  * [6a38e8] Build wars
+
+  [ Simone Dalmasso ]
+  * [4c455d] fix config file install
+
+  [ Ariel Nunez ]
+  * [876cca] Updated gsconfig to 0.6.6
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Fri, 20 Sep 2013 17:34:34 +0000
+
+geonode (2.0.0+beta59) precise; urgency=high
+
+  [ Vivien Deparday ]
+  * [d4f7fb] Update quick_install.txt
+
+  [ capooti ]
+  * [96c757] Updated the users/layers/upload and users/layers/more doc pages as per #1132.
+  * [a30562] Removed a screenshot uncorrectly added in last commit.
+
+  [ Ariel Nunez ]
+  * [602065] Fix django-admin reference in packages, it was breaking debian packages
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Fri, 13 Sep 2013 14:07:06 +0000
+
+geonode (2.0.0+beta58) precise; urgency=high
+
+  [ Tom Kralidis ]
+  * [5a7ed0] Add blurb about metadata downloads to Layer Information page (#1152)
+  * [93db6d] Add blurb about layer attributes to layer info docs page (#1154)
+
+  [ Simone Dalmasso ]
+  * [f6751c] move install demoed under developers workshop
+  * [a96ecf] adjust a bit the install flow
+
+  [ Tom Kralidis ]
+  * [5bd5ac] make URL /ows for all, add wcs link
+
+  [ capooti ]
+  * [7ff5bd] Updated the "sharing layers" screenshots. Refs #1133.
+
+  [ Tom Kralidis ]
+  * [06ba55] add info on OWS
+
+  [ Simone Dalmasso ]
+  * [1d6295] Some testing doc
+  * [ad121c] Add few lines
+
+  [ Ariel Nunez ]
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Fri, 13 Sep 2013 13:18:37 +0000
+
+geonode (2.0.0+beta57) precise; urgency=high
+
+  [ mwengren ]
+  * [59a333] Added support for 'proxy' OGC_SERVER config that allows secondary LOCATION config for public GeoServer access point
+  * [b8181a] Remove redundant config in settings.py
+  * [5dd544] Fix syntax error for check of 'CATALOG_WRITE_ENABLED' in layers/models.py
+  * [2de7c8] Added back in the 'DATASTORE' key in OGC_SERVER OPTIONS dict that was dropped
+
+  [ Christian Spanring ]
+  * [7518ea] fixes waypoints dependency when DEBUG_STATIC is set.
+
+  [ Jeffrey Johnson ]
+  * [44a405] Comment out console.log in LayerInfo.js (closes #1087)
+
+  [ Simone Dalmasso ]
+  * [18237b] add release docs
+
+  [ capooti ]
+  * [7b868b] Added the gettext_compact option in conf.py file.
+  * [30415b] Updated the -How to translate GeoNode's Documentation- file.
+  * [d6100a] Added the initial .po files to git after a tx pull.
+  * [ce51b8] Updated part of the admin panel section in the admin workshop. Added new screenshots.
+
+  [ Simone Dalmasso ]
+  * [11156e] some updates on the installation guide
+  * [cc26e0] move deploy_config under manual installation
+
+  [ Jeffrey Johnson ]
+  * [eea21d] Move processing to users section
+  * [9ad8d8] Move data section to users tutorial
+  * [20dfe4] Moving data section to admin tutorial
+  * [f3b839] change heading in admin/data/index.txt
+  * [84633d] Add ssl to tutorials/admin/index
+
+  [ Simone Dalmasso ]
+  * [481753] fix some installation details
+  * [80b0fb] use django-admin.py in the installer
+  * [7f6023] some other small fixes in the installation process
+  * [e5baa2] fix installation from config file
+
+  [ Paolo Pasquali ]
+  * [04acda] Fix items layout, home page IE8 bugs
+  * [8438d2] Restoring scripts
+
+  [ Simone Dalmasso ]
+  * [8e5d41] add some other admin docs
+
+  [ Ariel Nunez ]
+  * [8586a7] ows url should link to /ows instead of /wms
+
+  [ Simone Dalmasso ]
+  * [5a0abb] Take out the geoserver installation from the install script
+  * [d99367] further work on the admin doc
+  * [16e906] add the geoserver deployment to the installation with config file
+  * [24cfc0] fix failing test
+
+  [ Tom Kralidis ]
+  * [ea78f4] execute WPS statistics only if WPS is enabled on OGC_SERVER (#1128)
+
+  [ mwengren ]
+  * [bcfc86] Changed ogc_server_settings.ows to use PUBLIC_URL if present
+
+  [ Simone Dalmasso ]
+  * [541291] update the user registration
+
+  [ capooti ]
+  * [5fe1e6] Updated first part of the admin data tutorial.
+  * [ce728d] Updated the admin OSM data tutorial.
+
+  [ mwengren ]
+  * [615299] Added test cases for PUBLIC_LOCATION, BACKEND_WRITE_ENABLED in OGC_SERVER config
+
+  [ Ariel Nunez ]
+  * [e4d775] Added service=WMS to get_wms method
+
+ -- Ariel Nunez <ingenieroariel@gmail.com>  Thu, 12 Sep 2013 22:42:20 +0000
+
 geonode (2.0.0+beta54) precise; urgency=high
 
   [ Simone Dalmasso ]

@@ -24,7 +24,6 @@
       {% else %}
       <link href="{{ STATIC_URL }}lib/css/assets.min.css" rel="stylesheet"/>
       {% endif %}
-
     {% endblock %}
     <!--[if lt IE 9]>
       <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -307,6 +306,7 @@
     <script src="{{ STATIC_URL }}lib/js/assets.min.js"></script>
     {% endif %}
     <script src="{{ STATIC_URL }}geonode/js/utils/utils.js"></script>
+    <script src="{{ STATIC_URL }}lib/js/waypoints.js"></script>
     <script>
       $("#search").select2({
         minimumInputLength: 1,
