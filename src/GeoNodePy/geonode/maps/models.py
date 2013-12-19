@@ -29,7 +29,7 @@ import sys
 import re
 from geonode.maps.encode import despam, XssCleaner
 from geonode.flexidates import FlexiDateField, FlexiDateFormField
-
+from geonode.contrib.services.models import Service
 
 logger = logging.getLogger("geonode.maps.models")
 
@@ -881,7 +881,7 @@ class Layer(models.Model, PermissionLevelMixin):
     uuid = models.CharField(max_length=36)
     typename = models.CharField(max_length=128, unique=True)
     owner = models.ForeignKey(User, blank=True, null=True)
-
+    service = models.ForeignKey(Service, null=True, blank=True)
     contacts = models.ManyToManyField(Contact, through='ContactRole')
 
     # section 1
@@ -951,6 +951,8 @@ class Layer(models.Model, PermissionLevelMixin):
 
     # Section 8
     data_quality_statement = models.TextField(_('data quality statement'), blank=True, null=True)
+
+
 
     # Section 9
     # see metadata_author property definition below
@@ -1591,6 +1593,9 @@ class Layer(models.Model, PermissionLevelMixin):
         #Update geonetwork record with latest extent
         logger.info("Save new bounds to geonetwork")
         self.save_to_geonetwork()
+
+class RemoteLayer(Layer):
+    service = models.ForeignKey()
 
 
 class LayerAttributeManager(models.Manager):

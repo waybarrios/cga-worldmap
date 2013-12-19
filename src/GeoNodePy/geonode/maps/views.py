@@ -736,11 +736,16 @@ def additional_layers(request, map_obj, layerlist):
         group = layer.topic_category.title if layer.topic_category else "General"
         if group not in groups:
             groups.add(group)
-                
+
+        if layer.storeType == 'remoteStore':
+            ows_url = layer.service.base_url
+        else:
+            ows_url = settings.GEOSERVER_BASE_URL + "wms"
+
         layers.append(MapLayer(
                     map = map_obj,
                     name = layer.typename,
-                    ows_url = settings.GEOSERVER_BASE_URL + "wms",
+                    ows_url = ows_url,
                     visibility = request.user.has_perm('maps.view_layer', obj=layer),
                     styles='',
                     group=group,
@@ -1085,12 +1090,17 @@ def layer_metadata(request, layername):
                     return HttpResponse('success', status=200)
                 elif mapid != '' and str(mapid).lower() != 'new':
                     logger.debug("adding layer to map [%s]", str(mapid))
+
+                    ows_url = layer.service.base_url if layer.storeType == 'remoteStore' \
+                        else settings.GEOSERVER_BASE_URL + "wms"
+
+
                     maplayer = MapLayer.objects.create(map=Map.objects.get(id=mapid),
                         name = layer.typename,
                         group = layer.topic_category.title if layer.topic_category else 'General',
                         layer_params = '{"selected":true, "title": "' + layer.title + '"}',
                         source_params = '{"ptype": "gxp_gnsource"}',
-                        ows_url = settings.GEOSERVER_BASE_URL + "wms",
+                        ows_url = ows_url,
                         visibility = True,
                         stack_order = MapLayer.objects.filter(id=mapid).count()
                     )
@@ -1213,7 +1223,10 @@ def layer_detail(request, layername):
 
     metadata = layer.metadata_csw()
 
-    maplayer = MapLayer(name = layer.typename, styles=[layer.default_style.name], source_params = '{"ptype": "gxp_gnsource"}', ows_url = settings.GEOSERVER_BASE_URL + "wms",  layer_params= '{"tiled":true, "title":" '+ layer.title + '", ' + json.dumps(layer.attribute_config()) + '}')
+    ows_url = layer.service.base_url if layer.storeType == 'remoteStore' \
+        else settings.GEOSERVER_BASE_URL + "wms"
+
+    maplayer = MapLayer(name = layer.typename, styles=[layer.default_style.name], source_params = '{"ptype": "gxp_gnsource"}', ows_url = ows_url,  layer_params= '{"tiled":true, "title":" '+ layer.title + '", ' + json.dumps(layer.attribute_config()) + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     map_obj = Map(projection="EPSG:900913")
