@@ -1,6 +1,6 @@
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 from geonode.maps.models import Map, Layer, MapLayer, Contact, ContactRole, \
-     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, CHARSETS
+     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, CHARSETS, Service
 from geonode.profile.forms import ContactProfileForm
 from geoserver.resource import FeatureType, Coverage
 import base64
@@ -1214,8 +1214,13 @@ def layer_style(request, layername):
     else:
         return HttpResponse("Not allowed",status=403)
 
-def layer_detail(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+def layer_detail(request, layername, service=None):
+
+    if service is not None:
+        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
+    else:
+        layer = get_object_or_404(Layer, typename=layername, service=None)
+
     if not request.user.has_perm('maps.view_layer', obj=layer):
         return HttpResponse(loader.render_to_string('401.html',
             RequestContext(request, {'error_message':
@@ -1223,10 +1228,12 @@ def layer_detail(request, layername):
 
     metadata = layer.metadata_csw()
 
-    ows_url = layer.service.base_url if layer.storeType == 'remoteStore' \
-        else settings.GEOSERVER_BASE_URL + "wms"
 
-    maplayer = MapLayer(name = layer.typename, styles=[layer.default_style.name], source_params = '{"ptype": "gxp_gnsource"}', ows_url = ows_url,  layer_params= '{"tiled":true, "title":" '+ layer.title + '", ' + json.dumps(layer.attribute_config()) + '}')
+
+    maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename], \
+        source_params = '{"ptype": "' + layer.ptype + '"}', ows_url = layer.ows_url, \
+        layer_params= '{"srs": {"' + layer.srs + '":true}, "tiled":true, "title":" '+ layer.title + '", ' + \
+        json.dumps(layer.attribute_config()) + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     map_obj = Map(projection="EPSG:900913")

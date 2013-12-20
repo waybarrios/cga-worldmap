@@ -31,6 +31,7 @@ SERVICE_TYPES = (
     ('TMS', _('Tile Map Service')),
     ('OSG', _('OpenSearch Geo Service')),
     ('ARC', _('ArcGIS REST Service')),
+    ('ARCT', _('ArcGIS Tile Service')),
 )
 
 SERVICE_METHODS = (
@@ -40,3 +41,18 @@ SERVICE_METHODS = (
     ('I', _('Indexed')),
     ('X', _('Live')),
 )
+
+
+GXP_PTYPES = {
+    'OWS' : 'gxp_wmscsource',
+    'WMS': 'gxp_wmscsource',
+    'WFS': 'gxp_wmscsource',
+    'WCS': 'gxp_wmscsource',
+    'ARC': 'gxp_arcrestsource',
+    'WPS': None,
+    'CSW': None,
+    'WMTS': None,
+    'TMS': None,
+    'OSG': None,
+}
+

@@ -35,7 +35,12 @@ urlpatterns = patterns('',
                 {'template': 'developer.html'}, name='dev'),
     url(r'^upload_terms/$', 'django.views.generic.simple.direct_to_template',
             {'template': 'maps/upload_terms.html'}, name='upload_terms'),
+
+    # Services views
+    (r'^services/', include('geonode.contrib.services.urls')),
+
      # Data views
+
     (r'^data/', include(geonode.maps.urls.datapatterns)),
     (r'^maps/', include(geonode.maps.urls.urlpatterns)),
     (r'^annotations/', include(geonode.mapnotes.urls.urlpatterns)),

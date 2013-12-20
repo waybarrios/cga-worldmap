@@ -28,8 +28,7 @@ from django.core.cache import cache
 import sys
 import re
 from geonode.maps.encode import despam, XssCleaner
-from geonode.flexidates import FlexiDateField, FlexiDateFormField
-from geonode.contrib.services.models import Service
+from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS, GXP_PTYPES
 
 logger = logging.getLogger("geonode.maps.models")
 
@@ -632,10 +631,121 @@ class Contact(models.Model):
     def username(self):
         return u"%s" % (self.name if self.name else self.user.username)
 
+class Role(models.Model):
+    """
+    Roles are a generic way to create groups of permissions.
+    """
+    value = models.CharField('Role', choices= [(x, x) for x in ROLE_VALUES], max_length=255, unique=True)
+    permissions = models.ManyToManyField(Permission, verbose_name=_('permissions'), blank=True)
+
+    created_dttm = models.DateTimeField(auto_now_add=True)
+    """
+    The date/time the object was created.
+    """
+
+    last_modified = models.DateTimeField(auto_now=True)
+    """
+    The last time the object was modified.
+    """
+
+    def __unicode__(self):
+        return self.get_value_display()
+
+
+
+"""
+geonode.contrib.services
+"""
+class Service(models.Model, PermissionLevelMixin):
+    """
+    Service Class to represent remote Geo Web Services
+    """
+
+    type = models.CharField(max_length=4, choices=SERVICE_TYPES)
+    method = models.CharField(max_length=1, choices=SERVICE_METHODS)
+    base_url = models.URLField(unique=True) # with service, version and request etc stripped off
+    version = models.CharField(max_length=10, null=True, blank=True)
+    name = models.CharField(max_length=255, unique=True) #Should force to slug?
+    title = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
+    abstract = models.TextField(null=True, blank=True)
+    keywords = models.TextField(null=True, blank=True)
+    online_resource = models.URLField(False, null=True, blank=True)
+    fees = models.CharField(max_length=1000, null=True, blank=True)
+    access_contraints = models.CharField(max_length=255, null=True, blank=True)
+    connection_params = models.TextField(null=True, blank=True)
+    username = models.CharField(max_length=50, null=True, blank=True)
+    password = models.CharField(max_length=50, null=True, blank=True)
+    api_key = models.CharField(max_length=255, null=True, blank=True)
+    workspace_ref = models.URLField(False, null=True, blank=True)
+    store_ref = models.URLField(null=True, blank=True)
+    resources_ref = models.URLField(null = True, blank = True)
+    contacts = models.ManyToManyField(Contact, through='ServiceContactRole')
+    owner = models.ForeignKey(User, blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    first_noanswer = models.DateTimeField(null=True, blank=True)
+    noanswer_retries = models.PositiveIntegerField(null=True, blank=True)
+    uuid = models.CharField(max_length=36, null=True, blank=True)
+    external_id = models.IntegerField(null=True, blank=True)
+
+    # Supported Capabilities
+
+    def __unicode__(self):
+        return self.name
+
+    def layers(self):
+        """Return a list of all the child layers (resources) for this Service"""
+        pass
+
+    def ptype(self):
+        # Return the gxp ptype that should be used to display layers
+        return GXP_PTYPES[self.type]
+
+    def get_absolute_url(self):
+        return '/services/%i' % self.id
+
+    class Meta:
+        # custom permissions,
+        # change and delete are standard in django
+        permissions = (('view_service', 'Can view'),
+                       ('change_service_permissions', "Can change permissions"), )
+
+    # Permission Level Constants
+    # LEVEL_NONE inherited
+    LEVEL_READ  = 'service_readonly'
+    LEVEL_WRITE = 'service_readwrite'
+    LEVEL_ADMIN = 'service_admin'
+
+    def set_default_permissions(self):
+        self.set_gen_level(ANONYMOUS_USERS, self.LEVEL_READ)
+        self.set_gen_level(AUTHENTICATED_USERS, self.LEVEL_READ)
+
+        # remove specific user permissions
+        current_perms =  self.get_all_level_info()
+        for username in current_perms['users'].keys():
+            user = User.objects.get(username=username)
+            self.set_user_level(user, self.LEVEL_NONE)
+
+        # assign owner admin privs
+        if self.owner:
+            self.set_user_level(self.owner, self.LEVEL_ADMIN)
+
+class ServiceContactRole(models.Model):
+    """
+    ServiceContactRole is an intermediate model to bind Contacts and Services and apply roles.
+    """
+    contact = models.ForeignKey(Contact)
+    service = models.ForeignKey(Service)
+    role = models.ForeignKey(Role)
+
+
+
 def create_user_profile(sender, instance, created, **kwargs):
     profile, created = Contact.objects.get_or_create(user=instance, defaults={'name': instance.username})
 
 signals.post_save.connect(create_user_profile, sender=User)
+
 
 
 _viewer_projection_lookup = {
@@ -973,7 +1083,7 @@ class Layer(models.Model, PermissionLevelMixin):
         """Returns a list of (mimetype, URL) tuples for downloads of this data
         in various formats."""
 
-        if not self.downloadable:
+        if not self.downloadable or self.storeType == "remoteStore":
             return None
 
         bbox = self.llbbox_coords()
@@ -1167,6 +1277,7 @@ class Layer(models.Model, PermissionLevelMixin):
         local_wms = "%swms" % settings.GEOSERVER_BASE_URL
         return set([layer.map for layer in MapLayer.objects.filter(ows_url=local_wms, name=self.typename).select_related()])
 
+
     #    def metadata(self):
     #        if (_wms is None) or (self.typename not in _wms.contents):
     #            get_wms()
@@ -1357,6 +1468,39 @@ class Layer(models.Model, PermissionLevelMixin):
     def metadata_author_role(self):
         role = Role.objects.get(value='author')
         return role
+
+    @property
+    def local(self):
+        """
+        Tests whether this layer is served by the GeoServer instance that is
+        paired with the GeoNode site.
+        """
+        if self.service:
+            return self.service.base_url == (settings.GEOSERVER_BASE_URL + "wms")
+        else:
+            return True
+
+    @property
+    def ows_url(self):
+        if self.service:
+            return self.service.base_url
+        else:
+            return settings.GEOSERVER_BASE_URL + "wms"
+
+    @property
+    def default_stylename(self):
+        if self.local:
+            return self.default_style.name
+        else:
+            return ''
+
+    @property
+    def ptype(self):
+        if self.service and not self.local:
+            return self.service.ptype()
+        else:
+            return "gxp_gnsource"
+
 
     def _set_poc(self, poc):
         # reset any poc asignation to this layer
@@ -1594,10 +1738,6 @@ class Layer(models.Model, PermissionLevelMixin):
         logger.info("Save new bounds to geonetwork")
         self.save_to_geonetwork()
 
-class RemoteLayer(Layer):
-    service = models.ForeignKey()
-
-
 class LayerAttributeManager(models.Manager):
     """Helper class to access filtered attributes
     """
@@ -1630,6 +1770,37 @@ class LayerAttribute(models.Model):
 
     def __str__(self):
         return "%s" % self.attribute
+
+class ContactRole(models.Model):
+    """
+    ContactRole is an intermediate model to bind Contacts and Layers and apply roles.
+    """
+    contact = models.ForeignKey(Contact)
+    layer = models.ForeignKey(Layer)
+    role = models.ForeignKey(Role)
+
+    def clean(self):
+        """
+        Make sure there is only one poc and author per layer
+        """
+        if (self.role == self.layer.poc_role) or (self.role == self.layer.metadata_author_role):
+            contacts = self.layer.contacts.filter(contactrole__role=self.role)
+            if contacts.count() == 1:
+                # only allow this if we are updating the same contact
+                if self.contact != contacts.get():
+                    raise ValidationError('There can be only one %s for a given layer' % self.role)
+        if self.contact.user is None:
+            # verify that any unbound contact is only associated to one layer
+            bounds = ContactRole.objects.filter(contact=self.contact).count()
+            if bounds > 1:
+                raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
+            elif bounds == 1:
+                # verify that if there was one already, it corresponds to this instace
+                if ContactRole.objects.filter(contact=self.contact).get().id != self.id:
+                    raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
+
+    class Meta:
+        unique_together = (("contact", "layer", "role"),)
 
 
 class Map(models.Model, PermissionLevelMixin):
@@ -2246,57 +2417,6 @@ class MapLayer(models.Model):
     def __unicode__(self):
         return '%s?layers=%s' % (self.ows_url, self.name)
 
-class Role(models.Model):
-    """
-    Roles are a generic way to create groups of permissions.
-    """
-    value = models.CharField('Role', choices= [(x, x) for x in ROLE_VALUES], max_length=255, unique=True)
-    permissions = models.ManyToManyField(Permission, verbose_name=_('permissions'), blank=True)
-
-    created_dttm = models.DateTimeField(auto_now_add=True)
-    """
-    The date/time the object was created.
-    """
-
-    last_modified = models.DateTimeField(auto_now=True)
-    """
-    The last time the object was modified.
-    """
-
-    def __unicode__(self):
-        return self.get_value_display()
-
-
-class ContactRole(models.Model):
-    """
-    ContactRole is an intermediate model to bind Contacts and Layers and apply roles.
-    """
-    contact = models.ForeignKey(Contact)
-    layer = models.ForeignKey(Layer)
-    role = models.ForeignKey(Role)
-
-    def clean(self):
-        """
-        Make sure there is only one poc and author per layer
-        """
-        if (self.role == self.layer.poc_role) or (self.role == self.layer.metadata_author_role):
-            contacts = self.layer.contacts.filter(contactrole__role=self.role)
-            if contacts.count() == 1:
-                # only allow this if we are updating the same contact
-                if self.contact != contacts.get():
-                    raise ValidationError('There can be only one %s for a given layer' % self.role)
-        if self.contact.user is None:
-            # verify that any unbound contact is only associated to one layer
-            bounds = ContactRole.objects.filter(contact=self.contact).count()
-            if bounds > 1:
-                raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
-            elif bounds == 1:
-                # verify that if there was one already, it corresponds to this instace
-                if ContactRole.objects.filter(contact=self.contact).get().id != self.id:
-                    raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
-
-    class Meta:
-        unique_together = (("contact", "layer", "role"),)
 
 def delete_layer(instance, sender, **kwargs):
     """
@@ -2330,6 +2450,18 @@ def post_save_layer(instance, sender, **kwargs):
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)
 
+def post_save_service(instance, sender, created, **kwargs):
+    if created:
+        instance.set_default_permissions()
+
+def pre_delete_service(instance, sender, **kwargs):
+    if instance.method == 'H':
+        gn = Layer.objects.gn_catalog
+        gn.control_harvesting_task('stop', [instance.external_id])
+        gn.control_harvesting_task('remove', [instance.external_id])
+
+signals.pre_delete.connect(pre_delete_service, sender=Service)
+signals.post_save.connect(post_save_service, sender=Service)
 
 
 #===================#
@@ -2348,3 +2480,4 @@ class LayerStats(models.Model):
     uniques = models.IntegerField(_("Unique Visitors"), default = 0)
     downloads = models.IntegerField(_("Downloads"), default = 0)
     last_modified = models.DateTimeField(auto_now=True, null=True)
+

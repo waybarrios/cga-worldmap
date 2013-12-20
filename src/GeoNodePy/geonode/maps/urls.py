@@ -49,6 +49,7 @@ datapatterns = patterns('geonode.maps.views',
     url(r'^create_pg_layer', 'create_pg_layer', name='create_pg_layer'),
     url(r'^addlayers/?$', 'addlayers', name='addlayers'),
     (r'^layerstats/?$', 'ajax_increment_layer_stats'),
+    # Local layers
     url(r'^(?P<layername>[^/]*)$', 'layer_detail', name="data_detail"),
     url(r'^(?P<layername>[^/]*)/metadata$', 'layer_metadata', name="data_metadata"),
     url(r'^(?P<layername>[^/]*)/contacts$', 'layer_contacts', name="layer_contacts"),
@@ -57,10 +58,21 @@ datapatterns = patterns('geonode.maps.views',
     url(r'^(?P<layername>[^/]*)/style$', 'layer_style', name="data_style"),
     url(r'^(?P<layername>[^/]*)/ajax-permissions$', 'ajax_layer_permissions', name='data_ajax_perm'),
     url(r'^(?P<layername>[^/]*)/ajax-permissions-email$', 'ajax_layer_permissions_by_email', name="data_ajax_perm_email"),
+
     (r'^(?P<layername>[^/]*)/ajax-edit-check/?$', 'ajax_layer_edit_check'),
     (r'^(?P<layername>[^/]*)/ajax_layer_update/?$', 'ajax_layer_update'),
     (r'^layerstats/?$', 'ajax_increment_layer_stats'),
     url(r'^addlayers/?$', 'addlayers', name='addlayers'),
     url(r'^api/batch_permissions_by_email/?$', 'batch_permissions_by_email'),
     url(r'^create_pg_layer', 'create_pg_layer', name='create_pg_layer'),
+
+    # Remote layers
+    url(r'^(?P<service>[^/]*)/(?P<layername>[^/]*)$', 'layer_detail', name="data_detail"),
+    url(r'^(?P<service>[^/]*)/(?P<layername>[^/]*)/metadata$', 'layer_metadata', name="data_metadata"),
+    url(r'^(?P<service>[^/]*)/(?P<layername>[^/]*)/contacts$', 'layer_contacts', name="layer_contacts"),
+    url(r'^(?P<service>[^/]*)/(?P<layername>[^/]*)/remove$', 'layer_remove', name="data_remove"),
+    url(r'^(?P<service>[^/]*)/(?P<layername>[^/]*)/ajax-permissions$', 'ajax_layer_permissions', name='data_ajax_perm'),
+    url(r'^(?P<service>[^/]*)/(?P<layername>[^/]*)/ajax-permissions-email$', 'ajax_layer_permissions_by_email', name="data_ajax_perm_email"),
+
 )
+
