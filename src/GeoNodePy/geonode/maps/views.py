@@ -737,20 +737,15 @@ def additional_layers(request, map_obj, layerlist):
         if group not in groups:
             groups.add(group)
 
-        if layer.storeType == 'remoteStore':
-            ows_url = layer.service.base_url
-        else:
-            ows_url = settings.GEOSERVER_BASE_URL + "wms"
-
         layers.append(MapLayer(
                     map = map_obj,
                     name = layer.typename,
-                    ows_url = ows_url,
+                    ows_url = layer.ows_url,
                     visibility = request.user.has_perm('maps.view_layer', obj=layer),
                     styles='',
                     group=group,
-                    source_params = u'{"ptype": "gxp_gnsource"}',
-                    layer_params= u'{"tiled":true, "title":" '+ layer.title + '", "format":"image/png","queryable":true}')
+                    source_params = u'{"ptype": ' + layer.ptype + '}',
+                    layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", "format":"image/png","queryable":true}')
                 )    
     return layers, groups, bbox
 
@@ -978,8 +973,12 @@ class LayerDescriptionForm(forms.Form):
 
 
 @login_required
-def layer_metadata(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+def layer_metadata(request, layername, service=None):
+    if service is not None:
+        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
+    else:
+        layer = get_object_or_404(Layer, typename=layername, service=None)
+
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
             return HttpResponse(loader.render_to_string('401.html',
@@ -1110,7 +1109,10 @@ def layer_metadata(request, layername):
                     if str(mapid) == "new":
                         return HttpResponseRedirect("/maps/new?layer" + layer.typename)
                     else:
-                        return HttpResponseRedirect("/data/" + layer.typename)
+                        if layer.local:
+                            return HttpResponseRedirect("/data/" + layer.typename)
+                        else:
+                            return HttpResponseRedirect("/data/" + service + "/" + layer.typename)
 
         #Deal with a form submission via ajax
         if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
@@ -1227,8 +1229,6 @@ def layer_detail(request, layername, service=None):
                 _("You are not permitted to view this layer")})), status=401)
 
     metadata = layer.metadata_csw()
-
-
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename], \
         source_params = '{"ptype": "' + layer.ptype + '"}', ows_url = layer.ows_url, \
@@ -2803,7 +2803,11 @@ def create_pg_layer(request):
             return HttpResponse(layer_form.errors, status='500')
 
 @login_required
-def layer_contacts(request, layername):
+def layer_contacts(request, layername, service=None):
+    if service is not None:
+        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
+    else:
+        layer = get_object_or_404(Layer, typename=layername, service=None)
     layer = get_object_or_404(Layer, typename=layername)
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
@@ -2855,7 +2859,10 @@ def layer_contacts(request, layername):
                 layer.poc = new_poc
                 layer.metadata_author = new_author
                 layer.save()
-                return HttpResponseRedirect("/data/" + layer.typename)
+                if layer.local:
+                    return HttpResponseRedirect("/data/" + layer.typename)
+                else:
+                    return HttpResponseRedirect("/data/" + service + "/" + layer.typename)
 
 
 

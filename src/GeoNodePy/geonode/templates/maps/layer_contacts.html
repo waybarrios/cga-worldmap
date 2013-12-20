@@ -50,7 +50,7 @@
 {% block main %}
 <div class="twocol">
     <h2> {% trans "Editing contacts for " %} {{ layer.typename }} </h2>
-    <form action="{% url layer_contacts layer.typename %}" method="POST">
+    <form action="{% url layer_contacts layer.service layer.typename %}" method="POST">
         {% csrf_token %}
         <ul class="form">
             {{ contact_form.as_ul }}

@@ -472,14 +472,25 @@
     <ul>
         {% if user.is_authenticated %}
         {% if can_change %}
-        <li> <a href="{% url data_metadata layer.typename %}">
+        <li>
+            {% if layer.local %}
+            <a href="{% url data_metadata layer.typename %}">
+            {% else %}
+            <a href="{% url data_metadata layer.service layer.typename %}">
+            {% endif %}
             {% trans "Update the description of this data" %}
         </a> </li>
-        <li> <a href="{% url layer_contacts layer.typename %}">
+        <li>
+            {% if layer.local %}
+            <a href="{% url layer_contacts layer.typename%}">
+            {% else %}
+            <a href="{% url layer_contacts layer.service layer.typename%}">
+            {% endif %}
+
                 {% trans "Update the contacts for this data" %}
             </a> </li>
         {% if layer.local %}
-        <li> <a href="{% url data_replace layer.typename %}">
+        <li> <a href="{% url data_replace layer.typename%}">
             {% trans "Upload a new version of this data" %}
         </a></li>
         {% endif %}
