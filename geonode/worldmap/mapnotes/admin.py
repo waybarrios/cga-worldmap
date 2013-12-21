@@ -8,14 +8,14 @@ from dialogos.models import Comment
 import autocomplete_light
 from django.contrib.contenttypes import generic
 
-class MapNoteCommentInline(generic.GenericTabularInline):
-    model = Comment
-    extra = 0
-    form = autocomplete_light.modelform_factory(Comment)
+# class MapNoteCommentInline(generic.GenericTabularInline):
+#     model = Comment
+#     extra = 0
+#     form = autocomplete_light.modelform_factory(Comment)
 
     
 class MapNoteAdmin(admin.ModelAdmin):
-    inlines = [MapNoteCommentInline,]
+#    inlines = [MapNoteCommentInline,]
     list_display = ('id', 'map', 'title','content', 'owner','created_dttm', 'modified_dttm')
     date_hierarchy = 'created_dttm'
     search_fields = ['title','content']

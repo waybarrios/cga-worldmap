@@ -67,8 +67,8 @@ class TopicCategory(models.Model):
     See: http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml
     <CodeListDictionary gml:id="MD_MD_TopicCategoryCode">
     """
-    identifier = models.CharField(max_length=255, editable=False, default='location')
-    description = models.TextField(editable=False)
+    identifier = models.CharField(max_length=255, default='location')
+    description = models.TextField()
     gn_description = models.TextField('GeoNode description', default='', null=True)
     is_choice = models.BooleanField(default=True)
 
@@ -189,7 +189,7 @@ class ThumbnailMixin(object):
     def get_thumbnail_url(self):
         thumb = self.thumbnail
         return thumb == None and self._get_default_thumbnail() or thumb.thumb_file.url
-
+ 
     def has_thumbnail(self):
         '''Determine if the thumbnail object exists and an image exists'''
         thumb = self.thumbnail
@@ -285,7 +285,7 @@ class ResourceBase(models.Model, PermissionLevelMixin, ThumbnailMixin):
     metadata_uploaded = models.BooleanField(default=False)
     metadata_xml = models.TextField(null=True, default='<gmd:MD_Metadata xmlns:gmd="http://www.isotc211.org/2005/gmd"/>', blank=True)
 
-    thumbnail = models.ForeignKey(Thumbnail, null=True, blank=True)
+    thumbnail = models.ForeignKey(Thumbnail, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __unicode__(self):
         return self.title

@@ -571,7 +571,6 @@ def final_step(upload_session, user):
 
     if keywords is not None:
         saved_layer.keywords.add(*keywords)
-        saved_layer.save()
 
     # look for xml
     xml_file = find_file_re(upload_session.base_file, '.*\.xml')

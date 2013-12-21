@@ -27,9 +27,6 @@ from django.views.generic import TemplateView
 import geonode.proxy.urls
 import worldmap.urls
 
-# Import *_signals.py
-import geonode.social_signals
-
 # Setup Django Admin
 from django.contrib import admin
 admin.autodiscover()
@@ -82,7 +79,7 @@ urlpatterns += patterns('',
     (r'^announcements/', include('announcements.urls')),
     #(r'^notifications/', include('notification.urls')),
     (r'^messages/', include('user_messages.urls')),
-
+    (r'^social/', include('geonode.social.urls')),
     # Accounts
     url(r'^account/ajax_login$', 'geonode.views.ajax_login',
                                        name='account_ajax_login'),

@@ -5,7 +5,7 @@
     display: none;
 }
 #paneltbar {
-    margin-top: 90px;
+    margin-top: 81px;
 }
 button.logout {
     display: none;
@@ -30,8 +30,8 @@ Ext.onReady(function() {
         proxy: "/proxy/?url=",
         {% if PRINTNG_ENABLED %}
         listeners: {
-            'save': function() {
-                createMapThumbnail();
+            'save': function(obj_id) {
+                createMapThumbnail(obj_id);
             }
         },
         {% endif %}

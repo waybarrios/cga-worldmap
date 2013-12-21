@@ -214,16 +214,17 @@ def get_valid_name(layer_name):
     """
 
     name = _clean_string(layer_name)
-    proposed_name = name + "_"  + "".join([choice('qwertyuiopasdfghjklzxcvbnm0123456789') for i in range(3)])
+    proposed_name = name.lower()
     count = 1
     while Layer.objects.filter(name=proposed_name).count() > 0:
-        proposed_name = name + "_"  + "".join([choice('qwertyuiopasdfghjklzxcvbnm0123456789') for i in range(3)])
+        proposed_name = "%s_%d" % (name, count)
+        count = count + 1
         logger.info('Requested name already used; adjusting name '
                     '[%s] => [%s]', layer_name, proposed_name)
     else:
         logger.info("Using name as requested")
 
-    return proposed_name.lower()
+    return proposed_name
 
 
 ## TODO: Remove default arguments here, they are never used.

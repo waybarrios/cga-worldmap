@@ -299,8 +299,6 @@ def tweetTrendProxy (request):
 
     return HttpResponse(resultJSON, mimetype="application/json")
 
->>>>>>> d32884f49f01881a2ec03d6b13bbd66e8a063299:src/GeoNodePy/geonode/proxy/views.py
-
 def youtube(request):
     url = "http://gdata.youtube.com/feeds/api/videos?v=2&prettyprint=true&"
     bbox = request.GET['bbox'] if request.method == 'GET' else request.POST['bbox']

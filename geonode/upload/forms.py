@@ -56,7 +56,7 @@ class LayerUploadForm(forms.Form):
     termsAgreement = forms.BooleanField(required=True,  error_messages={'required': _('You must agree to the terms and conditions')})
 
     def clean(self):
-        requires_datastore = () if ogc_server_settings.DATASTORE else ('csv','kml')
+        requires_datastore = () if ogc_server_settings.DATASTORE else ('.csv','.kml')
         types = [ t for t in files.types if t.code not in requires_datastore]
         supported_type = lambda ext: any([t.matches(ext) for t in types])
 

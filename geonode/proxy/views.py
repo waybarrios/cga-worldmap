@@ -64,6 +64,9 @@ def proxy(request):
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
 
+    if request.META.get('HTTP_AUTHORIZATION'):
+        headers['AUTHORIZATION'] = request.META.get('HTTP_AUTHORIZATION')
+
     conn = HTTPConnection(url.hostname, url.port)
     conn.request(request.method, locator, request.raw_post_data, headers)
     result = conn.getresponse()
@@ -72,6 +75,10 @@ def proxy(request):
             status=result.status,
             content_type=result.getheader("Content-Type", "text/plain")
             )
+
+    if result.getheader('www-authenticate'):
+        response['www-authenticate'] = result.getheader('www-authenticate')
+
     return response
 
 @csrf_exempt
