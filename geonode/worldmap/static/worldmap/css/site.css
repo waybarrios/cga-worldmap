@@ -1004,9 +1004,9 @@ Comments
 	border: 1px solid #000;
 }
 
-
+/*
 .x-panel-header {
-    background: #123456 center left repeat-x;
+    background: #FFFFFF center left repeat-x;
     text-align: center;
     border-color: #000;
 }
@@ -1019,10 +1019,11 @@ Comments
 
 .x-panel-body {
     border-color: #000;
-    background-color: #fafad2;
+    background-color: #FFF;
 }
 
 .x-panel-header-text {
     font: bold 14px Consolas, Arial, san-serif;
     color: #eee;
 }
+*/

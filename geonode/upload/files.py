@@ -23,6 +23,7 @@ scattered over the codebase
 '''
 
 import os.path
+from tempfile import mkstemp
 from geoserver.resource import FeatureType
 from geoserver.resource import Coverage
 
@@ -127,7 +128,26 @@ def _rename_files(file_names):
             os.rename(f, safe)
             renamed.append(safe)
     return renamed
-            
+
+
+def _rename_zip(oldname, newname):
+    """Create ZipFile object from uploaded data """
+    handle, tempfile = mkstemp()
+    oldzip = zipfile.ZipFile(oldname, 'r')
+    newzip = zipfile.ZipFile(open(tempfile, "wb"), "w")
+
+    """Get the necessary files from the uploaded zip, and add them to the new zip
+    with the desired layer name"""
+    zipFiles = oldzip.namelist()
+    files = ['.shp', '.prj', '.shx', '.dbf', '.sld']
+    for file in zipFiles:
+        name, ext = os.path.splitext(file)
+        if ext.lower() in files:
+            files.remove(ext) #OS X creates hidden subdirectory with garbage files having same extensions; ignore.
+            newzip.writestr(newname + ext, oldzip.read(file))
+    oldzip.close()
+    newzip.close()
+    os.rename(tempfile,oldname)
 
 def _find_sld_files(file_names):
     return filter( lambda f: f.lower().endswith('.sld'), file_names)

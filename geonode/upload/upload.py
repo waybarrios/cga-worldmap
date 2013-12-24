@@ -41,6 +41,7 @@ from geonode.layers.utils import layer_set_permissions
 from geonode.people.models import Profile 
 from geonode import GeoNodeException
 from geonode.people.utils import get_default_user
+from geonode.upload.files import _rename_zip
 from geonode.upload.models import Upload
 from geonode.upload import signals
 from geonode.upload.utils import create_geoserver_db_featurestore
@@ -198,8 +199,14 @@ def save_step(user, layer, base_file, overwrite=True):
     name = get_valid_layer_name(layer, overwrite)
     _log('Name for layer: [%s]', name)
 
+
+    base_name, extension = os.path.splitext(base_file)
+    if extension.lower() == "zip":
+        _rename_zip(base_file, name)
+
     # Step 2. Check that it is uploading to the same resource type as
     # the existing resource
+
 
     the_layer_type = layer_type(base_file)
 
