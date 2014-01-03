@@ -1425,7 +1425,7 @@ class Layer(models.Model, PermissionLevelMixin):
         try:
             self.resource.metadata_links = md_links
         except Exception, ex:
-            logger.error("Exception occurred in _set_metadata_links for %s: %s", str(ex))
+            logger.error("Exception occurred in _set_metadata_links:  %s", str(ex))
 
     metadata_links = property(_get_metadata_links, _set_metadata_links)
 
@@ -1771,6 +1771,9 @@ class LayerAttribute(models.Model):
     def __str__(self):
         return "%s" % self.attribute
 
+    def __unicode__(self):
+        return self.attribute
+
 class ContactRole(models.Model):
     """
     ContactRole is an intermediate model to bind Contacts and Layers and apply roles.
@@ -1801,6 +1804,7 @@ class ContactRole(models.Model):
 
     class Meta:
         unique_together = (("contact", "layer", "role"),)
+
 
 
 class Map(models.Model, PermissionLevelMixin):
@@ -2431,9 +2435,8 @@ def post_save_layer(instance, sender, **kwargs):
     if (re.search("coverageStore|dataStore", instance.storeType)):
         logger.info("Call save_to_geoserver for %s", instance.name)
         instance.save_to_geoserver()
-
-    if kwargs['created']:
-        instance._populate_from_gs()
+        if kwargs['created']:
+            instance._populate_from_gs()
 
     instance.save_to_geonetwork()
 
@@ -2481,3 +2484,7 @@ class LayerStats(models.Model):
     downloads = models.IntegerField(_("Downloads"), default = 0)
     last_modified = models.DateTimeField(auto_now=True, null=True)
 
+class ServiceLayer(models.Model):
+    service = models.ForeignKey(Service)
+    typename = models.CharField(_("Layer Name"), max_length=255)
+    layer = models.ForeignKey(Layer, null=True)

@@ -42,4 +42,6 @@ jdcal
 #For mapnotes
 vectorformats
 #For autocomplete
-django-autocomplete-light
+django-autocomplete-light==1.4.5
+#For slugifying
+unidecode

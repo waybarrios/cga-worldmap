@@ -1,0 +1,24 @@
+{% extends "page_layout.html" %}
+{% load i18n %}
+
+{% block title %} Services -- Available Layers {{ block.super }} {% endblock %}
+
+{% block main %}
+<div class="twocol">
+    {% if service %}
+     <form method="POST">
+      {% csrf_token %}
+      <ul class="form">
+          <input type="hidden" id="service_id" value="{{service.id}}"
+          <li><input type="checkbox" checked="true" onchange="javascript:mass_select(this.checked);" />{% trans "Select All/None" %}</li>
+        {% for layer in service.servicelayer_set.all %}
+          <li><input type="checkbox" name="layer_list" id="option_{{layer.typename}}" value="{{ layer.typename }}" checked="true"  />{{ layer.typename }}</li>
+        {% endfor %}
+      </ul>
+         <div align="center"><p><input type="submit" class="submit_btn" value="{% trans "Add Layers" %}" /></p></div>
+     </form>
+    {% else %}
+    <h3>No layers found</h3>
+    {% endif %}
+</div>
+{% endblock %}

@@ -13,8 +13,8 @@
 import StringIO
 import random
 from owslib.etree import etree
-from owslib.filter import *
 from owslib import util
+from owslib.fes import setsortby, FilterRequest, FilterCapabilities
 from owslib.ows import *
 from owslib.iso import *
 from owslib.fgdc import *

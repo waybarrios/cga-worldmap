@@ -3,12 +3,21 @@
 
 {% block head %}
 {{ block.super }}
+
 {% endblock %}
 
 {% block title %} Register Service - {{ block.super }} {% endblock %}
 
 {% block main %}
+<div class="twocol">
 
 <h2>Register New Service</h2>
-
+    <form method="POST">
+    {% csrf_token %}
+    <ul class="form">
+        {{ create_service_form.as_ul }}
+    </ul>
+<div align="center"><p><input type="submit" class="submit_btn" value="{% trans "Create" %}" /></p></div>
+      </form>
+</div>
 {% endblock %}

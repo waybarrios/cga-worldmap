@@ -24,6 +24,7 @@ import logging
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.forms.models import modelformset_factory
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.conf import settings
@@ -37,9 +38,12 @@ from django.shortcuts import get_object_or_404
 from geoserver.catalog import Catalog
 from owslib.wms import WebMapService
 #from geonode.utils import OGC_Servers_Handler
-from geonode.maps.models import Service, Layer
+from geonode.maps.models import Service, Layer, ServiceLayer
 from geonode.maps.views import _perms_info
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS
+from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSet
+from geonode.utils import slugify
+import re
 
 logger = logging.getLogger("geonode.core.layers.views")
 
@@ -68,17 +72,22 @@ def services(request):
 
 @login_required
 def register_service(request):
+
     if request.method == "GET":
+        service_form = CreateServiceForm()
         return render_to_response('services/service_register.html',
-                                  RequestContext(request, {}))
+                                  RequestContext(request, {
+                                      'create_service_form': service_form
+                                  }))
 
     elif request.method == 'POST':
         # Register a new Service
+        service_form = CreateServiceForm(request.POST)
         try:
             method = request.POST.get('method').upper()
             type = request.POST.get('type').upper()
             url = request.POST.get('url')
-            name = request.POST.get('name')
+            name = slugify(request.POST.get('name'))
             if "user" in request.POST and "password" in request.POST:
                 user = request.POST.get('user')
                 password = request.POST.get('password')
@@ -116,7 +125,7 @@ def register_service(request):
                                     mimetype='application/json',
                                     status=400)
             if method == 'C':
-                return _register_cascaded_service(type, url, name, user, password) 
+                return _register_cascaded_service(type, url, name, user, password)
             elif method == 'I':
                 return _register_indexed_service(type, url, name, user, password)
             elif method == 'H':
@@ -271,6 +280,8 @@ def _register_indexed_service(type, url, name, user, password):
         available_resources = []
         for layer in list(wms.contents):
             available_resources.append(wms[layer].name)
+            service_layer = ServiceLayer(service=service,typename=wms[layer].name)
+            service_layer.save()
         message = "Service %s registered" % service.name
         return_dict = {'status': 'ok', 'msg': message,
                         'id': service.pk,
@@ -296,10 +307,29 @@ def _register_indexed_layers(user, service, layers, perm_spec):
         for layer in layers:
             wms_layer = wms[layer]
             layer_uuid = str(uuid.uuid1())
-            if wms_layer.keywords:
+            if not wms_layer.keywords:
                 keywords = ""
             else:
                 keywords=' '.join(wms_layer.keywords)
+            if not wms_layer.abstract:
+                abstract = ""
+            else:
+                abstract = wms_layer.abstract
+
+            srs = None
+            if 'EPSG:900913' in wms_layer.crsOptions:
+                srs = 'EPSG:900913'
+            elif len(wms_layer.crsOptions) > 0:
+                matches = re.findall('EPSG\:(3857|102100|102113)', ' '.join(wms_layer.crsOptions))
+                if matches:
+                    srs = matches[0]
+            if srs is None:
+                message = "%d Incompatible projection - try setting the service as cascaded" % count
+                return_dict = {'status': 'ok', 'msg': message }
+                return HttpResponse(json.dumps(return_dict),
+                                mimetype='application/json',
+                                status=200)
+
             # Need to check if layer already exists??
             saved_layer, created = Layer.objects.get_or_create(name=wms_layer.name,
                 defaults=dict(
@@ -309,13 +339,16 @@ def _register_indexed_layers(user, service, layers, perm_spec):
                     typename=wms_layer.name,
                     workspace="remoteWorkspace",
                     title=wms_layer.title,
-                    abstract=wms_layer.abstract,
+                    abstract=abstract,
                     uuid=layer_uuid,
-                    #keywords=keywords,
                     owner=user,
+                    srs=srs,
                     geographic_bounding_box = wms_layer.boundingBoxWGS84,
                 )
             )
+            if created:
+                saved_layer.set_default_permissions()
+                saved_layer.keywords.add(*keywords)
             count += 1
         message = "%d Layers Registered" % count
         return_dict = {'status': 'ok', 'msg': message }
@@ -358,14 +391,19 @@ def _register_harvested_service(type, url, name, user, password):
         )
 
 @login_required
-def register_layers(request):
+def register_layers(request, service_id):
+    service = Service.objects.get(pk = int(service_id))
+    layerformset = modelformset_factory(ServiceLayer, form=ServiceLayerFormSet)
+    layerformset(queryset=ServiceLayer.objects.filter(service_id=service_id))
     if request.method == 'GET':
-        return HttpResponse('Not Implemented (Yet)', status=501)
+        return render_to_response('services/layers_register.html',
+                            RequestContext(request, {
+                            'service': service,
+                            'formset': layerformset
+                            }))
     elif request.method == 'POST':
         try:
-            service_id = request.POST.get("service_id")
-            layer_list = request.POST.get("layer_list")
-            layers = layer_list.split(',')
+            layers = request.POST.getlist("layer_list")
             if request.POST.get("permissions"):
                 perm_spec= json.loads(request.POST.get("permissions"))
             else:
@@ -388,8 +426,8 @@ def register_layers(request):
                 return HttpResponse('Local Services not configurable via API', status=400)
             else:
                 return HttpResponse('Invalid Service Type', status=400)
-        except:
-            logger.error("Unexpected Error", exc_info=1) 
+        except Exception, e:
+            logger.error("Unexpected Error: %s" % e.message, exc_info=1)
             return HttpResponse('Unexpected Error', status=501)
     elif request.method == 'PUT':
         return HttpResponse('Not Implemented (Yet)', status=501)
@@ -515,3 +553,4 @@ def ajax_service_permissions(request, service_id):
         "Permissions updated",
         status=200,
         mimetype='text/plain')
+
