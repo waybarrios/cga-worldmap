@@ -799,9 +799,10 @@ class LayerManager(models.Manager):
 
     def __init__(self):
         models.Manager.__init__(self)
+        self.geonetwork = GeoNetwork(settings.GEONETWORK_BASE_URL, settings.GEONETWORK_CREDENTIALS[0], settings.GEONETWORK_CREDENTIALS[1])
         url = "%srest" % settings.GEOSERVER_BASE_URL
         self.gs_catalog = Catalog(url, _user, _password)
-        self.geonetwork = GeoNetwork(settings.GEONETWORK_BASE_URL, settings.GEONETWORK_CREDENTIALS[0], settings.GEONETWORK_CREDENTIALS[1])
+
 
     @property
     def gn_catalog(self):
@@ -1260,6 +1261,24 @@ class Layer(models.Model, PermissionLevelMixin):
             logger.debug("cache created for layer %s", self.typename)
         return attribute_fields
 
+    def set_layer_attributes(self):
+        attrNames = self.attribute_names
+        if attrNames is not None:
+            logger.debug("Attributes are not None")
+            iter = 1
+            mark_searchable = True
+            for field, ftype in attrNames.iteritems():
+                if field is not None and  ftype.find("gml:") != 0:
+                    las = LayerAttribute.objects.filter(layer=self, attribute=field)
+                    if len(las) == 0:
+                        la = LayerAttribute.objects.create(layer=self, attribute=field, attribute_label=field.title(), attribute_type=ftype, searchable=(ftype == "xsd:string" and mark_searchable), display_order = iter)
+                        la.save()
+                        if la.searchable:
+                            mark_searchable = False
+                        iter+=1
+        else:
+            logger.debug("No attributes found")
+
 
     def attribute_config(self):
         #Get custom attribute sort order and labels if any
@@ -1313,8 +1332,9 @@ class Layer(models.Model, PermissionLevelMixin):
     @property
     def attribute_names(self):
         from ordereddict import OrderedDict
-        if self.resource.resource_type == "featureType":
-            dft_url = settings.GEOSERVER_BASE_URL + "wfs?" + urllib.urlencode({
+        if not self.local or self.resource.resource_type == "featureType":
+            dft_url = settings.GEOSERVER_BASE_URL if self.local else re.sub('wms\/?$', '/', self.service.base_url)
+            dft_url += "wfs?" + urllib.urlencode({
                 "service": "wfs",
                 "version": "1.0.0",
                 "request": "DescribeFeatureType",
@@ -1344,7 +1364,7 @@ class Layer(models.Model, PermissionLevelMixin):
             except Exception:
                 atts = {}
             return atts
-        elif self.resource.resource_type == "coverage":
+        elif self.local and self.resource.resource_type == "coverage":
             dc_url = settings.GEOSERVER_BASE_URL + "wcs?" + urllib.urlencode({
                 "service": "wcs",
                 "version": "1.1.0",
@@ -1374,6 +1394,7 @@ class Layer(models.Model, PermissionLevelMixin):
             except Exception:
                 atts = {}
             return atts
+        return {}
 
     @property
     def display_type(self):
@@ -1383,7 +1404,8 @@ class Layer(models.Model, PermissionLevelMixin):
             }).get(self.storeType, "Data")
 
     def delete_from_geoserver(self):
-        cascading_delete(Layer.objects.gs_catalog, self.resource)
+        if self.local:
+            cascading_delete(Layer.objects.gs_catalog, self.resource)
 
     def delete_from_geonetwork(self):
         gn = Layer.objects.gn_catalog
@@ -1402,28 +1424,33 @@ class Layer(models.Model, PermissionLevelMixin):
 
     @property
     def resource(self):
-        if not hasattr(self, "_resource_cache"):
-            cat = Layer.objects.gs_catalog
-            try:
-                ws = cat.get_workspace(self.workspace)
-            except AttributeError:
-                # Geoserver is not running
-                raise RuntimeError("Geoserver cannot be accessed, are you sure it is running in: %s" %
+        if self.local:
+            if not hasattr(self, "_resource_cache"):
+                cat = Layer.objects.gs_catalog
+                try:
+                    ws = cat.get_workspace(self.workspace)
+                except AttributeError:
+                    # Geoserver is not running
+                    raise RuntimeError("Geoserver cannot be accessed, are you sure it is running in: %s" %
                                    (settings.GEOSERVER_BASE_URL))
-            try:
-                store = cat.get_store(self.store, ws)
-                self._resource_cache = cat.get_resource(self.name, store)
-            except:
-                logger.error("Store for %s does not exist", self.name)
-                return None
-        return self._resource_cache
+                try:
+                    store = cat.get_store(self.store, ws)
+                    self._resource_cache = cat.get_resource(self.name, store)
+                except:
+                    logger.error("Store for %s does not exist", self.name)
+                    return None
+            return self._resource_cache
+        return None
 
     def _get_metadata_links(self):
-        return self.resource.metadata_links
+        if self.local:
+            return self.resource.metadata_links
+        return None
 
     def _set_metadata_links(self, md_links):
         try:
-            self.resource.metadata_links = md_links
+            if self.local:
+                self.resource.metadata_links = md_links
         except Exception, ex:
             logger.error("Exception occurred in _set_metadata_links:  %s", str(ex))
 
@@ -1614,7 +1641,10 @@ class Layer(models.Model, PermissionLevelMixin):
         self.geographic_bounding_box = bbox_to_wkt(box[0], box[1], box[2], box[3], srid=srid )
 
     def get_absolute_url(self):
-        return "/data/%s" % (self.typename)
+        if self.local:
+            return "/data/%s" % (self.typename)
+        else:
+            return "/data/%s/%s" % (self.typename, self.service.name)
 
     def __str__(self):
         return "%s Layer" % self.typename

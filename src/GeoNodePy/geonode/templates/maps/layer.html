@@ -476,7 +476,7 @@
             {% if layer.local %}
             <a href="{% url data_metadata layer.typename %}">
             {% else %}
-            <a href="{% url data_metadata layer.service layer.typename %}">
+            <a href="{% url data_metadata layer.typename layer.service %}">
             {% endif %}
             {% trans "Update the description of this data" %}
         </a> </li>
@@ -484,7 +484,7 @@
             {% if layer.local %}
             <a href="{% url layer_contacts layer.typename%}">
             {% else %}
-            <a href="{% url layer_contacts layer.service layer.typename%}">
+            <a href="{% url layer_contacts layer.typename layer.service%}">
             {% endif %}
 
                 {% trans "Update the contacts for this data" %}

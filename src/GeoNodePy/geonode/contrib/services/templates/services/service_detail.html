@@ -9,30 +9,33 @@
 {{ block.super }}
 <script type="text/javascript">
 var app;
+{% autoescape off %}
 Ext.onReady(function() {
 {% has_obj_perm user service "maps.change_service_permissions" as can_change_permissions %}
-{% autoescape off %}
+
 {% if can_change_permissions %}
-    new GeoNode.PermissionsEditor({
+       new GeoNode.WorldMapPermissionsEditor({
+                renderTo: "permissions_form",
+                submitTo: "{% url geonode.contrib.services.views.ajax_service_permissions service.id %}",
+                userLookup: "{% url geonode.views.ajax_lookup %}",
+                customGroup: "{{ customGroup }}",
+                permissions: {{ permissions_json }},
         levels: {
-            'admin': 'service_admin',
-            'readwrite': 'service_readwrite',
-            'readonly': 'service_readonly',
-            '_none': '_none'
+            'admin': 'layer_admin',
+                    'readwrite': 'layer_readwrite',
+                    'readonly': 'layer_readonly',
+                    'none': '_none'
         },
-        renderTo: "permissions_form",
-        userLookup: "{% url "account_ajax_lookup" %}",
-        permissions: {{ permissions_json }},
         listeners: {
             updated: function(perms) {
-                var submitTo = "{% url "ajax_service_permissions" service.id %}";
+                var submitTo = "{% url geonode.contrib.services.views.ajax_service_permissions service.id %}";
                 Ext.Ajax.request({ url: submitTo, jsonData: perms.writePermissions() });
             }
         }
     });
-{% endif %}
-{% endautoescape %}
+    {% endif %}
 });
+{% endautoescape %}
 </script>
 {% endblock %}
 

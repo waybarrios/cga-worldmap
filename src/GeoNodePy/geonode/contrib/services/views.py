@@ -349,6 +349,7 @@ def _register_indexed_layers(user, service, layers, perm_spec):
             if created:
                 saved_layer.set_default_permissions()
                 saved_layer.keywords.add(*keywords)
+                saved_layer.set_layer_attributes()
             count += 1
         message = "%d Layers Registered" % count
         return_dict = {'status': 'ok', 'msg': message }

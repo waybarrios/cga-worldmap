@@ -83,7 +83,7 @@
     {% if layer.local %}
     <form action="{% url data_metadata  layer.typename %}" method="POST">
     {% else %}
-    <form action="{% url data_metadata layer.service layer.typename %}" method="POST">
+    <form action="{% url data_metadata layer.typename layer.service %}" method="POST">
     {% endif %}
 
 

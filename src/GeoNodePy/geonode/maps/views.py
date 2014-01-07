@@ -159,7 +159,7 @@ class LayerForm(forms.ModelForm):
     keywords = taggit.forms.TagField(required=False)
     class Meta:
         model = Layer
-        exclude = ('owner', 'contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename', 'topic_category', 'bbox', 'llbbox', 'srs', 'geographic_bounding_box', 'in_gazetteer', 'gazetteer_project' ) #, 'topic_category'
+        exclude = ('service', 'owner', 'contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename', 'topic_category', 'bbox', 'llbbox', 'srs', 'geographic_bounding_box', 'in_gazetteer', 'gazetteer_project' ) #, 'topic_category'
 
 class RoleForm(forms.ModelForm):
     class Meta:
@@ -1112,7 +1112,7 @@ def layer_metadata(request, layername, service=None):
                         if layer.local:
                             return HttpResponseRedirect("/data/" + layer.typename)
                         else:
-                            return HttpResponseRedirect("/data/" + service + "/" + layer.typename)
+                            return HttpResponseRedirect("/data/" + layer.typename + "/" + layer.service.name)
 
         #Deal with a form submission via ajax
         if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
@@ -1372,22 +1372,7 @@ def layer_replace(request, layername):
                                 la.delete()
 
                     #Add new layer attributes if they dont already exist
-                    if attrNames is not None:
-                        logger.debug("Attributes are not None")
-                        iter = 1
-                        mark_searchable = True
-                        for field, ftype in attrNames.iteritems():
-                            if re.search('geom|oid|objectid|gid', field, flags=re.I) is None:
-                                logger.debug("Field is [%s]", field)
-                                las = LayerAttribute.objects.filter(layer=saved_layer, attribute=field)
-                                if len(las) == 0:
-                                    la = LayerAttribute.objects.create(layer=saved_layer, attribute=field, attribute_label=field.title(), attribute_type=ftype, searchable=(ftype == "xsd:string" and mark_searchable), display_order = iter)
-                                    la.save()
-                                    if la.searchable:
-                                        mark_searchable = False
-                                    iter+=1
-                    else:
-                        logger.debug("No attributes found")
+                    saved_layer.set_layer_attributes()
 
                 except Exception, ex:
                     logger.debug("Attributes could not be saved:[%s]", str(ex))

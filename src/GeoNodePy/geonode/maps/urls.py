@@ -68,11 +68,11 @@ datapatterns = patterns('geonode.maps.views',
 
     # Remote layers
 
-    url(r'^(?P<layername>[^/]*)/?(?P<service>[^/]*)/metadata$', 'layer_metadata', name="data_metadata"),
-    url(r'^(?P<layername>[^/]*)/?(?P<service>[^/]*)/contacts$', 'layer_contacts', name="layer_contacts"),
-    url(r'^(?P<layername>[^/]*)/?(?P<service>[^/]*)/remove$', 'layer_remove', name="data_remove"),
-    url(r'^(?P<layername>[^/]*)/?(?P<service>[^/]*)/ajax-permissions$', 'ajax_layer_permissions', name='data_ajax_perm'),
-    url(r'^(?P<layername>[^/]*)/?(?P<service>[^/]*)/ajax-permissions-email$', 'ajax_layer_permissions_by_email', name="data_ajax_perm_email"),
-    url(r'^(?P<layername>[^/]*)/?(?P<service>[^/]*)$', 'layer_detail', name="data_detail"),
+    url(r'^(?P<layername>[^/]*)/(?P<service>[^/]*)/metadata$', 'layer_metadata', name="data_metadata"),
+    url(r'^(?P<layername>[^/]*)/(?P<service>[^/]*)/contacts$', 'layer_contacts', name="layer_contacts"),
+    url(r'^(?P<layername>[^/]*)/(?P<service>[^/]*)/remove$', 'layer_remove', name="data_remove"),
+    url(r'^(?P<layername>[^/]*)/(?P<service>[^/]*)/ajax-permissions$', 'ajax_layer_permissions', name='data_ajax_perm'),
+    url(r'^(?P<layername>[^/]*)/(?P<service>[^/]*)/ajax-permissions-email$', 'ajax_layer_permissions_by_email', name="data_ajax_perm_email"),
+    url(r'^(?P<layername>[^/]*)/(?P<service>[^/]*)/?$', 'layer_detail', name="data_detail"),
 )
 
