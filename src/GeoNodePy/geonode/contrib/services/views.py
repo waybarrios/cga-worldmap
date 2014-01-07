@@ -38,7 +38,7 @@ from django.shortcuts import get_object_or_404
 from geoserver.catalog import Catalog
 from owslib.wms import WebMapService
 #from geonode.utils import OGC_Servers_Handler
-from geonode.maps.models import Service, Layer, ServiceLayer
+from geonode.contrib.services.models import Service, Layer, ServiceLayer
 from geonode.maps.views import _perms_info
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSet

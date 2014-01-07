@@ -1,5 +1,5 @@
 from django import forms
-from geonode.maps.models import Service, ServiceLayer
+from geonode.contrib.services.models import Service, ServiceLayer
 from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS
 from django.utils.translation import ugettext_lazy as _
 

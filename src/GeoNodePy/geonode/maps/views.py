@@ -1,6 +1,6 @@
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 from geonode.maps.models import Map, Layer, MapLayer, Contact, ContactRole, \
-     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, CHARSETS, Service
+     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, CHARSETS
 from geonode.profile.forms import ContactProfileForm
 from geoserver.resource import FeatureType, Coverage
 import base64
@@ -29,6 +29,7 @@ import unicodedata
 from django.db.models import Q
 import logging
 from geonode.flexidates import FlexiDateFormField
+from geonode.contrib.services.models import Service
 import taggit
 from geonode.maps.utils import forward_mercator
 from geonode.maps.owslib_csw import CswRecord
