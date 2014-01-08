@@ -1,5 +1,15 @@
 {% extends "page_layout.html" %}
 {% load i18n %}
+{% block head %}
+{{ block.super }}
+<script type="text/javascript">
+    $(function () {
+        $("#checkall").on('click', function () {
+            $('input[name=layer_list]').prop('checked', this.checked);
+        });
+    });
+</script>
+{% endblock %}
 
 {% block title %} Services -- Available Layers {{ block.super }} {% endblock %}
 
@@ -9,10 +19,10 @@
      <form method="POST">
       {% csrf_token %}
       <ul class="form">
-          <input type="hidden" id="service_id" value="{{service.id}}"
-          <li><input type="checkbox" checked="true" onchange="javascript:mass_select(this.checked);" />{% trans "Select All/None" %}</li>
+          <input type="hidden" id="service_id" value="{{service.id}}">
+          <li><input type="checkbox" checked="true" id="checkall" />{% trans "Select All/None" %}</li>
         {% for layer in service.servicelayer_set.all %}
-          <li><input type="checkbox" name="layer_list" id="option_{{layer.typename}}" value="{{ layer.typename }}" checked="true"  />{{ layer.typename }}</li>
+          <li><input type="checkbox" name="layer_list" id="option_{{layer.typename}}" value="{{ layer.typename }}" checked="false"  />{{ layer.typename }}</li>
         {% endfor %}
       </ul>
          <div align="center"><p><input type="submit" class="submit_btn" value="{% trans "Add Layers" %}" /></p></div>

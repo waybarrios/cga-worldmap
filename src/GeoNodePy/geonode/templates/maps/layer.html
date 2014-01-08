@@ -155,7 +155,11 @@
     function addToMap(selectInput) {
     	var selectedValue = selectInput.options[selectInput.selectedIndex].value;
     	if (selectedValue != '') {
-    		window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
+            {% if layer.local %}
+    		    window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
+            {% else %}
+                window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}&service={{layer.service.id}}'
+            {% endif %}
     	}
     }
     {% endautoescape %}
