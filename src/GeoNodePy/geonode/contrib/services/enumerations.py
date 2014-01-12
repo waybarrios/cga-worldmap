@@ -31,7 +31,8 @@ SERVICE_TYPES = (
     ('TMS', _('Tile Map Service')),
     ('OSG', _('OpenSearch Geo Service')),
     ('ARC', _('ArcGIS REST Service')),
-    ('ARCT', _('ArcGIS Tile Service')),
+    ('OGP', _('OpenGeoPortal')),
+    ('HGL', _('Harvard Geospatial Library')),
 )
 
 SERVICE_METHODS = (
@@ -49,10 +50,12 @@ GXP_PTYPES = {
     'WFS': 'gxp_wmscsource',
     'WCS': 'gxp_wmscsource',
     'ARC': 'gxp_arcrestsource',
+    'HGL': 'gxp_hglsource',
     'WPS': None,
     'CSW': None,
     'WMTS': None,
     'TMS': None,
     'OSG': None,
+    'OGP': None
 }
 

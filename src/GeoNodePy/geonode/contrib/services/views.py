@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
+import urllib
 
 import uuid
 import logging
@@ -44,6 +45,7 @@ from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSet
 from geonode.utils import slugify
 import re
+
 
 logger = logging.getLogger("geonode.core.layers.views")
 
@@ -125,11 +127,11 @@ def register_service(request):
                                     mimetype='application/json',
                                     status=400)
             if method == 'C':
-                return _register_cascaded_service(type, url, name, user, password)
+                return _register_cascaded_service(type, url, name, user, password, owner=request.user)
             elif method == 'I':
-                return _register_indexed_service(type, url, name, user, password)
+                return _register_indexed_service(type, url, name, user, password, owner=request.user)
             elif method == 'H':
-                return _register_harvested_service(type, url, name, user, password)
+                return _register_harvested_service(type, url, name, user, password, owner=request.user)
             elif method == 'X':
                 return HttpResponse('Not Implemented (Yet)', status=501)
             elif method == 'L':
@@ -148,7 +150,7 @@ def register_service(request):
     else:
         return HttpResponse('Invalid Request', status = 400)
 
-def _register_cascaded_service(type, url, name, user, password):
+def _register_cascaded_service(type, url, name, user, password, owner=None):
     if type == 'WMS':
         # Register the Service with GeoServer to be cascaded
         cat = Catalog(settings.GEOSERVER_BASE_URL + "rest", 
@@ -166,7 +168,7 @@ def _register_cascaded_service(type, url, name, user, password):
                             method='C',
                             base_url = url,
                             name = name,
-                            owner = user)
+                            owner = owner)
         service.save()
         message = "Service %s registered" % service.name
         return_dict = {'status': 'ok', 'msg': message, 
@@ -224,7 +226,7 @@ def _register_cascaded_service(type, url, name, user, password):
             mimetype="text/plain",
             status=400)
 
-def _register_cascaded_layers(user, service, layers, perm_spec):
+def _register_cascaded_layers(user, service, layers, perm_spec, verbosity=False):
     if service.type == 'WMS' or service.type == "WFS":
         cat = Catalog(settings.GEOSERVER_BASE_URL + "rest", 
                         _user , _password)
@@ -259,8 +261,7 @@ def _register_cascaded_layers(user, service, layers, perm_spec):
     else:
         return HttpResponse('Invalid Service Type', status=400)
 
-
-def _register_indexed_service(type, url, name, user, password):
+def _register_indexed_service(type, url, name, user, password, owner=None, verbosity=False):
     if type == 'WMS':
         # TODO: Handle for errors from owslib
         wms = WebMapService(url)
@@ -275,7 +276,7 @@ def _register_indexed_service(type, url, name, user, password):
                           abstract = wms.identification.abstract,
                           keywords = ','.join(wms.identification.keywords),
                           online_resource = wms.provider.url,
-                          owner=user)
+                          owner=owner)
         service.save()
         available_resources = []
         for layer in list(wms.contents):
@@ -300,12 +301,14 @@ def _register_indexed_service(type, url, name, user, password):
             mimetype="text/plain",
             status=400)
 
-def _register_indexed_layers(user, service, layers, perm_spec):
+def _register_indexed_layers(user, service, layers, perm_spec, verbosity=False):
     if service.type == 'WMS':
         wms = WebMapService(service.base_url)
         count = 0
         for layer in layers:
             wms_layer = wms[layer]
+            if verbosity:
+                print "Importing layer %s" % layer
             layer_uuid = str(uuid.uuid1())
             if not wms_layer.keywords:
                 keywords = ""
@@ -350,6 +353,10 @@ def _register_indexed_layers(user, service, layers, perm_spec):
                 saved_layer.set_default_permissions()
                 saved_layer.keywords.add(*keywords)
                 saved_layer.set_layer_attributes()
+
+                service_layer = ServiceLayer.objects.get(service=service,typename=saved_layer.typename)
+                service_layer.layer = saved_layer
+                service_layer.save()
             count += 1
         message = "%d Layers Registered" % count
         return_dict = {'status': 'ok', 'msg': message }
@@ -363,7 +370,7 @@ def _register_indexed_layers(user, service, layers, perm_spec):
     else:
         return HttpResponse('Invalid Service Type', status=400)
 
-def _register_harvested_service(type, url, name, user, password):
+def _register_harvested_service(type, url, name, user, password, owner=None):
     if type == 'CSW':
         # Make this CSW Agnostic (i.e. Not GeoNetwork specific)
         gn = Layer.objects.gn_catalog
@@ -372,7 +379,7 @@ def _register_harvested_service(type, url, name, user, password):
                             method='H',
                             base_url = url,
                             name = name,
-                            owner=user,
+                            owner=owner,
                             uuid = service_uuid,
                             external_id = id)
         service.save()
@@ -383,6 +390,8 @@ def _register_harvested_service(type, url, name, user, password):
         return HttpResponse(json.dumps(return_dict),
                             mimetype='application/json',
                             status=200)
+    elif type== "OGP":
+        harvest_ogp_service(name,url)
     else:
         return HttpResponse(
             'Invalid Method / Type combo: ' + 
@@ -391,11 +400,95 @@ def _register_harvested_service(type, url, name, user, password):
             status=400
         )
 
+def harvest_ogp_service(url, num_rows=25, start=0,owner=None):
+    base_query_str =  """q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0),
+        map(MaxX,-180.0,180.0,1,0),map(MinY,-90.0,90.0,1,0),map(MaxY,-90.0,90.0,1,0)),4,4,1,0))),0,0)%22&debugQuery=
+        false&&fq={!frange+l%3D1+u%3D10}product(2.0,map(sum(map(sub(abs(sub(0,CenterX)),sum(171.03515625,HalfWidth)),0,
+        400000,1,0),map(sub(abs(sub(0,CenterY)),sum(75.84516854027,HalfHeight)),0,400000,1,0)),0,0,1,0))&wt=json
+        &fl=Name,CollectionId,Institution,Access,DataType,Availability,LayerDisplayName,Publisher,GeoReferenced,
+        Originator,Location,MinX,MaxX,MinY,MaxY,ContentDate,LayerId,score,WorkspaceName,SrsProjectionCode
+        &sort=score+desc&fq=DataType%3APoint+OR+DataType%3ALine+OR+DataType%3APolygon+OR+DataType%3ARaster
+        +OR+DataType%3APaper+Map&fq=Access:Public"""
+
+    fullurl = url + base_query_str + ("&rows=%d&start=%d" % (num_rows, start))
+    response = json.loads(urllib.urlopen(url).read())
+    result_count =  response["response"]["numFound"]
+    process_ogp_results(response)
+
+    while start < result_count:
+        start = start + num_rows
+        harvest_ogp_service(url, num_rows, start)
+
+def process_ogp_results(result_json, owner):
+    for doc in result_json["response"]["docs"]:
+        locations = doc["Location"]
+        if "tilecache" in locations:
+            service_url = doc["Location"]["tilecache"]
+            service_type = "WMS"
+        elif "wms" in locations:
+            service_url = doc["Location"]["tilecache"]
+            service_type = "WMS"
+        else:
+            pass
+
+        #Harvard is a special case
+        if doc["Institution"] == "Harvard":
+            service_type = "HGL"
+
+        try:
+            service = Service.objects.get(base_url=service_url)
+        except Service.DoesNotExist:
+            name = slugify(service_url)
+            if service_type == "WMS":
+                try:
+                    r_json = json.loads(_register_indexed_service(service_type, service_url, name, owner=owner))
+                    service = r_json["id"]
+                except Exception, e:
+                    print str(e)
+                    service = Service(type = type,
+                                      method='I',
+                                      base_url = service_url,
+                                      name = name,
+                                      online_resource = service_url,
+                                      owner=owner)
+
+            if service:
+                typename = doc["Name"]
+                if doc["Workspace"]:
+                    typename = doc["Workspace"] + ":" + typename
+                service_layer = ServiceLayer(service=service,typename=typename)
+                service_layer.save()
+                bbox = (
+                    float(doc['MinX']),
+                    float(doc['MinY']),
+                    float(doc['MaxX']),
+                    float(doc['MaxY']),
+                )
+                abstract = json.dumps(doc)
+                saved_layer, created = Layer.objects.get_or_create(service=service, typename=typename,
+                                                                   defaults=dict(
+                                                                       service = service,
+                                                                       store=service.name, #??
+                                                                       storeType="remoteStore",
+                                                                       workspace="remoteWorkspace",
+                                                                       abstract=abstract,
+                                                                       title=doc["LayerDisplayName"],
+                                                                       owner=owner,
+                                                                       srs="EPSG:900913", #Assumption
+                                                                       geographic_bounding_box = bbox,
+                                                                       )
+                )
+
+                if created:
+                    service_layer.layer = saved_layer
+                    service_layer.save
+
+
 @login_required
 def register_layers(request, service_id):
     service = Service.objects.get(pk = int(service_id))
     layerformset = modelformset_factory(ServiceLayer, form=ServiceLayerFormSet)
-    layerformset(queryset=ServiceLayer.objects.filter(service_id=service_id))
+    layerformset(queryset=ServiceLayer.objects.filter(service_id=service_id,layer_id=None))
     if request.method == 'GET':
         return render_to_response('services/layers_register.html',
                             RequestContext(request, {

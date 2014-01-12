@@ -36,7 +36,7 @@ from geonode.maps.owslib_csw import CswRecord
 from django.utils.html import escape
 from django.forms.models import inlineformset_factory
 from django.core.cache import cache
-from geonode.maps.forms import LayerCreateForm, GEOMETRY_CHOICES
+from geonode.maps.forms import LayerCreateForm, GEOMETRY_CHOICES, MapForm, LayerForm, GazetteerForm, PocForm, LayerContactForm
 
 import itertools
 from registration.models import RegistrationProfile
@@ -47,8 +47,8 @@ from datetime import datetime, timedelta
 from geonode.maps.gs_helpers import get_sld_for, get_postgis_bbox
 from geonode.maps.encode import num_encode, num_decode
 from django.db import transaction
-import autocomplete_light
 from geonode.maps.encode import despam, XssCleaner
+import geonode.maps.autocomplete_light_registry
 
 logger = logging.getLogger("geonode.maps.views")
 
@@ -88,94 +88,6 @@ def default_map_config():
 
 def bbox_to_wkt(x0, x1, y0, y1, srid="4326"):
     return 'SRID='+srid+';POLYGON(('+x0+' '+y0+','+x0+' '+y1+','+x1+' '+y1+','+x1+' '+y0+','+x0+' '+y0+'))'
-
-
-class GazetteerForm(forms.Form):
-
-    project = forms.CharField(label=_('Project'), max_length=128, required=False)
-    startDate = forms.ModelChoiceField(label = _("Start Date attribute"),
-        required=False,
-        queryset = LayerAttribute.objects.none())
-
-    startDateFormat = forms.CharField(label=_("Date format"), max_length=256, required=False)
-
-    endDate = forms.ModelChoiceField(label = _("End Date attribute"),
-        required=False,
-        queryset = LayerAttribute.objects.none())
-
-    endDateFormat = forms.CharField(label=_("Date format"), max_length=256, required=False)
-
-
-class LayerContactForm(forms.Form):
-    poc = forms.ModelChoiceField(empty_label = _("Person outside WorldMap (fill form)"),
-        label = "*" + _("Point Of Contact"), required=False,
-        queryset = Contact.objects.exclude(user=None),
-        widget=autocomplete_light.ChoiceWidget('ContactAutocomplete'))
-
-    metadata_author = forms.ModelChoiceField(empty_label = _("Person outside WorldMap (fill form)"),
-        label = _("Metadata Author"), required=False,
-        queryset = Contact.objects.exclude(user=None),
-        widget=autocomplete_light.ChoiceWidget('ContactAutocomplete'))
-
-    class Meta:
-        model = Contact
-
-
-class LayerForm(forms.ModelForm):
-    from geonode.maps.models import CONSTRAINT_OPTIONS
-    CONSTRAINT_HELP = _('''<p>Please choose the appropriate type of restriction (if any) for the use of your data. 
-    Then use the "Constraints Other" form below to provide any necessary details.</p>
-    <p>
-    Public Domain Dedication and License<br />
-    http://opendatacommons.org/licenses/pddl/
-    </p>
-    <p>
-    Attribution License (ODC-By)<br />
-    http://opendatacommons.org/licenses/by/
-    </p>
-    <p>
-    Open Database License (ODC-ODbL)<br />
-    http://opendatacommons.org/licenses/odbl/
-    </p>
-    <p>
-    CC-BY-SA<br />
-    http://creativecommons.org/licenses/by-sa/2.0/
-    ''')
-    
-    map_id = forms.CharField(widget=forms.HiddenInput(), initial='', required=False)
-    date = forms.DateTimeField(label='*' + (_('Date')), widget=forms.SplitDateTimeWidget)
-    date.widget.widgets[0].attrs = {"class":"date"}
-    date.widget.widgets[1].attrs = {"class":"time"}
-    temporal_extent_start = FlexiDateFormField(required=False,label= _('Temporal Extent Start Date'))
-    temporal_extent_end = FlexiDateFormField(required=False,label= _('Temporal Extent End Date'))
-    title = forms.CharField(label = '*' + _('Title'), max_length=255)
-    abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea(attrs={'cols': 60}))
-    constraints_use = forms.ChoiceField(label= _('Contraints'), choices=CONSTRAINT_OPTIONS, 
-                                        help_text=CONSTRAINT_HELP)
-    keywords = taggit.forms.TagField(required=False)
-    class Meta:
-        model = Layer
-        exclude = ('service', 'owner', 'contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename', 'topic_category', 'bbox', 'llbbox', 'srs', 'geographic_bounding_box', 'in_gazetteer', 'gazetteer_project' ) #, 'topic_category'
-
-class RoleForm(forms.ModelForm):
-    class Meta:
-        model = ContactRole
-        exclude = ('contact', 'layer')
-
-class PocForm(forms.Form):
-    contact = forms.ModelChoiceField(label = _("New point of contact"),
-                                     queryset = Contact.objects.exclude(user=None))
-
-
-class MapForm(forms.ModelForm):
-    keywords = taggit.forms.TagField(required=False)
-    title = forms.CharField()
-    abstract = forms.CharField(widget=forms.Textarea(attrs={'cols': 40, 'rows': 10}), required=False)
-    content = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, 'rows': 10, 'id':'mapdescription'}), required=False)
-
-    class Meta:
-        model = Map
-        exclude = ('contact', 'zoom', 'projection', 'center_x', 'center_y', 'owner', 'officialurl', 'urlsuffix', 'keywords', 'use_custom_template', 'group_params')
 
 
 
@@ -2394,7 +2306,7 @@ def addLayerJSON(request):
 
 
 def ajax_layer_edit_check(request, layername):
-    layer = get_object_or_404(Layer, typename=layername);
+    layer = get_object_or_404(Layer, typename=layername)
     editable = request.user.has_perm("maps.change_layer", obj=layer)
     return HttpResponse(
         str(editable),
