@@ -20,7 +20,8 @@ from django.template.defaultfilters import slugify
 
 import math
 import httplib2
-from owslib.csw import namespaces
+from owslib import fes
+from owslib.csw import namespaces, CswRecord
 from owslib.util import nspath
 import re
 from urllib import urlencode
@@ -32,7 +33,6 @@ from geonode.flexidates import FlexiDateFormField
 from geonode.contrib.services.models import Service
 import taggit
 from geonode.maps.utils import forward_mercator
-from geonode.maps.owslib_csw import CswRecord
 from django.utils.html import escape
 from django.forms.models import inlineformset_factory
 from django.core.cache import cache
@@ -1634,14 +1634,16 @@ def metadata_search(request):
     result['success'] = True
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
-def _metadata_search(query, start, limit, sortby, sortorder, **kw):
+def _metadata_search(query, start, limit, sortby, sortorder='ASC', **kw):
 
     csw = get_csw()
 
     keywords = _split_query(query)
 
     if sortby:
-        sortby = 'dc:' + sortby
+        sortproperty = fes.SortBy([fes.SortProperty(sortby, sortorder)])
+    else:
+        sortproperty = None
 
     #Filter by category if present
     category = kw.get('topic_category', None)
@@ -1659,8 +1661,19 @@ def _metadata_search(query, start, limit, sortby, sortorder, **kw):
         for keyword in keywords:
             cql += " and csw:AnyText like '%%%s%%'" % keyword
 
+    constraints = []
+    if category:
+        constraints.append(fes.PropertyIsEqualTo(propertyname='gmd:topicCategory', literal=category))
 
-    csw.getrecords(keywords=keywords, startposition=start+1, maxrecords=limit, bbox=kw.get('bbox', None), sortby=sortby, sortorder=sortorder, cql=cql)
+    if profile:
+        constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal='%%profiles/%s/' % profile))
+
+    for keyword in keywords:
+        constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal=('%%%s%%' % keyword)))
+    if kw.get('bbox'):
+        constraints.append(fes.BBox(kw.get('bbox')))
+
+    csw.getrecords2(constraints=constraints, esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
 
     # build results
     # XXX this goes directly to the result xml doc to obtain
@@ -1786,21 +1799,10 @@ def _build_search_result(doc):
     result['uuid'] = rec.identifier
     result['abstract'] = rec.abstract
     result['keywords'] = [x for x in rec.subjects if x]
-    result['detail'] = rec.uri or ''
+    result['detail'] = rec.uris[0]['url'] or ''
 
     # XXX needs indexing ? how
     result['attribution'] = {'title': '', 'href': ''}
-
-    # XXX !_! pull out geonode 'typename' if there is one
-    # index this directly...
-    if rec.uri:
-        try:
-            result['name'] = urlparse(rec.uri).path.split('/')[-1]
-        except Exception:
-            pass
-    # fallback: use geonetwork uuid
-    if not result.get('name', ''):
-        result['name'] = rec.identifier
 
     # Take BBOX from GeoNetwork Result...
     # XXX this assumes all our bboxes are in this
@@ -2299,12 +2301,12 @@ def addlayers(request):
 
 def addLayerJSON(request):
     logger.debug("Enter addLayerJSON")
-    layername = request.POST.get('layername', False)
-    logger.debug("layername is [%s]", layername)
+    uuid = request.POST.get('uuid', False)
+    logger.debug("layername is [%s]", uuid)
     
-    if layername:
+    if uuid:
         try:
-            layer = Layer.objects.get(typename=layername)
+            layer = Layer.objects.get(uuid=uuid)
             if not request.user.has_perm("maps.view_layer", obj=layer):
                 return HttpResponse(status=401)
             sfJSON = {'layer': layer.layer_config(request.user)}

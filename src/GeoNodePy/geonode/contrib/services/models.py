@@ -97,6 +97,7 @@ class ServiceContactRole(models.Model):
 class ServiceLayer(models.Model):
     service = models.ForeignKey(Service)
     typename = models.CharField(_("Layer Name"), max_length=255)
+    description = models.TextField(_("Layer Description"), null=True)
     layer = models.ForeignKey(Layer, null=True)
 
 def post_save_service(instance, sender, created, **kwargs):

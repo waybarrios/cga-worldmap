@@ -1098,9 +1098,9 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
 
 
                 Ext.Ajax.request({
-                    url: "/maps/addgeonodelayer/?" + thisRecord.get("name"),
+                    url: "/maps/addgeonodelayer/",
                     method: "POST",
-                    params: {layername:thisRecord.get("name")},
+                    params: {uuid:thisRecord.get("uuid")},
 
                     success: function(result, request) {
                         var jsonData = Ext.util.JSON.decode(result.responseText);

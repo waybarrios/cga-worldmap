@@ -2,7 +2,8 @@
 import threading
 from django.conf import settings
 from django.db import models
-from geonode.maps.owslib_csw import CatalogueServiceWeb
+from geoserver.resource import FeatureType
+from owslib.csw import CatalogueServiceWeb
 from geoserver.catalog import Catalog
 from geonode.core.models import PermissionLevelMixin
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
@@ -1335,23 +1336,28 @@ class Layer(models.Model, PermissionLevelMixin):
 
     @property
     def resource(self):
-        if self.local:
-            if not hasattr(self, "_resource_cache"):
+        if not hasattr(self, "_resource_cache"):
+            if self.local:
                 cat = Layer.objects.gs_catalog
                 try:
                     ws = cat.get_workspace(self.workspace)
                 except AttributeError:
                     # Geoserver is not running
                     raise RuntimeError("Geoserver cannot be accessed, are you sure it is running in: %s" %
-                                   (settings.GEOSERVER_BASE_URL))
+                                (settings.GEOSERVER_BASE_URL))
                 try:
                     store = cat.get_store(self.store, ws)
                     self._resource_cache = cat.get_resource(self.name, store)
                 except:
                     logger.error("Store for %s does not exist", self.name)
                     return None
-            return self._resource_cache
-        return None
+            else:
+                try:
+                    self._resource_cache = FeatureType(None, self.workspace, self.store, self.name)
+                except:
+                    return None
+        return self._resource_cache
+
 
     def _get_metadata_links(self):
         if self.local:
@@ -1360,8 +1366,7 @@ class Layer(models.Model, PermissionLevelMixin):
 
     def _set_metadata_links(self, md_links):
         try:
-            if self.local:
-                self.resource.metadata_links = md_links
+            self.resource.metadata_links = md_links
         except Exception, ex:
             logger.error("Exception occurred in _set_metadata_links:  %s", str(ex))
 
@@ -1555,7 +1560,7 @@ class Layer(models.Model, PermissionLevelMixin):
         if self.local:
             return "/data/%s" % (self.typename)
         else:
-            return "/data/%s/%s" % (self.typename, self.service.name)
+            return "/data/%s/%s" % (self.service.name, self.typename)
 
     def __str__(self):
         return "%s Layer" % self.typename
@@ -1605,7 +1610,10 @@ class Layer(models.Model, PermissionLevelMixin):
             cfg['group'] = self.topic_category.title
         else:
             cfg['group'] = 'General'
-        cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
+        if self.local:
+            cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
+        else:
+            cfg['url'] = self.service.base_url
         cfg['srs'] = self.srs
         cfg['bbox'] = json.loads(self.bbox)
         cfg['llbbox'] = json.loads(self.llbbox)

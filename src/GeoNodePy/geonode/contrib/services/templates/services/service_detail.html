@@ -41,7 +41,9 @@ Ext.onReady(function() {
 
 {% block main %}
 <div class="twocol">
-  <h3>{{service.name}}</h3>
+  <h3>{{service.title|default:service.name}}</h3>
+  <p><strong>{% trans "Name:" %}</strong> {{service.name}}</p>
+  <p><strong>{% trans "URL:" %}</strong> {{service.base_url}}</p>
   <p><strong>{% trans "Abstract:" %}</strong> {{service.abstract}}</p>
   <p><strong>{% trans "Contact:" %}</strong> <a href="{{ service.owner.get_profile.get_absolute_url }}">{{ service.owner }}</a></a></p>
 </div>
