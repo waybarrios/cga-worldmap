@@ -158,7 +158,7 @@
             {% if layer.local %}
     		    window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
             {% else %}
-                window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}&service={{layer.service.id}}'
+                window.location.href='/maps/' + selectedValue + '/?layer={{layer.service.name}}:{{layer.typename}}'
             {% endif %}
     	}
     }

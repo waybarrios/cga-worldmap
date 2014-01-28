@@ -49,6 +49,7 @@ from geonode.maps.encode import num_encode, num_decode
 from django.db import transaction
 from geonode.maps.encode import despam, XssCleaner
 import geonode.maps.autocomplete_light_registry
+from geonode.maps.models import _get_service_and_typename
 
 logger = logging.getLogger("geonode.maps.views")
 
@@ -632,7 +633,8 @@ def additional_layers(request, map_obj, layerlist):
     bbox = None
     for layer_name in layerlist:
         try:
-            layer = Layer.objects.get(typename=layer_name)
+            service, typename = _get_service_and_typename(layer_name)
+            layer = Layer.objects.get(typename=typename, service__name=service)
         except ObjectDoesNotExist:
             # bad layer, skip
             continue
@@ -652,8 +654,9 @@ def additional_layers(request, map_obj, layerlist):
                     visibility = request.user.has_perm('maps.view_layer', obj=layer),
                     styles='',
                     group=group,
-                    source_params = u'{"ptype": ' + layer.ptype + '}',
-                    layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", "format":"image/png","queryable":true}')
+                    source_params = json.dumps({"ptype":layer.ptype, "remote": (service is not None)}),
+                    layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '","bbox":' \
+                                  + layer.bbox + ',"format":"image/png","queryable":true}')
                 )    
     return layers, groups, bbox
 
@@ -1126,10 +1129,10 @@ def layer_style(request, layername):
 
 def layer_detail(request, layername, service=None):
 
-    if service is not None:
-        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
-    else:
-        layer = get_object_or_404(Layer, typename=layername, service=None)
+    service, typename = _get_service_and_typename(layername)
+
+
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
     if not request.user.has_perm('maps.view_layer', obj=layer):
         return HttpResponse(loader.render_to_string('401.html',
@@ -1138,10 +1141,13 @@ def layer_detail(request, layername, service=None):
 
     metadata = layer.metadata_csw()
 
-    maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename], \
-        source_params = '{"ptype": "' + layer.ptype + '"}', ows_url = layer.ows_url, \
-        layer_params= '{"srs": {"' + layer.srs + '":true}, "tiled":true, "title":" '+ layer.title + '", ' + \
-        json.dumps(layer.attribute_config()) + '}')
+    attributes = (json.dumps(layer.attribute_config()) + ",") if layer.local else ''
+
+
+    maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
+        source_params = '{"ptype": "' + layer.ptype + '", "remote":true}', ows_url = layer.ows_url,
+        layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
+        attributes + '"bbox": ' + layer.bbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     map_obj = Map(projection="EPSG:900913")
@@ -1234,7 +1240,7 @@ def upload_layer(request):
 
 @login_required
 def layer_replace(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+    layer = get_object_or_404(Layer, typename=layername, local=True)
     if not request.user.has_perm('maps.change_layer', obj=layer):
         return HttpResponse(loader.render_to_string('401.html',
             RequestContext(request, {'error_message':
@@ -2835,3 +2841,4 @@ def mobilemap(request, mapid=None, snapshot=None):
         'maptitle': map_obj.title,
         'urlsuffix': get_suffix_if_custom(map_obj),
     }))
+

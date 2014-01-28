@@ -29,12 +29,13 @@ from django.core.cache import cache
 import sys
 import re
 from geonode.maps.encode import despam, XssCleaner
-from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS, GXP_PTYPES
+
 
 logger = logging.getLogger("geonode.maps.models")
 
 
 ows_sub = re.compile(r"[&\?]+SERVICE=WMS|[&\?]+REQUEST=GetCapabilities", re.IGNORECASE)
+
 
 
 def bbox_to_wkt(x0, x1, y0, y1, srid="4326"):
@@ -579,6 +580,13 @@ DEFAULT_CONTENT=_(
   and improve upon.</p>'
 )
 
+def _get_service_and_typename(layername):
+    service_typename = layername.split(":")
+    service = service_typename[0]
+    if service != settings.DEFAULT_WORKSPACE:
+        return [service, ':'.join(service_typename[1:])]
+    else:
+        return [None,layername]
 
 class GeoNodeException(Exception):
     pass
@@ -904,7 +912,7 @@ class Layer(models.Model, PermissionLevelMixin):
     uuid = models.CharField(max_length=36)
     typename = models.CharField(max_length=128, unique=True)
     owner = models.ForeignKey(User, blank=True, null=True)
-    service = models.ForeignKey('services.Service', null=True, blank=True, related_name='services.Service')
+    service = models.ForeignKey('services.Service', null=True, blank=True, related_name='layer_set')
     contacts = models.ManyToManyField(Contact, through='ContactRole')
 
     # section 1
@@ -1191,7 +1199,6 @@ class Layer(models.Model, PermissionLevelMixin):
         else:
             logger.debug("No attributes found")
 
-
     def attribute_config(self):
         #Get custom attribute sort order and labels if any
             cfg = {}
@@ -1207,7 +1214,6 @@ class Layer(models.Model, PermissionLevelMixin):
         """Return a list of all the maps that use this layer"""
         local_wms = "%swms" % settings.GEOSERVER_BASE_URL
         return set([layer.map for layer in MapLayer.objects.filter(ows_url=local_wms, name=self.typename).select_related()])
-
 
     #    def metadata(self):
     #        if (_wms is None) or (self.typename not in _wms.contents):
@@ -1352,10 +1358,7 @@ class Layer(models.Model, PermissionLevelMixin):
                     logger.error("Store for %s does not exist", self.name)
                     return None
             else:
-                try:
-                    self._resource_cache = FeatureType(None, self.workspace, self.store, self.name)
-                except:
-                    return None
+                return None
         return self._resource_cache
 
 
@@ -1560,7 +1563,7 @@ class Layer(models.Model, PermissionLevelMixin):
         if self.local:
             return "/data/%s" % (self.typename)
         else:
-            return "/data/%s/%s" % (self.service.name, self.typename)
+            return "/data/%s:%s" % (self.service.name, self.typename)
 
     def __str__(self):
         return "%s Layer" % self.typename
@@ -1614,15 +1617,18 @@ class Layer(models.Model, PermissionLevelMixin):
             cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
         else:
             cfg['url'] = self.service.base_url
+            cfg['ptype'] = self.service.ptype()
         cfg['srs'] = self.srs
         cfg['bbox'] = json.loads(self.bbox)
         cfg['llbbox'] = json.loads(self.llbbox)
-        cfg['queryable'] = (self.storeType == 'dataStore')
+        cfg['queryable'] = (self.storeType != 'coverageStore')
         cfg['attributes'] = self.layer_attributes()
         cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=self)
         cfg['visibility'] = True
         cfg['abstract'] = self.abstract
         cfg['styles'] = ''
+        if not self.local:
+            cfg['source_params'] = {"ptype":self.ptype, "remote": True, "url": cfg["url"]}
         return cfg
 
     def queue_gazetteer_update(self):
@@ -1870,7 +1876,7 @@ class Map(models.Model, PermissionLevelMixin):
         layers = []
         for map_layer in map_layers:
             if map_layer.local():
-                layer =  Layer.objects.get(typename=map_layer.name)
+                layer =  Layer.objects.get(typename=map_layer.name,service=None)
                 layers.append(layer)
             else:
                 pass
@@ -2254,7 +2260,7 @@ class MapLayer(models.Model):
         if self.ows_url == (settings.GEOSERVER_BASE_URL + "wms"):
             isLocal = cache.get('islocal_' + self.name)
             if isLocal is None:
-                isLocal = Layer.objects.filter(typename=self.name).count() != 0
+                isLocal = Layer.objects.filter(typename=self.name,service=None).count() != 0
                 cache.add('islocal_' + self.name, isLocal)
             return isLocal
         else:
@@ -2298,7 +2304,7 @@ class MapLayer(models.Model):
 
         try:
             cfg = json.loads(self.layer_params)
-        except Exception:
+        except Exception, e:
             cfg = dict()
 
         if self.format: cfg['format'] = self.format
@@ -2314,36 +2320,37 @@ class MapLayer(models.Model):
             cfg['url'] = ows_sub.sub('', cfg['url'])
         if self.group: cfg["group"] = self.group
         cfg["visibility"] = self.visibility
-
-        if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
-            #Get parameters from GeoNode instead of WMS GetCapabilities
-            try:
-                gnLayer = Layer.objects.get(typename=self.name)
-                if gnLayer.srs: cfg['srs'] = gnLayer.srs
-                if gnLayer.bbox: cfg['bbox'] = json.loads(gnLayer.bbox)
-                if gnLayer.llbbox: cfg['llbbox'] = json.loads(gnLayer.llbbox)
-                cfg['attributes'] = (gnLayer.layer_attributes())
-                attribute_cfg = gnLayer.attribute_config()
-                if "getFeatureInfo" in attribute_cfg:
-                    cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
-                cfg['queryable'] = (gnLayer.storeType == 'dataStore'),
-                cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=gnLayer)
-                #cfg["displayOutsideMaxExtent"] = user is not None and  user.has_perm('maps.change_layer', obj=gnLayer)
-                cfg['visibility'] = cfg['visibility'] and not cfg['disabled']
-                cfg['abstract'] = gnLayer.abstract
-                cfg['styles'] = self.styles
-            except Exception, e:
-                # Give it some default values so it will still show up on the map, but disable it in the layer tree
-                cfg['srs'] = 'EPSG:900913'
-                cfg['llbbox'] = [-180,-90,180,90]
-                cfg['attributes'] = []
-                cfg['queryable'] =False,
-                cfg['disabled'] = True
-                cfg['visibility'] = False
-                cfg['abstract'] = ''
-                cfg['styles'] =''
-                logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
-        elif self.source_params.find( "gxp_hglsource") > -1:
+        source = json.loads(self.source_params)
+        if self.name is not None and (source["ptype"] == "gxp_gnsource"):
+            #Get parameters from GeoNode instead of WMS GetCapabilities if possible
+                try:
+                    gnLayer = Layer.objects.get(typename=self.name,service=None)
+                    if gnLayer.srs: cfg['srs'] = gnLayer.srs
+                    if gnLayer.bbox: cfg['bbox'] = json.loads(gnLayer.bbox)
+                    if gnLayer.llbbox: cfg['llbbox'] = json.loads(gnLayer.llbbox)
+                    cfg['attributes'] = (gnLayer.layer_attributes())
+                    attribute_cfg = gnLayer.attribute_config()
+                    if "getFeatureInfo" in attribute_cfg:
+                        cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
+                    cfg['queryable'] = re.search('dataStore',gnLayer.storeType) is not None,
+                    cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=gnLayer)
+                    #cfg["displayOutsideMaxExtent"] = user is not None and  user.has_perm('maps.change_layer', obj=gnLayer)
+                    cfg['visibility'] = cfg['visibility'] and not cfg['disabled']
+                    cfg['abstract'] = gnLayer.abstract
+                    cfg['styles'] = self.styles
+                except Exception, e:
+                    # Give it some default values so it will still show up on the map, but disable it in the layer tree
+                    if self.source_params.find( "gxp_gnsource") > -1:
+                        cfg['srs'] = 'EPSG:900913'
+                        cfg['llbbox'] = [-180,-90,180,90]
+                        cfg['attributes'] = []
+                        cfg['queryable'] =False,
+                        cfg['disabled'] = True
+                        cfg['visibility'] = False
+                        cfg['abstract'] = ''
+                        cfg['styles'] =''
+                        logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
+        if self.source_params.find( "gxp_hglsource") > -1:
             # call HGL ServiceStarter asynchronously to load the layer into HGL geoserver
             from geonode.queue.tasks import loadHGL
             loadHGL.delay(self.name)
@@ -2358,10 +2365,14 @@ class MapLayer(models.Model):
     @property
     def local_link(self):
         if self.local():
-            layer = Layer.objects.get(typename=self.name)
+            layer = Layer.objects.get(typename=self.name,service=None)
             link = "<a href=\"%s\">%s</a>" % (layer.get_absolute_url(),layer.title)
         else:
-            link = "<span>%s</span> " % self.name
+            remotelayer = Layer.objects.filter(typename=self.name,service__base_url=self.ows_url)
+            if len(remotelayer) == 1:
+                link = "<a href=\"%s\">%s</a>" % (remotelayer[0].get_absolute_url(),remotelayer[0].title)
+            else:
+                link = "<span>%s</span> " % self.name
         return link
 
     class Meta:

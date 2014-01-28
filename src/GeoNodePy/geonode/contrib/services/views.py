@@ -53,6 +53,7 @@ from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSe
 from geonode.utils import slugify
 from geonode.contrib.services.tasks import import_indexed_wms_service_layers
 import re
+from geonode.maps.utils import llbbox_to_mercator
 
 
 logger = logging.getLogger("geonode.core.layers.views")
@@ -75,7 +76,7 @@ def services(request):
     This view shows the list of services that the logged in user owns
     TODO: Show all that they have permissions for
     """
-    services = Service.objects.filter(owner=request.user)
+    services = Service.objects.all()
     return render_to_response("services/service_list.html", RequestContext(request, {
         'services': services,
     }))
@@ -184,7 +185,7 @@ def _guess_service_type(base_url):
         except:
             pass
         return service_type
-    except:
+    except Exception, e:
         try:
             service = TileMapService(base_url)
             return ["TMS", service]
@@ -335,9 +336,13 @@ def _register_indexed_service(type, url, name, user, password, owner=None, serve
         service.save()
         available_resources = []
         for layer in list(wms.contents):
-            service_layer, created = ServiceLayer.objects.get_or_create(service=service,typename=wms[layer].name)
+            service_layer, created = ServiceLayer.objects.get_or_create(
+                service=service,
+                typename=wms[layer].name,
+                description=wms[layer].abstract,
+                styles=wms[layer].styles
+                )
             if created:
-                service_layer.save()
                 available_resources.append(wms[layer].name)
         if settings.USE_QUEUE:
             import_indexed_wms_service_layers.delay(service, server, available_resources)
@@ -363,7 +368,7 @@ def _register_indexed_service(type, url, name, user, password, owner=None, serve
             status=400)
 
 def _register_indexed_layers(user, service, layers, perm_spec, wms=None, verbosity=False):
-    if service.type == 'WMS':
+    if re.match("WMS|OWS", service.type):
         wms = wms or WebMapService(service.base_url)
         count = 0
         for layer in layers:
@@ -372,9 +377,9 @@ def _register_indexed_layers(user, service, layers, perm_spec, wms=None, verbosi
                 print "Importing layer %s" % layer
             layer_uuid = str(uuid.uuid1())
             if not wms_layer.keywords:
-                keywords = ""
+                keywords = []
             else:
-                keywords=' '.join(wms_layer.keywords)
+                keywords = map(lambda x: x[:100], wms_layer.keywords)
             if not wms_layer.abstract:
                 abstract = ""
             else:
@@ -407,7 +412,7 @@ def _register_indexed_layers(user, service, layers, perm_spec, wms=None, verbosi
                     uuid=layer_uuid,
                     owner=user,
                     srs=srs,
-                    bbox = list(wms_layer.boundingBoxWGS84),
+                    bbox = llbbox_to_mercator(list(wms_layer.boundingBoxWGS84)),
                     llbbox = list(wms_layer.boundingBoxWGS84)
                 )
             )
@@ -553,52 +558,6 @@ def process_ogp_results(result_json, owner):
                     service_layer.save
 
 
-@login_required
-def register_layers(request, service_id):
-    service = Service.objects.get(pk = int(service_id))
-    layerformset = modelformset_factory(ServiceLayer, form=ServiceLayerFormSet)
-    layerformset(queryset=ServiceLayer.objects.filter(service_id=service_id,layer_id=None))
-    if request.method == 'GET':
-        return render_to_response('services/layers_register.html',
-                            RequestContext(request, {
-                            'service': service,
-                            'formset': layerformset
-                            }))
-    elif request.method == 'POST':
-        try:
-            layers = request.POST.getlist("layer_list")
-            if request.POST.get("permissions"):
-                perm_spec= json.loads(request.POST.get("permissions"))
-            else:
-               perm_spec = None 
-            try:
-                service = Service.objects.get(pk = int(service_id))
-            except Service.DoesNotExist:
-                return HttpResponse(
-                    'No Service mathing id exists',
-                    mimetype="text/plain",
-                    status=404
-                )
-            if service.method == 'C':
-                return _register_cascaded_layers(request.user, service, layers, perm_spec)
-            elif service.method == 'I':
-                return _register_indexed_layers(request.user, service, layers, perm_spec)
-            elif service.method == 'X':
-                return HttpResponse('Not Implemented (Yet)', status=501)
-            elif service.method == 'L':
-                return HttpResponse('Local Services not configurable via API', status=400)
-            else:
-                return HttpResponse('Invalid Service Type', status=400)
-        except Exception, e:
-            logger.error("Unexpected Error: %s" % e.message, exc_info=1)
-            return HttpResponse('Unexpected Error', status=501)
-    elif request.method == 'PUT':
-        return HttpResponse('Not Implemented (Yet)', status=501)
-    elif request.method == 'DELETE':
-        return HttpResponse('Not Implemented (Yet)', status=501)
-    else:
-        return HttpResponse('Invalid Request', status = 400)
-
 def service_detail(request, service_id):
     '''
     This view shows the details of a service 
@@ -630,22 +589,26 @@ def remove_service(request, service_id):
     '''
     Delete a service, and its constituent layers. 
     '''
-    service = get_object_or_404(Service,pk=service_id) 
+    service_obj = get_object_or_404(Service,pk=service_id)
 
-    if not request.user.has_perm('maps.delete_service', obj=service):
+    if not request.user.has_perm('maps.delete_service', obj=service_obj):
         return HttpResponse(loader.render_to_string('401.html', 
             RequestContext(request, {'error_message': 
                 _("You are not permitted to remove this service.")})), status=401)
 
     if request.method == 'GET':
         return render_to_response("services/service_remove.html", RequestContext(request, {
-            "service": service
+            "service": service_obj
         }))
     elif request.method == 'POST':
-        layers = service.layer_set.all()
+        servicelayers = service_obj.servicelayer_set.all()
+        for servicelayer in servicelayers:
+            servicelayer.delete()
+
+        layers = service_obj.layer_set.all()
         for layer in layers:
             layer.delete()
-        service.delete()
+        service_obj.delete()
 
         return HttpResponseRedirect(reverse("services"))
 

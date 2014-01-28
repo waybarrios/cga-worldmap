@@ -46,19 +46,27 @@ Ext.onReady(function() {
   <p><strong>{% trans "URL:" %}</strong> {{service.base_url}}</p>
   <p><strong>{% trans "Abstract:" %}</strong> {{service.abstract}}</p>
   <p><strong>{% trans "Contact:" %}</strong> <a href="{{ service.owner.get_profile.get_absolute_url }}">{{ service.owner }}</a></a></p>
+    {% autoescape off %}
+    <h3>{% trans "Layers" %}</h3>
+    <p>{% trans "This Service contains the following layers" %} </p>
+    <table>
+        <tr><th style="width:50%">Title</th><th>Description</th></tr>
+        {% for layer in layers %}
+        {% if not layer.group == "background" %}
+        <tr>
+            <td><a href='{{ layer.get_absolute_url }}'>{{layer.title}}</a></td>
+            <td>{{layer.abstract}}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+    {% endautoescape %}
+
 </div>
 {% endblock %}
 {% block sidebar %}
 <div id="sidebar" class="threecol">
-    <h3>{% trans "Layers" %}</h3>
-  <p>{% trans "This Service contains the following layers" %} </p>
-  <ul>
-    {% for layer in layers %}
-    {% if not layer.group == "background" %}
-    <li>{% autoescape off %}<a href='{{ layer.get_absolute_url }}'>{{layer.name}}</a>{% endautoescape %}</li>
-    {% endif %}
-    {% endfor %}
-  </ul>
+
     {% has_obj_perm user service "maps.change_service" as can_change %}
     {% has_obj_perm user service "maps.delete_service" as can_remove %}
     {% has_obj_perm user service "maps.change_service_permissions" as can_change_permissions %}
