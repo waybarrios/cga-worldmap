@@ -206,8 +206,9 @@
                             break;
                     }
                     var geoEx = window.app;
-                    var LayerRec = Ext.data.Record.create([{name: 'title', name: 'name', name: 'tiled'}]);
-                    var thisLayerRec = new LayerRec({title: '{{ layer.title|escape }}', name: '{{ layer.typename }}', tiled: true});
+                    var LayerRec = Ext.data.Record.create([{name: 'title', name: 'name', name: 'uuid', name: 'tiled'}]);
+                    var thisLayerRec = new LayerRec({title: '{{ layer.title|escape }}', name: '{{ layer.typename }}',
+                        uuid: '{{ layer.uuid }}', tiled: true});
                     //geoEx.reloadWorldMapSource([thisLayerRec]);
                     geoEx.addWorldMapLayers([thisLayerRec]);
                 } catch (Exception) {
