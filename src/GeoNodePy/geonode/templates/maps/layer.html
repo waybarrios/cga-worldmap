@@ -182,6 +182,11 @@
 <div class="twocol">
 	<div id="description">
 		<h3>{{ layer.title|default:layer.typename }}</h3>
+
+        {% if not layer.local %}
+            <h4>{% trans "External layer - not hosted by WorldMap - use at your own risk" %}</h4>
+            <div><p>{% trans "Source:" %}<a href="/services/{{layer.service.id}}">{{ layer.service.title }}</a></p></div>
+        {% endif %}
         {% overall_rating layer "layer" as layer_rating %}
         <div class="overall_rating" data-rating="{{ layer_rating }}"></div>
 		<g:plusone size="small" href="http://{{ request.get_host }}{{ request.get_full_path }}"></g:plusone>
