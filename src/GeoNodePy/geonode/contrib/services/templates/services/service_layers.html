@@ -1,18 +1,13 @@
-{% extends "base.html" %}
 {% load i18n %}
-
-{% block title %} Services -- Available Layers {{ block.super }} {% endblock %}
-
-{% block main %}
 <div class="twocol">
-    {% if registration %}
-    <ul>
-        {% for layer in registration.available_layers %}
-        <li>{{ layer }}</li>
+    <p>{% trans "Service: %} <a href="{% url service_detail service.id %}">{{ service.title }}</a></p>
+
+    <table>
+        {% for layer in layers %}
+        <tr><td>{{ layer[0] }}</td><td>{{ layer[1] }}</td></tr>
         {% endfor %}
-    </ul>
+    </table>
     {% else %}
-    <h3>No layers found</h3>
+    <h3>No layers</h3>
     {% endif %}
 </div>
-{% endblock %}

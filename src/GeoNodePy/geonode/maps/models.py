@@ -1645,7 +1645,7 @@ class Layer(models.Model, PermissionLevelMixin):
         cfg['abstract'] = self.abstract
         cfg['styles'] = ''
         if not self.local:
-            cfg['source_params'] = {"ptype":self.ptype, "remote": True, "url": cfg["url"]}
+            cfg['source_params'] = {"ptype":self.ptype, "remote": True, "url": cfg["url"], "name": self.service.name}
         return cfg
 
     def queue_gazetteer_update(self):
@@ -2351,7 +2351,6 @@ class MapLayer(models.Model):
                         cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
                     cfg['queryable'] = re.search('dataStore',gnLayer.storeType) is not None,
                     cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=gnLayer)
-                    #cfg["displayOutsideMaxExtent"] = user is not None and  user.has_perm('maps.change_layer', obj=gnLayer)
                     cfg['visibility'] = cfg['visibility'] and not cfg['disabled']
                     cfg['abstract'] = gnLayer.abstract
                     cfg['styles'] = self.styles

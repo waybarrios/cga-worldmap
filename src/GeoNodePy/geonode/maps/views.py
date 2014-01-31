@@ -654,7 +654,8 @@ def additional_layers(request, map_obj, layerlist):
                     visibility = request.user.has_perm('maps.view_layer', obj=layer),
                     styles='',
                     group=group,
-                    source_params = json.dumps({"ptype":layer.ptype, "remote": (service is not None)}),
+                    source_params = json.dumps({"ptype":layer.ptype, "remote": (service is not None),
+                                                "name": (None if service is None else service)}),
                     layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '","bbox":' \
                                   + layer.bbox + ',"format":"image/png","queryable":true}')
                 )    
@@ -1145,7 +1146,8 @@ def layer_detail(request, layername, service=None):
 
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
-        source_params = '{"ptype": "' + layer.ptype + '", "remote":true}', ows_url = layer.ows_url,
+        source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
+                        +  (None if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
         attributes + '"bbox": ' + layer.bbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
@@ -1626,13 +1628,19 @@ def metadata_search(request):
     for doc in result['rows']:
         try:
             layer = Layer.objects.get(uuid=doc['uuid'])
-            doc['_local'] = True
-            doc['_permissions'] = {
-                'view': request.user.has_perm('maps.view_layer', obj=layer),
-                'change': request.user.has_perm('maps.change_layer', obj=layer),
-                'delete': request.user.has_perm('maps.delete_layer', obj=layer),
-                'change_permissions': request.user.has_perm('maps.change_layer_permissions', obj=layer),
-            }
+            is_local = layer.local
+            doc['_local'] = is_local
+            if is_local:
+                doc['_permissions'] = {
+                    'view': request.user.has_perm('maps.view_layer', obj=layer),
+                    'change': request.user.has_perm('maps.change_layer', obj=layer),
+                    'delete': request.user.has_perm('maps.delete_layer', obj=layer),
+                    'change_permissions': request.user.has_perm('maps.change_layer_permissions', obj=layer),
+                }
+            else:
+                doc['_permissions'] = {
+                    'view': request.user.has_perm('maps.view_layer', obj=layer),
+                    }
         except Layer.DoesNotExist:
             doc['_local'] = False
             pass

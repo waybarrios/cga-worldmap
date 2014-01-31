@@ -54,7 +54,7 @@ from geonode.utils import slugify
 from geonode.contrib.services.tasks import import_indexed_wms_service_layers
 import re
 from geonode.maps.utils import llbbox_to_mercator
-
+from django.db import transaction
 
 logger = logging.getLogger("geonode.core.layers.views")
 
@@ -82,6 +82,7 @@ def services(request):
     }))
 
 @login_required
+@transaction.commit_on_success()
 def register_service(request):
 
     if request.method == "GET":
@@ -114,31 +115,27 @@ def register_service(request):
                 password = None
 
             # First Check if this service already exists based on the URL
-            base_url = url
-            try:
-                service = Service.objects.get(base_url=base_url)
-            except Service.DoesNotExist:
-                service = None
-            if service is not None:
-                return_dict = {}
-                if service.owner == request.user:
-                    return_dict['service_id'] = service.pk
-                    return_dict['msg'] = "This is an existing Service" 
-                    return HttpResponse(json.dumps(return_dict), 
-                                        mimetype='application/json',
-                                        status=200)        
-                else:
-                    return_dict['msg'] = "A Service already Exists for this URL, and you are not the owner" 
-                    return HttpResponse(json.dumps(return_dict), 
-                                        mimetype='application/json',
-                                        status=400)
+
 
             if type == "WMS" or type == "OWS":
+                url = server.getOperationByName('GetMap').methods['Get']['url'].rstrip("?")
+
+                try:
+                    service = Service.objects.get(base_url=url)
+                    return_dict = {}
+                    return_dict['service_id'] = service.pk
+                    return_dict['msg'] = "This is an existing Service"
+                    return HttpResponse(json.dumps(return_dict),
+                                mimetype='application/json',
+                                status=200)
+                except:
+                    pass
+
                 title = server.identification.title
                 if title:
                     name = _get_valid_name(slugify(title))
                 else:
-                    name = _get_valid_name(slugify(urlsplit(base_url).netloc))
+                    name = _get_valid_name(slugify(urlsplit(url).netloc))
                 try:
                     supported_crs  = ','.join(server.contents.itervalues().next().crsOptions)
                 except:
@@ -148,13 +145,24 @@ def register_service(request):
                 else:
                     return _register_cascaded_service(type, url, name, user, password, server=server)
             elif type == "ARC":
+                try:
+                    service = Service.objects.get(base_url=url)
+                    return_dict = {}
+                    return_dict['service_id'] = service.pk
+                    return_dict['msg'] = "This is an existing Service"
+                    return HttpResponse(json.dumps(return_dict),
+                                        mimetype='application/json',
+                                        status=200)
+                except:
+                    pass
+
                 return _register_arcgis_service(url, user, password, server=server)
 
             else:
                 return HttpResponse('Not Implemented (Yet)', status=501)
-        except:
+        except Exception, e:
             logger.error("Unexpected Error", exc_info=1) 
-            return HttpResponse('Unexpected Error', status=500)
+            return HttpResponse('Unexpected Error: %s' % e, status=500)
     elif request.method == 'PUT':
         # Update a previously registered Service
         return HttpResponse('Not Implemented (Yet)', status=501)
@@ -164,6 +172,14 @@ def register_service(request):
     else:
         return HttpResponse('Invalid Request', status = 400)
 
+def _is_unique(url):
+    try:
+        service = Service.objects.get(base_url=url)
+        return False
+    except Service.DoesNotExist:
+        return True
+
+
 def _get_valid_name(proposed_name):
     name = proposed_name
     if len(proposed_name)>40:
@@ -171,7 +187,8 @@ def _get_valid_name(proposed_name):
     existing_service = Service.objects.filter(name=name)
     iter = 1
     while existing_service.count() > 0:
-        name = proposed_name + str(1)
+        name = proposed_name + str(iter)
+        existing_service = Service.objects.filter(name=name)
         iter+=1
     return name
 
@@ -323,9 +340,10 @@ def _register_indexed_service(type, url, name, user, password, owner=None, serve
         wms = server or WebMapService(url)
         # TODO: Make sure we are parsing all service level metadata
         # TODO: Handle for setting ServiceContactRole
+        base_url = wms.getOperationByName('GetMap').methods['Get']['url'].rstrip("?")
         service = Service(type = type,
                           method='I',
-                          base_url = url,
+                          base_url = base_url,
                           name = name,
                           version = wms.identification.version,
                           title = wms.identification.title,
@@ -343,7 +361,7 @@ def _register_indexed_service(type, url, name, user, password, owner=None, serve
                 styles=wms[layer].styles
                 )
             if created:
-                available_resources.append(wms[layer].name)
+                available_resources.append([wms[layer].name, wms[layer].abstract])
         if settings.USE_QUEUE:
             import_indexed_wms_service_layers.delay(service, server, available_resources)
         else:
@@ -367,12 +385,20 @@ def _register_indexed_service(type, url, name, user, password, owner=None, serve
             mimetype="text/plain",
             status=400)
 
+
+def service_layers(request):
+    service = Service.get_object_or_404(Service,pk=request.POST.get('service_id'))
+    return render_to_response('services/service_layers.html', RequestContext(request, {
+        'service': service,
+        'layers': request.POST.get('layers')
+    }))
+
 def _register_indexed_layers(user, service, layers, perm_spec, wms=None, verbosity=False):
     if re.match("WMS|OWS", service.type):
         wms = wms or WebMapService(service.base_url)
         count = 0
         for layer in layers:
-            wms_layer = wms[layer]
+            wms_layer = wms[layer[0]]
             if verbosity:
                 print "Importing layer %s" % layer
             layer_uuid = str(uuid.uuid1())
@@ -611,38 +637,6 @@ def remove_service(request, service_id):
         service_obj.delete()
 
         return HttpResponseRedirect(reverse("services"))
-
-@login_required
-def service_layers(request, service_id):
-    """
-    Return the layers for a service.
-    For now it *only* returns unconfigured layers for WMS/WFS serivces
-    TODO: Take a ?list=availble ?list=all ?list=configured
-    """
-    service = get_object_or_404(Service,pk=service_id)
-    if service.owner != request.user:
-        return HttpResponse(json.dumps({'msg': 'You are not permitted to configure this service'}), 
-                             mimetype='application/json',
-                             status=400)
-    else:
-        if service.type == 'WMS' or service.type == 'WFS':
-            cat = Layer.objects.gs_catalog
-            store = cat.get_store(service.name)
-            if store:
-                available_resources = store.get_resources(available=True)
-                return_dict = { 'id': service.pk,
-                                'available_layers': available_resources}
-                return HttpResponse(json.dumps(return_dict), 
-                                    mimetype='application/json',
-                                    status=200)        
-            else:
-                return HttpResponse(json.dumps({'msg': 'Store for Service Not Found'}), 
-                                 mimetype='application/json',
-                                 status=400)
-        else:
-            return HttpResponse(json.dumps({'msg': 'Method not valid for this service type'}), 
-                                 mimetype='application/json',
-                                 status=400)
 
 def set_service_permissions(service, perm_spec):
     if "authenticated" in perm_spec:

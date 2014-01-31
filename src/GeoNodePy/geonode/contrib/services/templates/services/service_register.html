@@ -4,6 +4,48 @@
 {% block head %}
 {{ block.super }}
 
+<script type="text/javascript">
+
+$( document ).ready(function() {
+    $("#service_register_form").submit(function(e) {
+        $("#responseDiv").hide();
+        e.preventDefault();
+
+        var url = $("#service_register_form").attr( "action" );
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: $("#service_register_form").serialize(), // serializes the form's elements.
+            success: function(data)
+            {
+
+                if (data.available_layers) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url service_layers %}",
+                        data: {service_id: data.service_id, layers: data.available_layers}, // serializes the form's elements.
+                        success: function(response) {
+                            $("#responseDiv").html(response);
+                        }
+                    });
+                }
+                else if (data.service_id) {
+                    document.location.href="/services/" + data.service_id;
+                }
+                else {
+                    $("#responseDiv").html(data.msg);
+                }
+                $("#responseDiv").show();
+            }
+        });
+
+        return false; // avoid to execute the actual submit of the form.
+    });
+});
+</script>
+
+
 {% endblock %}
 
 {% block title %} Register Service - {{ block.super }} {% endblock %}
@@ -12,12 +54,18 @@
 <div class="twocol">
 
 <h2>Register New Service</h2>
-    <form method="POST">
+    <form method="POST" id="service_register_form">
     {% csrf_token %}
     <ul class="form">
         {{ create_service_form.as_ul }}
     </ul>
 <div align="center"><p><input type="submit" class="submit_btn" value="{% trans "Create" %}" /></p></div>
       </form>
+
+    <div id="responseDiv" style="display:none;">
+
+</div>
+
+
 </div>
 {% endblock %}
