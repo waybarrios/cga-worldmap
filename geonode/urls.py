@@ -94,7 +94,7 @@ urlpatterns += patterns('',
                                   {'sitemaps': sitemaps}, name='sitemap'),
     (r'^i18n/', include('django.conf.urls.i18n')),
     (r'^admin/', include(admin.site.urls)),
-
+    url(r'^data/acls/?$', 'geonode.layers.views.layer_acls', name='layer_acls'),
     )
 
 #Documents views
