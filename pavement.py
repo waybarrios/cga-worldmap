@@ -22,14 +22,14 @@ import urllib
 from urllib import urlretrieve
 import glob
 
-assert sys.version_info >= (2,6),\
-SystemError("GeoNode Build requires python 2.6 or better")
+assert sys.version_info >= (2,7),\
+SystemError("WorldMap Build requires python 2.7 or better")
 
 
 options(
     config=Bunch(
-        ini=path('shared/build.ini'),
-        package_dir = path('shared/package')
+        ini=path('dev/build.ini'),
+        package_dir = path('package')
     ),
     minilib=Bunch(extra_files=['virtual', 'doctools', 'misctasks']),
     sphinx=Bunch(
@@ -49,7 +49,7 @@ options(
         paver_command_line='post_bootstrap'
     ),
     deploy=Bunch(
-        req_file=path('shared/package/requirements.txt'),
+        req_file=path('requirements.txt'),
         packages_to_install=['pip'],
         dest_dir='./',
     ),
@@ -58,10 +58,10 @@ options(
     )
 )
 
-venv = os.environ.get('VIRTUAL_ENV')
-bundle = path('shared/geonode.pybundle')
-dl_cache = "--download-cache=./build"
-dlname = 'geonode.bundle'
+#venv = os.environ.get('VIRTUAL_ENV')
+bundle = path('package/worldmap.pybundle')
+#dl_cache = "--download-cache=./build"
+dlname = 'worldmap.bundle'
 gs_data = "gs-data"
 geoserver_target = path('src/geoserver-geonode-ext/target/geoserver.war')
 geonetwork_target = path('webapps/geonetwork.war')
@@ -70,8 +70,8 @@ geonode_client_target_war = path('webapps/geonode-client.war')
 
 deploy_req_txt = """
 # NOTE... this file is generated
--r %(venv)s/shared/requirements.txt
--e %(venv)s/src/GeoNodePy
+-r requirements.txt
+-e worldmap
 """ % locals()
 
 @task
@@ -96,11 +96,9 @@ def install_deps(options):
     else:
         info('Installing from requirements file. '\
              'Use "paver bundle_deps" to create an install bundle')
-        pip_install("-r shared/%s" % options.config.corelibs)
-        pip_install("-r shared/%s" % options.config.devlibs)
-        if options.config.platform == "win32":
-            info("You will need to install 'PIL' and 'ReportLab' "\
-                 "separately to do PDF generation")
+        pip_install("-r requirements.txt")
+
+
 
 @task
 def bundle_deps(options):
@@ -108,7 +106,7 @@ def bundle_deps(options):
     Create a pybundle of all python dependencies.  If created, this
     will be the default for installing python deps.
     """
-    pip_bundle("-r shared/requirements.txt %s" % bundle)
+    pip_bundle("-r requirements.txt %s" % bundle)
 
 
 @task
@@ -130,7 +128,7 @@ def download_bundle(options):
 
     bpath = bundle.abspath()
     if not bundle.exists():
-        with pushd('shared'):
+        with pushd('dev'):
             grab("http://dev.capra.opengeo.org/repo/%s.zip" % dlname, bpath)
     else:
         info("Skipping download. 'rm bundle  %s' if you need a fresh download. " % bundle)
@@ -146,8 +144,8 @@ def install_25_deps(options):
 @needs(['install_deps'])
 def post_bootstrap(options):
     """installs the current package"""
-    pip = path(options.config.bin) / "pip"
-    sh('%s install -e %s' %(pip, path("src/GeoNodePy")))
+    pip = "pip"
+    sh('%s install -e %s' %(pip, path("worldmap")))
 
 
 #TODO Move svn urls out to a config file
@@ -159,11 +157,11 @@ def grab(src, dest):
 def setup_gs_data(options):
     """Fetch a data directory to use with GeoServer for testing."""
     src_url = str(options.config.parser.get('geoserver', 'gs_data_url'))
-    shared = path("./shared")
-    if not shared.exists():
-        shared.mkdir()
+    dev = path("./dev")
+    if not dev.exists():
+        dev.mkdir()
 
-    dst_url = shared / "geonode-geoserver-data.zip"
+    dst_url = dev / "geonode-geoserver-data.zip"
     grab(src_url, dst_url)
 
     if getattr(options, 'clean', False): path(gs_data).rmtree()
@@ -228,8 +226,8 @@ def setup_webapps(options):
     'package_client'
 ])
 def build(options):
-    """Get dependencies and generally prepare a GeoNode development environment."""
-    info("""GeoNode development environment successfully set up.\nIf you have not set up an administrative account, please do so now.\nUse "paver host" to start up the server.""")
+    """Get dependencies and generally prepare a WorldMap development environment."""
+    info("""WorldMap development environment successfully set up.\nIf you have not set up an administrative account, please do so now.\nUse "paver host" to start up the server.""")
 
 
 @task
@@ -240,8 +238,8 @@ def build(options):
     'package_client'
 ])
 def fastbuild(options):
-    """Get dependencies and generally prepare a GeoNode development environment."""
-    info("""GeoNode development environment successfully set up minus GeoServer and Geonetwork.\nIf you have not set up an administrative account, please do so now.\nUse "paver host" to start up the server.""")
+    """Get dependencies and generally prepare a WorldMap development environment."""
+    info("""WorldMap development environment successfully set up minus GeoServer and Geonetwork.\nIf you have not set up an administrative account, please do so now.\nUse "paver host" to start up the server.""")
 
 
 @task
@@ -249,7 +247,7 @@ def setup_geonode_client(options):
     """
     Fetch geonode-client
     """
-    static = path("./src/GeoNodePy/geonode/static/geonode")
+    static = path("./worldmap/static/geonode")
     if not static.exists():
         static.mkdir()
 
@@ -264,14 +262,14 @@ def setup_geonode_client(options):
 
 @task
 def sync_django_db(options):
-    sh("django-admin.py syncdb --settings=geonode.settings --noinput")
+    sh("python manage.py syncdb --settings=worldmap.settings --noinput")
     try:
-        sh("django-admin.py syncdb --database=wmdata --settings=geonode.settings --noinput")
+        sh("python manage.py syncdb --database=wmdata --settings=worldmap.settings --noinput")
     except:
         info("******CREATION OF GAZETTEER TABLE FAILED - if you want the gazetteer enabled, \n \
 unescape the 'DATABASES' AND 'DATABASE_ROUTERS' settings in your settings file \n \
 and modify the default values if necessary")
-    sh("django-admin.py migrate --settings=geonode.settings --noinput")
+    sh("python manage.py migrate --settings=worldmap.settings --noinput")
 
 
 @task
@@ -295,7 +293,7 @@ def package_client(options):
     	geonode_client_target_war.copy(options.deploy.out_dir)
     else:
         # Extract static files to static_location
-    	geonode_media_dir = path("./src/GeoNodePy/geonode/media")
+    	geonode_media_dir = path("./worldmap/media")
         static_location = geonode_media_dir / "static"
 
         dst_zip = "src/geonode-client/build/geonode-client.zip"
@@ -321,15 +319,14 @@ def package_geonetwork(options):
 @needs('package_dir')
 def package_webapp(options):
 
-    sh("django-admin.py collectstatic -v0 --settings=geonode.settings --noinput")
+    sh("python manage.py collectstatic -v0  --noinput")
 
     """Package (Python, Django) web application and dependencies."""
-    with pushd('src/GeoNodePy'):
-        sh('python setup.py egg_info sdist')
+    #with pushd('worldmap'):
+    sh('python setup.py egg_info sdist')
 
-    req_file = options.deploy.req_file
-    req_file.write_text(deploy_req_txt)
-    pip_bundle("-r %s %s/geonode-webapp.pybundle" % (req_file, options.deploy.out_dir))
+
+    pip_bundle("-r requirements.txt package/worldmap-webapp.pybundle")
 
 
 @task
@@ -347,70 +344,13 @@ def package_all(options):
 def create_version_name():
     # we'll use the geonodepy version as our "official" version number
     # for now
-    slug = "GeoNode-%s" % (
-        pkg_resources.get_distribution('GeoNodePy').version,
+    slug = "WorldMap-%s" % (
+        pkg_resources.get_distribution('worldmap').version,
         date.today().isoformat()
     )
 
     return slug
 
-@task
-def make_devkit(options):
-    import virtualenv
-
-    (path("package") / "devkit" / "share").makedirs()
-    pip_bundle("package/devkit/share/geonode-core.pybundle -r shared/devkit.requirements")
-    script = virtualenv.create_bootstrap_script("""
-import os, subprocess, zipfile
-
-def after_install(options, home_dir):
-    if sys.platform == 'win32':
-        bin = 'Scripts'
-    else:
-        bin = 'bin'
-
-    installer_base = os.path.abspath(os.path.dirname(__file__))
-
-    def pip(*args):
-        subprocess.call([os.path.join(home_dir, bin, "pip")] + list(args))
-
-    pip("install", os.path.join(installer_base, "share", "geonode-core.pybundle"))
-    setup_jetty(source=os.path.join(installer_base, "share"), dest=os.path.join(home_dir, "share"))
-
-def setup_jetty(source, dest):
-    jetty_zip = os.path.join(source, "jetty-distribution-7.0.2.v20100331.zip")
-    jetty_dir = os.path.join(dest, "jetty-distribution-7.0.2.v20100331")
-
-    zipfile.ZipFile(jetty_zip).extractall(dest)
-    shutil.rmtree(os.path.join(jetty_dir, "contexts"))
-    shutil.rmtree(os.path.join(jetty_dir, "webapps"))
-    os.mkdir(os.path.join(jetty_dir, "contexts"))
-    os.mkdir(os.path.join(jetty_dir, "webapps"))
-
-    deployments = [
-        ('geoserver', 'geoserver-geonode-dev.war'),
-        ('geonetwork', 'geonetwork.war'),
-        ('media', 'geonode-client.zip')
-    ]
-
-    for context, archive in deployments:
-        src = os.path.join(source, archive)
-        dst = os.path.join(jetty_dir, "webapps", context)
-        zipfile.ZipFile(src).extractall(dst)
-""")
-
-    open((path("package")/"devkit"/"go-geonode.py"), 'w').write(script)
-    urlretrieve(
-        "http://download.eclipse.org/jetty/7.0.2.v20100331/dist/jetty-distribution-7.0.2.v20100331.zip",
-        "package/devkit/share/jetty-distribution-7.0.2.v20100331.zip"
-    )
-    urlretrieve(
-        "http://pypi.python.org/packages/source/p/pip/pip-0.7.1.tar.gz",
-        "package/devkit/share/pip-0.7.1.tar.gz"
-    )
-    geoserver_target.copy("package/devkit/share")
-    geonetwork_target.copy("package/devkit/share")
-    geonode_client_target().copy("package/devkit/share")
 
 @task
 @cmdopts([
@@ -434,19 +374,18 @@ def make_release(options):
         if hasattr(options, 'append_to'):
             pkgname += options.append_to
 
-    with pushd('shared'):
-        out_pkg = path(pkgname)
-        out_pkg.rmtree()
-        path('./package').copytree(out_pkg)
+    out_pkg = path(pkgname)
+    out_pkg.rmtree()
+    path('./package').copytree(out_pkg)
 
-        tar = tarfile.open("%s.tar.gz" % out_pkg, "w:gz")
-        for file in out_pkg.walkfiles():
-            tar.add(file)
-        tar.add('README.release.rst', arcname=('%s/README.rst' % out_pkg))
-        tar.close()
+    tar = tarfile.open("%s.tar.gz" % out_pkg, "w:gz")
+    for file in out_pkg.walkfiles():
+        tar.add(file)
+    tar.add('README.release.rst', arcname=('%s/README.rst' % out_pkg))
+    tar.close()
 
-        out_pkg.rmtree()
-        info("%s.tar.gz created" % out_pkg.abspath())
+    out_pkg.rmtree()
+    info("%s.tar.gz created" % out_pkg.abspath())
 
 
 def unzip_file(src, dest):
@@ -480,7 +419,7 @@ def pip(*args):
         error("**ATTENTION**: Update your 'pip' to at least 0.6")
         raise
 
-    full_path_pip = options.config.bin / 'pip'
+    full_path_pip = 'pip'
 
     sh("%(env)s %(cmd)s %(args)s" % {
         "env": options.config.pip_flags,
@@ -488,8 +427,8 @@ def pip(*args):
         "args": " ".join(args)
     })
 
-pip_install = functools.partial(pip, 'install', dl_cache)
-pip_bundle = functools.partial(pip, 'bundle', dl_cache)
+pip_install = functools.partial(pip, 'install')
+pip_bundle = functools.partial(pip, 'bundle')
 
 
 @task
@@ -529,7 +468,7 @@ def start_django(options):
         "paster",
         "serve",
         "--reload",
-        "shared/dev-paste.ini"
+        "dev/dev-paste.ini"
     ],
         stdout=djangolog,
         stderr=djangolog
@@ -639,7 +578,7 @@ def host(options):
             "paster",
             "serve",
             "--reload",
-	        "shared/dev-paste.ini"
+	        "dev/dev-paste.ini"
         ],
         stdout=djangolog,
         stderr=djangolog
@@ -671,10 +610,9 @@ def host(options):
         time.sleep(2)
 
     try:
-        sh("django-admin.py updatelayers --settings=geonode.settings")
+        sh("python manage.py updatelayers")
 
-        info("Development GeoNode is running at http://" + options.host.bind + ":8000/")
-        info("The GeoNode is an unstoppable machine")
+        info("Development WorldMap is running at http://" + options.host.bind + ":8000/")
         info("Press CTRL-C to shut down")
         django.wait()
         info("Django process terminated, see log for details.")
@@ -698,7 +636,7 @@ def host(options):
 
 @task
 def test(options):
-    sh("django-admin.py test --settings=geonode.settings")
+    sh("python manage.py test")
 
 
 def platform_options(options):
