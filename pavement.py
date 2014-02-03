@@ -25,65 +25,39 @@ import glob
 assert sys.version_info >= (2,7),\
 SystemError("WorldMap Build requires python 2.7 or better")
 
+venv = os.environ.get('VIRTUAL_ENV')
+curdir = os.getcwd()
 
-options(
-    config=Bunch(
-        ini=path('dev/build.ini'),
-        package_dir = path('package')
-    ),
-    minilib=Bunch(extra_files=['virtual', 'doctools', 'misctasks']),
-    sphinx=Bunch(
-        docroot='docs',
-        builddir="_build",
-        sourcedir="source"
-    ),
-    virtualenv=Bunch(
-        packages_to_install=[
-            'pip',
-            'jstools',
-            'virtualenv'
-        ],
-        dest_dir='./',
-        install_paver=True,
-        script_name='bootstrap.py',
-        paver_command_line='post_bootstrap'
-    ),
-    deploy=Bunch(
-        req_file=path('requirements.txt'),
-        packages_to_install=['pip'],
-        dest_dir='./',
-    ),
-
-)
-
-#venv = os.environ.get('VIRTUAL_ENV')
-bundle = path('package/worldmap.pybundle')
-#dl_cache = "--download-cache=./build"
-dlname = 'worldmap.bundle'
-gs_data = "gs-data"
-geoserver_target = path('src/geoserver-geonode-ext/target/geoserver.war')
-geonetwork_target = path('webapps/geonetwork.war')
-def geonode_client_target(): return options.deploy.out_dir / "geonode-client.zip"
-geonode_client_target_war = path('webapps/geonode-client.war')
+settings_file = os.environ.get("DJANGO_SETTINGS_MODULE", "geonode.settings.base")
+os.environ["DJANGO_SETTINGS_MODULE"] = settings_file
 
 deploy_req_txt = """
 # NOTE... this file is generated
--r requirements.txt
--e worldmap
+-r %(curdir)s/requirements/base.txt
+-e %(curdir)s
 """ % locals()
 
-@task
-def auto(options):
-    cp = ConfigParser.ConfigParser()
-    cp.read(options.config.ini)
-    options.config.parser = cp
+bundle = path('package/worldmap.pybundle')
+dlname = 'worldmap.bundle'
 
-    # set a few vars from the config ns
-    package_dir = options.deploy.out_dir = options.config.package_dir
-    options.deploy.script_name=package_dir / 'bootstrap.py'
+geoserver_target = path('src/geoserver-geonode-ext/target/geoserver.war')
+gs_data = "./webapps/gs-data"
+gs_data_url="http://worldmap.harvard.edu/media/geoserver/geonode-geoserver-data.zip"
 
-    # set windows dependent opts
-    platform_options(options)
+package_outdir = "./package"
+
+def geonode_client_target(): return package_outdir / "geonode-client.zip"
+geonode_client_target_war = path('webapps/geonode-client.war')
+
+
+
+
+geonetwork_target = path('webapps/geonetwork.war')
+geonetwork_zip="geonetwork.war"
+geonetwork_war_url="http://worldmap.harvard.edu/media/geoserver/"
+intermap_war_url="http://worldmap.harvard.edu/media/geoserver/intermap.war"
+
+
 
 @task
 def install_deps(options):
@@ -94,9 +68,8 @@ def install_deps(options):
     else:
         info('Installing from requirements file. '\
              'Use "paver bundle_deps" to create an install bundle')
-        pip_install("-r requirements.txt")
-        pip_install("-e .")
-
+        pip_install("-r requirements/base.txt")
+        pip_install('-e .')
 
 
 @task
@@ -105,11 +78,10 @@ def bundle_deps(options):
     Create a pybundle of all python dependencies.  If created, this
     will be the default for installing python deps.
     """
-    pip_bundle("-r requirements.txt %s" % bundle)
+    pip_bundle("-r requirements/base.txt %s" % bundle)
 
 
 @task
-@needs(['download_bundle'])
 def install_bundle(options):
     """
     Installs a bundle of dependencies located at %s.
@@ -119,18 +91,6 @@ def install_bundle(options):
     pip_install(bundle)
 
 
-@task
-def download_bundle(options):
-    """
-    Downloads zipped bundle of python dependencies to %s. Does not overwrite.
-    """ % bundle
-
-    bpath = bundle.abspath()
-    if not bundle.exists():
-        with pushd('dev'):
-            grab("http://dev.capra.opengeo.org/repo/%s.zip" % dlname, bpath)
-    else:
-        info("Skipping download. 'rm bundle  %s' if you need a fresh download. " % bundle)
 
 
 @task
@@ -138,13 +98,6 @@ def install_25_deps(options):
     """Fetch python 2_5-specific dependencies (not maintained)"""
     pass
 
-
-@task
-@needs(['install_deps'])
-def post_bootstrap(options):
-    """installs the current package"""
-    pip = "pip"
-    sh('%s install -e %s' %(pip, path("geonode")))
 
 
 #TODO Move svn urls out to a config file
@@ -155,8 +108,8 @@ def grab(src, dest):
 @task
 def setup_gs_data(options):
     """Fetch a data directory to use with GeoServer for testing."""
-    src_url = str(options.config.parser.get('geoserver', 'gs_data_url'))
-    dev = path("./dev")
+    src_url = gs_data_url
+    dev = path("./webapps")
     if not dev.exists():
         dev.mkdir()
 
@@ -177,8 +130,8 @@ def setup_geoserver(options):
 @task
 def setup_geonetwork(options):
     """Fetch the geonetwork.war and intermap.war to use with GeoServer for testing."""
-    war_zip_file = options.config.parser.get('geonetwork', 'geonetwork_zip')
-    src_url = str(options.config.parser.get('geonetwork', 'geonetwork_war_url') +  war_zip_file)
+    war_zip_file = geonetwork_zip
+    src_url = str(geonetwork_war_url + war_zip_file)
     info("geonetwork url: %s" %src_url)
     # where to download the war files. If changed change also
     # src/geoserver-geonode-ext/jetty.xml accordingly
@@ -201,7 +154,7 @@ def setup_geonetwork(options):
     if not deployed_url.exists():
         zip_extractall(zipfile.ZipFile(dst_war), deployed_url)
 
-    src_url = str(options.config.parser.get('geonetwork', 'intermap_war_url'))
+    src_url = intermap_war_url
     dst_url = webapps / "intermap.war"
 
     if not dst_url.exists():
@@ -261,14 +214,14 @@ def setup_geonode_client(options):
 
 @task
 def sync_django_db(options):
-    sh("python manage.py syncdb --settings=geonode.settings --noinput")
+    sh("python manage.py syncdb  --noinput")
     try:
-        sh("python manage.py syncdb --database=wmdata --settings=geonode.settings --noinput")
+        sh("python manage.py syncdb --database=wmdata  --noinput")
     except:
         info("******CREATION OF GAZETTEER TABLE FAILED - if you want the gazetteer enabled, \n \
 unescape the 'DATABASES' AND 'DATABASE_ROUTERS' settings in your settings file \n \
 and modify the default values if necessary")
-    sh("python manage.py migrate --settings=geonode.settings --noinput")
+    sh("python manage.py migrate --noinput")
 
 
 @task
@@ -276,8 +229,9 @@ def package_dir(options):
     """
     Adds a packaging directory
     """
-    if not options.deploy.out_dir.exists():
-        options.config.package_dir.mkdir()
+    package_path = path(package_outdir)
+    if not package_path.exists():
+        package_outdir.mkdir()
 
 
 @task
@@ -304,14 +258,14 @@ def package_client(options):
 @needs('package_dir', 'setup_geoserver')
 def package_geoserver(options):
     """Package GeoServer WAR file with appropriate extensions."""
-    geoserver_target.copy(options.deploy.out_dir)
+    geoserver_target.copy(package_outdir)
 
 
 @task
 @needs('package_dir', 'setup_geonetwork')
 def package_geonetwork(options):
     """Package GeoNetwork WAR file for deployment."""
-    geonetwork_target.copy(options.deploy.out_dir)
+    geonetwork_target.copy(package_outdir)
 
 
 @task
@@ -322,10 +276,12 @@ def package_webapp(options):
 
     """Package (Python, Django) web application and dependencies."""
     #with pushd('worldmap'):
+    
+    req_file = path('package/requirements.txt')
+    req_file.write_text(deploy_req_txt)    
+    
     sh('python setup.py egg_info sdist')
-
-
-    pip_bundle("-r requirements.txt package/worldmap-webapp.pybundle")
+    pip_bundle("-r %s package/worldmap-webapp.pybundle" % (req_file))
 
 
 @task
@@ -405,12 +361,6 @@ def unzip_file(src, dest):
             out.close()
 
 
-@task
-def checkup_spec(options):
-    parser = options.config.parser
-    svn.checkup(parser.get('doc', 'spec_url'), path('docs') / 'spec')
-
-
 def pip(*args):
     try:
         pkg_resources.require('pip>=0.6')
@@ -420,8 +370,7 @@ def pip(*args):
 
     full_path_pip = 'pip'
 
-    sh("%(env)s %(cmd)s %(args)s" % {
-        "env": options.config.pip_flags,
+    sh("%(cmd)s %(args)s" % {
         "cmd": full_path_pip,
         "args": " ".join(args)
     })
@@ -443,22 +392,10 @@ def package_bootstrap(options):
         info("VirtualEnv must be installed to enable 'paver bootstrap'. If you " +
              "need this command, run: pip install virtualenv")
 
-
 @task
-def install_sphinx_conditionally(options):
-    """if no sphinx, install it"""
-    try:
-        import sphinx
-    except ImportError:
-        sh("%s install sphinx" % (options.config.bin / 'pip'))
-
-        # have to reload doctools so it will realize sphinx is now
-        # available
-        sys.modules['paver.doctools'] = reload(sys.modules['paver.doctools'])
-
-@task
-@needs(['start_geoserver',
-        'start_django'])
+@needs(['install_deps',
+        'start_django',
+        'start_geoserver'])
 @cmdopts([
     ('bind=', 'b', 'Bind server to provided IP address and port number.')
 ], share_with=['start_django'])
@@ -481,7 +418,7 @@ def stop_geoserver():
     """
     Stop GeoServer
     """
-    kill('java', 'geoserver')
+    kill('java', 'jetty')
 
 
 @task
@@ -499,12 +436,14 @@ def stop():
     ('bind=', 'b', 'Bind server to provided IP address and port number.')
 ])
 @task
+@needs(['install_dev_deps'])
 def start_django():
     """
     Start the GeoNode Django application
     """
     bind = options.get('bind', '')
     sh('python manage.py runserver %s &' % bind)
+    
 
 @task
 @cmdopts([
@@ -533,53 +472,21 @@ def start_geoserver(options):
         )
 
 
-
-
-    def jetty_is_up():
-        try:
-            urllib.urlopen(url + "/web/")
-            return True
-        except Exception, e:
-            return False
-
     socket.setdefaulttimeout(1)
 
     info("Logging servlet output to jetty.log...")
     info("Jetty is starting up, please wait...")
-    while not jetty_is_up():
-        time.sleep(2)
-
-
+    waitfor(GEOSERVER_BASE_URL)
     info("Development GeoServer/GeoNetwork is running")
+    sh('python manage.py updatelayers') 
+  
 
 
 @task
 def test(options):
-    sh("python manage.py test")
+    pip_install("-r requirements/test.txt")
+    sh("python manage.py test --settings=geonode.settings.test")
 
-
-def platform_options(options):
-    "Platform specific options"
-    options.config.platform = sys.platform
-
-    # defaults:
-    pip_flags = ""
-    scripts = "bin"
-    corelibs = "requirements.txt"
-    devlibs = "dev-requirements.txt"
-
-    if sys.platform == "win32":
-        scripts = "Scripts"
-    elif sys.platform == "darwin":
-        pip_flags = "ARCHFLAGS='-arch i386'"
-
-    options.config.bin = path(scripts)
-    options.config.corelibs = corelibs
-    options.config.devlibs = devlibs
-    options.config.pip_flags = pip_flags
-
-# include patched versions of zipfile code
-# to extract zipfile dirs in python 2.6.1 and below...
 
 def zip_extractall(zf, path=None, members=None, pwd=None):
     if sys.version_info >= (2, 6, 2):
@@ -716,3 +623,67 @@ def justcopy(origin, target):
         if not os.path.exists(target):
             os.makedirs(target)
         shutil.copy(origin, target)
+
+@task
+@needs(['package_geonetwork', 'package_geoserver'])
+def package(options):
+    """
+    Creates a tarball to use for building the system elsewhere
+    """
+    import pkg_resources
+    import tarfile
+    import geonode
+
+    version = geonode.get_version()
+    # Use GeoNode's version for the package name.
+    pkgname = 'worldmap-%s-all' % version
+
+    # Create the output directory.
+    out_pkg = path(pkgname)
+    out_pkg_tar = path("%s.tar.gz" % pkgname)
+
+    # Create a distribution in zip format for the geonode python package.
+    dist_dir = path('dist')
+    dist_dir.rmtree()
+    sh('python setup.py sdist --formats=zip')
+
+    with pushd('package'):
+
+        #Delete old tar files in that directory
+        for f in glob.glob('worldmap*.tar.gz'):
+            old_package = path(f)
+            if old_package != out_pkg_tar:
+                old_package.remove()
+
+        if out_pkg_tar.exists():
+            info('There is already a package for version %s' % version)
+            return
+
+        # Clean anything that is in the oupout package tree.
+        out_pkg.rmtree()
+        out_pkg.makedirs()
+
+        support_folder = path('support')
+        install_file = path('install.sh')
+
+        # And copy the default files from the package folder.
+        justcopy(support_folder, out_pkg / 'support')
+        justcopy(install_file, out_pkg)
+
+        geonode_dist = path('..') / 'dist' / 'worldmap-%s.zip' % version
+        justcopy(geonode_dist, out_pkg)
+
+        # Create a tar file with all files in the output package folder.
+        tar = tarfile.open(out_pkg_tar, "w:gz")
+        for file in out_pkg.walkfiles():
+            tar.add(file)
+
+        # Add the README with the license and important links to documentation.
+        #tar.add('README.rst', arcname=('%s/README.rst' % out_pkg))
+        tar.close()
+
+        # Remove all the files in the temporary output package directory.
+        out_pkg.rmtree()
+
+    # Report the info about the new package.
+    info("%s created" % out_pkg_tar.abspath())

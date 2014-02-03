@@ -1,7 +1,7 @@
 #from huey.djhuey.decorators import queue_command, periodic_command, crontab
 from celery.schedules import crontab
 from celery.task import periodic_task, task
-from geonode import settings
+from django.conf import settings
 from geonode.queue.models import GazetteerUpdateJob, LayerBoundsUpdateJob
 
 __author__ = 'mbertrand'

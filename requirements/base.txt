@@ -1,5 +1,6 @@
 --extra-index-url=http://dist.pinaxproject.com/dev
 
+setuptools
 paver
 
 # Extensions with C components
@@ -46,9 +47,3 @@ jdcal
 vectorformats
 #For autocomplete
 django-autocomplete-light==1.4.5
-
-#testing
-django_nose
-mock
-coverage
-

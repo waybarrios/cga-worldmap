@@ -1,4 +1,4 @@
-from geonode import settings
+from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import auth_login
 from django.core.serializers.json import DateTimeAwareJSONEncoder

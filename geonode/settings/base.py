@@ -9,9 +9,9 @@ gettext = lambda s: s
 # General Django development settings
 #
 
-# Defines the directory that contains the settings file as the PROJECT_ROOT
+# Defines the directory above the settings file as the PROJECT_ROOT
 # It is used for relative settings elsewhere.
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 
 # Setting debug to true makes Django serve static media and
 # present pretty error pages.
@@ -507,7 +507,4 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
 
-try:
-    from local_settings import *
-except ImportError:
-    pass
+
