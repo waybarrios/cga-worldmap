@@ -58,7 +58,7 @@ setup(
     # Full list of classifiers can be found at:
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
     ],
     keywords="worldmap geonode django",
     url='https://github.com/cga-harvard/cga-worldmap',

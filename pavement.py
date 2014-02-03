@@ -53,9 +53,7 @@ options(
         packages_to_install=['pip'],
         dest_dir='./',
     ),
-    host=Bunch(
-    	bind='localhost'
-    )
+
 )
 
 #venv = os.environ.get('VIRTUAL_ENV')
@@ -97,6 +95,7 @@ def install_deps(options):
         info('Installing from requirements file. '\
              'Use "paver bundle_deps" to create an install bundle')
         pip_install("-r requirements.txt")
+        pip_install("-e .")
 
 
 
@@ -458,64 +457,74 @@ def install_sphinx_conditionally(options):
         sys.modules['paver.doctools'] = reload(sys.modules['paver.doctools'])
 
 @task
-@needs('package_client')
+@needs(['start_geoserver',
+        'start_django'])
 @cmdopts([
-    ('bind=', 'b', 'IP address to bind to. Default is localhost.')
-])
-def start_django(options):
-    djangolog = open("django.log", "w")
-    django = subprocess.Popen([
-        "paster",
-        "serve",
-        "--reload",
-        "dev/dev-paste.ini"
-    ],
-        stdout=djangolog,
-        stderr=djangolog
-    )
-
-    def django_is_up():
-        try:
-            urllib.urlopen("http://" + options.host.bind + ":8000")
-            return True
-        except Exception, e:
-            return False
-
-    socket.setdefaulttimeout(1)
-
-    info("Django is starting up, please wait...")
-    while not django_is_up():
-        time.sleep(2)
-
-    try:
-        info("Django/Worldmap is running at http://" + options.host.bind + ":8000/")
-        info("Press CTRL-C to shut down")
-        django.wait()
-        info("Django process terminated, see log for details.")
-    finally:
-        info("Shutting down...")
-        try:
-            django.terminate()
-        except:
-            pass
-
-        django.wait()
-        sys.exit()
+    ('bind=', 'b', 'Bind server to provided IP address and port number.')
+], share_with=['start_django'])
+def start():
+    """
+    Start GeoNode (Django, GeoServer & Client)
+    """
+    info("GeoNode is now available.")
 
 @task
-@needs('package_client')
+def stop_django():
+    """
+    Stop the GeoNode Django application
+    """
+    kill('python', 'runserver')
+
+
+@task
+def stop_geoserver():
+    """
+    Stop GeoServer
+    """
+    kill('java', 'geoserver')
+
+
+@task
+def stop():
+    """
+    Stop GeoNode
+    """
+    info("Stopping GeoNode ...")
+    stop_django()
+    stop_geoserver()
+
+
+
+@cmdopts([
+    ('bind=', 'b', 'Bind server to provided IP address and port number.')
+])
+@task
+def start_django():
+    """
+    Start the GeoNode Django application
+    """
+    bind = options.get('bind', '')
+    sh('python manage.py runserver %s &' % bind)
+
+@task
 @cmdopts([
     ('bind=', 'b', 'IP address to bind to. Default is localhost.')
 ])
 def start_geoserver(options):
+    from worldmap.settings import GEOSERVER_BASE_URL 
+    
+    url = "http://localhost:8080/geoserver/"
+    if GEOSERVER_BASE_URL != url:
+        print 'your GEOSERVER_BASE_URL does not match %s' % url
+        sys.exit(1)
+	
+	
     jettylog = open("jetty.log", "w")
     with pushd("src/geoserver-geonode-ext"):
         os.environ["MAVEN_OPTS"] = " ".join([
             "-XX:CompileCommand=exclude,net/sf/saxon/event/ReceivingContentHandler.startElement",
-            "-Djetty.host=" + options.host.bind,
             "-Xmx512M",
             "-XX:MaxPermSize=256m"
-            #"-Xdebug -Xrunjdwp:transport= dt_socket,address=8020,server=y,suspend=n"
         ])
         mvn = subprocess.Popen(
             ["mvn", "jetty:run"],
@@ -524,9 +533,11 @@ def start_geoserver(options):
         )
 
 
+
+
     def jetty_is_up():
         try:
-            urllib.urlopen("http://" + options.host.bind + ":8080/geoserver/web/")
+            urllib.urlopen(url + "/web/")
             return True
         except Exception, e:
             return False
@@ -538,100 +549,8 @@ def start_geoserver(options):
     while not jetty_is_up():
         time.sleep(2)
 
-    try:
-        info("Development GeoServer/GeoNetwork is running")
-        info("Press CTRL-C to shut down")
-        mvn.wait()
-        info("GeoServer process terminated, see log for details.")
-    finally:
-        info("Shutting down...")
-        try:
-            mvn.terminate()
-        except:
-            pass
-        mvn.wait()
-        sys.exit()
 
-
-@task
-@needs('package_client')
-@cmdopts([
-    ('bind=', 'b', 'IP address to bind to. Default is localhost.')
-])
-def host(options):
-    jettylog = open("jetty.log", "w")
-    djangolog = open("django.log", "w")
-    with pushd("src/geoserver-geonode-ext"):
-        os.environ["MAVEN_OPTS"] = " ".join([
-            #"-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8020,server=y,suspend=y",
-            "-XX:CompileCommand=exclude,net/sf/saxon/event/ReceivingContentHandler.startElement",
-            "-Djetty.host=" + options.host.bind,
-            "-Xmx512M",
-            "-XX:MaxPermSize=256m"
-        ])
-        mvn = subprocess.Popen(
-            ["mvn", "jetty:run"],
-            stdout=jettylog,
-            stderr=jettylog
-        )
-    django = subprocess.Popen([
-            "paster",
-            "serve",
-            "--reload",
-	        "dev/dev-paste.ini"
-        ],
-        stdout=djangolog,
-        stderr=djangolog
-    )
-
-    def jetty_is_up():
-        try:
-            urllib.urlopen("http://" + options.host.bind + ":8080/geoserver/web/")
-            return True
-        except Exception, e:
-            return False
-
-    def django_is_up():
-        try:
-            urllib.urlopen("http://" + options.host.bind + ":8000")
-            return True
-        except Exception, e:
-            return False
-
-    socket.setdefaulttimeout(1)
-
-    info("Django is starting up, please wait...")
-    while not django_is_up():
-        time.sleep(2)
-
-    info("Logging servlet output to jetty.log and django output to django.log...")
-    info("Jetty is starting up, please wait...")
-    while not jetty_is_up():
-        time.sleep(2)
-
-    try:
-        sh("python manage.py updatelayers")
-
-        info("Development WorldMap is running at http://" + options.host.bind + ":8000/")
-        info("Press CTRL-C to shut down")
-        django.wait()
-        info("Django process terminated, see log for details.")
-    finally:
-        info("Shutting down...")
-        try:
-            django.terminate()
-        except:
-            pass
-        try:
-            mvn.terminate()
-        except:
-            pass
-
-        django.wait()
-        mvn.wait()
-        sys.exit()
-
-
+    info("Development GeoServer/GeoNetwork is running")
 
 
 @task
@@ -731,3 +650,69 @@ def _zip_extract_member(zf, member, targetpath, pwd):
     target.close()
 
     return targetpath
+
+def kill(arg1, arg2):
+    """Stops a proces that contains arg1 and is filtered by arg2
+    """
+    from subprocess import Popen, PIPE
+
+    # Wait until ready
+    t0 = time.time()
+    # Wait no more than these many seconds
+    time_out = 30
+    running = True
+
+    while running and time.time() - t0 < time_out:
+        p = Popen('ps aux | grep %s' % arg1, shell=True,
+                  stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+
+        lines = p.stdout.readlines()
+
+        running = False
+        for line in lines:
+
+            if '%s' % arg2 in line:
+                running = True
+
+                # Get pid
+                fields = line.strip().split()
+
+                info('Stopping %s (process number %s)' % (arg1, fields[1]))
+                kill = 'kill -9 %s 2> /dev/null' % fields[1]
+                os.system(kill)
+
+        # Give it a little more time
+        time.sleep(1)
+    else:
+        pass
+
+    if running:
+        raise Exception('Could not stop %s: '
+                        'Running processes are\n%s'
+                        % (arg1, '\n'.join([l.strip() for l in lines])))
+
+
+def waitfor(url, timeout=300):
+    started = False
+    for a in xrange(timeout):
+        try:
+            resp = urllib.urlopen(url)
+        except IOError, e:
+            pass
+        else:
+            if resp.getcode() == 200:
+                started = True
+                break
+        time.sleep(1)
+    return started
+
+
+def justcopy(origin, target):
+    import shutil
+    if os.path.isdir(origin):
+        shutil.rmtree(target, ignore_errors=True)
+        shutil.copytree(origin, target)
+    elif os.path.isfile(origin):
+        if not os.path.exists(target):
+            os.makedirs(target)
+        shutil.copy(origin, target)

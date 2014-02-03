@@ -191,6 +191,7 @@ LOGGING = {
 # some problematic 3rd party apps
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
+
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
@@ -279,6 +280,7 @@ NOSE_ARGS = [
       '--detailed-errors',
       '--with-xunit',
       ]
+
 
 #
 # GeoNode specific settings
