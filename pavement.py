@@ -144,7 +144,7 @@ def install_25_deps(options):
 def post_bootstrap(options):
     """installs the current package"""
     pip = "pip"
-    sh('%s install -e %s' %(pip, path("worldmap")))
+    sh('%s install -e %s' %(pip, path("geonode")))
 
 
 #TODO Move svn urls out to a config file
@@ -246,7 +246,7 @@ def setup_geonode_client(options):
     """
     Fetch geonode-client
     """
-    static = path("./worldmap/static/geonode")
+    static = path("./geonode/static/geonode")
     if not static.exists():
         static.mkdir()
 
@@ -261,14 +261,14 @@ def setup_geonode_client(options):
 
 @task
 def sync_django_db(options):
-    sh("python manage.py syncdb --settings=worldmap.settings --noinput")
+    sh("python manage.py syncdb --settings=geonode.settings --noinput")
     try:
-        sh("python manage.py syncdb --database=wmdata --settings=worldmap.settings --noinput")
+        sh("python manage.py syncdb --database=wmdata --settings=geonode.settings --noinput")
     except:
         info("******CREATION OF GAZETTEER TABLE FAILED - if you want the gazetteer enabled, \n \
 unescape the 'DATABASES' AND 'DATABASE_ROUTERS' settings in your settings file \n \
 and modify the default values if necessary")
-    sh("python manage.py migrate --settings=worldmap.settings --noinput")
+    sh("python manage.py migrate --settings=geonode.settings --noinput")
 
 
 @task
@@ -292,7 +292,7 @@ def package_client(options):
     	geonode_client_target_war.copy(options.deploy.out_dir)
     else:
         # Extract static files to static_location
-    	geonode_media_dir = path("./worldmap/media")
+    	geonode_media_dir = path("./geonode/media")
         static_location = geonode_media_dir / "static"
 
         dst_zip = "src/geonode-client/build/geonode-client.zip"
@@ -511,7 +511,7 @@ def start_django():
     ('bind=', 'b', 'IP address to bind to. Default is localhost.')
 ])
 def start_geoserver(options):
-    from worldmap.settings import GEOSERVER_BASE_URL 
+    from geonode.settings import GEOSERVER_BASE_URL 
     
     url = "http://localhost:8080/geoserver/"
     if GEOSERVER_BASE_URL != url:

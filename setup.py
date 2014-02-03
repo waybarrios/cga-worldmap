@@ -31,7 +31,7 @@ packages, data_files = [], []
 root_dir = os.path.dirname(__file__)
 if root_dir != '':
     os.chdir(root_dir)
-geonode_dir = 'worldmap'
+geonode_dir = 'geonode'
 
 for dirpath, dirnames, filenames in os.walk(geonode_dir):
     # Ignore dirnames that start with '.'
