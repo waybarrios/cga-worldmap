@@ -31,5 +31,4 @@ urlpatterns = patterns('',
                        url(r'^edit/$',
                            views.edit_profile,
                            name='profiles_edit_profile'),
-                       (r'', include('profiles.urls')),
                        )

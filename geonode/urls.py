@@ -2,6 +2,7 @@ from django.conf.urls import include, patterns, url
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 from geonode.sitemap import LayerSitemap, MapSitemap
 import geonode.proxy.urls
 import geonode.maps.urls
@@ -29,12 +30,9 @@ sitemaps = {
 urlpatterns = patterns('',
 
     # Static pages
-    url(r'^$', 'django.views.generic.simple.direct_to_template',
-                {'template': 'index.html'}, name='home'),
-    url(r'^developer/$', 'django.views.generic.simple.direct_to_template',
-                {'template': 'developer.html'}, name='dev'),
-    url(r'^upload_terms/$', 'django.views.generic.simple.direct_to_template',
-            {'template': 'maps/upload_terms.html'}, name='upload_terms'),
+    url(r'^$', TemplateView.as_view(template_name='index.html'), name='home'),
+    url(r'^developer/$',  TemplateView.as_view(template_name='developer.html'), name='dev'),
+    url(r'^upload_terms/$',  TemplateView.as_view(template_name='maps/upload_terms.html'), name='upload_terms'),
 
     # Services views
     (r'^services/', include('geonode.contrib.services.urls')),
@@ -54,12 +52,13 @@ urlpatterns = patterns('',
         name='auth_ajax_lookup'),
     (r'^accounts/ajax_lookup_email$', 'geonode.views.ajax_lookup_email'),
 
-    (r'^accounts/login', 'django.contrib.auth.views.login'),
-    (r'^accounts/logout', 'django.contrib.auth.views.logout'),
+    #(r'^accounts/login', 'django.contrib.auth.views.login'),
+    #(r'^accounts/logout', 'django.contrib.auth.views.logout'),
+
+    url(r"^account/", include("geonode.register.urls")),
 
     # Meta
-    url(r'^lang\.js$', 'django.views.generic.simple.direct_to_template',
-         {'template': 'lang.js', 'mimetype': 'text/javascript'}, name='lang'),
+    url(r'^lang\.js$', TemplateView.as_view(template_name='lang.js'), name='lang'),
     url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog',
         js_info_dict, name='jscat'),
     url(r'^sitemap\.xml$', 'django.contrib.sitemaps.views.sitemap',

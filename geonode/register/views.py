@@ -9,38 +9,37 @@ from django.contrib.auth.models import User
 from geonode.register.forms import UserRegistrationForm, ForgotUsernameForm
 from django.core.mail import send_mail
 from django.utils.translation import ugettext as _
+import account
 import logging
 
 logger = logging.getLogger("geonode.registration.views")
 
-def forgotUsername(request,template_name='registration/username_form.html'):
+class SignupView(account.views.SignupView):
 
-    username_form = ForgotUsernameForm()
-    message = ''
+    form_class = UserRegistrationForm
 
-    email_subject = _("Your username for ") + settings.SITENAME
+    def after_signup(self, form):
+        self.create_profile(form)
+        super(SignupView, self).after_signup(form)
+        new_user = self.created_user
+        if new_user.get_profile().is_org_member:
+            self.request.session["group_username"] = new_user.username
+            logger.debug("group username set to [%s]", new_user.username)
+            return HttpResponseRedirect(settings.CUSTOM_ORG_AUTH_URL)
+        elif "bra_harvard_redirect" in self.request.session:
+            new_user.active = True
+            new_user.save()
+            new_user.backend = 'django.contrib.auth.backends.ModelBackend'
+            # This login function does not need password.
+            login(self.request, new_user)
+            return HttpResponseRedirect(self.request.session["bra_harvard_redirect"])
+        else:
+            return HttpResponseRedirect(self.success_url or reverse('registration_complete'))
 
-
-    if request.method == 'POST':
-        username_form = ForgotUsernameForm(request.POST)
-        if username_form.is_valid():
-
-            users = User.objects.filter(email=username_form.cleaned_data['email'])
-            if len(users) > 0:
-                username = users[0].username
-                email_message = email_subject + " : " + username
-                send_mail(email_subject, email_message, settings.DEFAULT_FROM_EMAIL,
-                    [username_form.cleaned_data['email']], fail_silently=False)
-                message = _("Your username has been emailed to you.")
-            else:
-                message = _("No user could be found with that email address.")
-
-
-    return render_to_response(template_name, RequestContext(request, {
-        'message': message,
-        'form' : username_form
-        }))
-
+    def create_profile(self, form):
+        profile = self.created_user.get_profile()
+        profile.is_org_member = form.cleaned_data["is_org_member"]
+        profile.save()
 
 
 def confirm(request):
@@ -52,45 +51,45 @@ def confirm(request):
         return HttpResponseRedirect("/")
 
 
-def registerOrganizationUser(request, success_url=None,
-             form_class=UserRegistrationForm, profile_callback=None,
-             template_name='registration/registration_form.html',
-             extra_context=None):
-
-    if request.method == 'POST':
-        form = form_class(data=request.POST, files=request.FILES)
-        if form.is_valid():
-            new_user = form.save(profile_callback=profile_callback)
-            # success_url needs to be dynamically generated here; setting a
-            # a default value using reverse() will cause circular-import
-            # problems with the default URLConf for this application, which
-            # imports this file.
-
-
-            if new_user.get_profile().is_org_member:
-                request.session["group_username"] = new_user.username
-                logger.debug("group username set to [%s]", new_user.username)
-                return HttpResponseRedirect(settings.CUSTOM_ORG_AUTH_URL)
-            elif "bra_harvard_redirect" in request.session:
-                new_user.active = True
-                new_user.save()
-                new_user.backend = 'django.contrib.auth.backends.ModelBackend'
-                # This login function does not need password.
-                login(request, new_user)
-                return HttpResponseRedirect(request.session["bra_harvard_redirect"])
-            else:
-                return HttpResponseRedirect(success_url or reverse('registration_complete'))
-    else:
-        form = form_class()
-
-    if extra_context is None:
-        extra_context = {}
-    context = RequestContext(request)
-    for key, value in extra_context.items():
-        context[key] = callable(value) and value() or value
-    return render_to_response(template_name,
-                              { 'form': form },
-                              context_instance=context)# Create your views here.
+# def registerOrganizationUser(request, success_url=None,
+#              form_class=UserRegistrationForm, profile_callback=None,
+#              template_name='registration/registration_form.html',
+#              extra_context=None):
+#
+#     if request.method == 'POST':
+#         form = form_class(data=request.POST, files=request.FILES)
+#         if form.is_valid():
+#             new_user = form.save(profile_callback=profile_callback)
+#             # success_url needs to be dynamically generated here; setting a
+#             # a default value using reverse() will cause circular-import
+#             # problems with the default URLConf for this application, which
+#             # imports this file.
+#
+#
+#             if new_user.get_profile().is_org_member:
+#                 request.session["group_username"] = new_user.username
+#                 logger.debug("group username set to [%s]", new_user.username)
+#                 return HttpResponseRedirect(settings.CUSTOM_ORG_AUTH_URL)
+#             elif "bra_harvard_redirect" in request.session:
+#                 new_user.active = True
+#                 new_user.save()
+#                 new_user.backend = 'django.contrib.auth.backends.ModelBackend'
+#                 # This login function does not need password.
+#                 login(request, new_user)
+#                 return HttpResponseRedirect(request.session["bra_harvard_redirect"])
+#             else:
+#                 return HttpResponseRedirect(success_url or reverse('registration_complete'))
+#     else:
+#         form = form_class()
+#
+#     if extra_context is None:
+#         extra_context = {}
+#     context = RequestContext(request)
+#     for key, value in extra_context.items():
+#         context[key] = callable(value) and value() or value
+#     return render_to_response(template_name,
+#                               { 'form': form },
+#                               context_instance=context)# Create your views here.
 
 
 def registercompleteOrganizationUser(request, template_name='registration/registration_complete.html',):
@@ -107,11 +106,11 @@ def registercompleteOrganizationUser(request, template_name='registration/regist
             #    userProfile.is_org_member = False
             #    userProfile.save()
             if "bra_harvard_redirect" in request.session:
-                new_user.active = True
-                new_user.save()
-                new_user.backend = 'django.contrib.auth.backends.ModelBackend'
+                user.active = True
+                user.save()
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
                 # This login function does not need password.
-                login(request, new_user)
+                login(request, user)
                 return HttpResponseRedirect(request.session["bra_harvard_redirect"])
 
             if user.is_active:

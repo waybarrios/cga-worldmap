@@ -114,8 +114,7 @@ INSTALLED_APPS = (
 
     # Third party apps
     'django_extensions',
-    'registration',
-    'profiles',
+    'account',
     'avatar',
     'dialogos',
     'agon_ratings',
@@ -204,6 +203,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     # The context processor belows add things like SITEURL
     # and GEOSERVER_BASE_URL to all pages that use a RequestContext
     'geonode.maps.context_processors.resource_urls',
+    'account.context_processors.account',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -215,6 +215,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'account.middleware.LocaleMiddleware',
+    'account.middleware.TimezoneMiddleware',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 

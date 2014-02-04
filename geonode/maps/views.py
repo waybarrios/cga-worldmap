@@ -39,7 +39,6 @@ from django.core.cache import cache
 from geonode.maps.forms import LayerCreateForm, GEOMETRY_CHOICES, MapForm, LayerForm, GazetteerForm, PocForm, LayerContactForm
 
 import itertools
-from registration.models import RegistrationProfile
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.contrib.sites.models import Site
@@ -2480,18 +2479,18 @@ def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner
     while len(User.objects.filter(username=user_name)) > 0:
         user_name = user_name[0:user_length-4] + User.objects.make_random_password(length=4, allowed_chars='0123456789')
 
-    new_user = RegistrationProfile.objects.create_inactive_user(username=user_name, email=user_email, password=random_password, site = settings.SITE_ID, send_email=False)
-    if new_user:
-        new_profile = Contact(user=new_user, name=new_user.username, email=new_user.email)
-        if settings.USE_CUSTOM_ORG_AUTHORIZATION and new_user.email.endswith(settings.CUSTOM_GROUP_EMAIL_SUFFIX):
-            new_profile.is_org_member = True
-            new_profile.member_expiration_dt = datetime.today() + timedelta(days=365)
-        new_profile.save()
-        try:
-            _send_permissions_email(user_email, map_layer_title, map_layer_url, map_layer_owner_id, random_password)
-        except:
-            logger.debug("An error ocurred when sending the mail")
-    return new_user
+    # new_user = RegistrationProfile.objects.create_inactive_user(username=user_name, email=user_email, password=random_password, site = settings.SITE_ID, send_email=False)
+    # if new_user:
+    #     new_profile = Contact(user=new_user, name=new_user.username, email=new_user.email)
+    #     if settings.USE_CUSTOM_ORG_AUTHORIZATION and new_user.email.endswith(settings.CUSTOM_GROUP_EMAIL_SUFFIX):
+    #         new_profile.is_org_member = True
+    #         new_profile.member_expiration_dt = datetime.today() + timedelta(days=365)
+    #     new_profile.save()
+    #     try:
+    #         _send_permissions_email(user_email, map_layer_title, map_layer_url, map_layer_owner_id, random_password)
+    #     except:
+    #         logger.debug("An error ocurred when sending the mail")
+    # return new_user
 
 
 
@@ -2500,27 +2499,27 @@ def _send_permissions_email(user_email, map_layer_title, map_layer_url, map_laye
 
     current_site = Site.objects.get_current()
     user = User.objects.get(email = user_email)
-    profile = RegistrationProfile.objects.get(user=user)
-    owner = User.objects.get(id=map_layer_owner_id)
-
-    subject = render_to_string('registration/new_user_email_subject.txt',
-            { 'site': current_site,
-              'owner' : (owner.get_profile().name if owner.get_profile().name else owner.email),
-              })
-    # Email subject *must not* contain newlines
-    subject = ''.join(subject.splitlines())
-
-    message = render_to_string('registration/new_user_email.txt',
-            { 'activation_key': profile.activation_key,
-              'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-              'owner': (owner.get_profile().name if owner.get_profile().name else owner.email),
-              'title': map_layer_title,
-              'url' : map_layer_url,
-              'site': current_site,
-              'username': user.username,
-              'password' : password })
-
-    send_mail(subject, message, settings.NO_REPLY_EMAIL, [user.email])
+    # profile = RegistrationProfile.objects.get(user=user)
+    # owner = User.objects.get(id=map_layer_owner_id)
+    #
+    # subject = render_to_string('registration/new_user_email_subject.txt',
+    #         { 'site': current_site,
+    #           'owner' : (owner.get_profile().name if owner.get_profile().name else owner.email),
+    #           })
+    # # Email subject *must not* contain newlines
+    # subject = ''.join(subject.splitlines())
+    #
+    # message = render_to_string('registration/new_user_email.txt',
+    #         { 'activation_key': profile.activation_key,
+    #           'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+    #           'owner': (owner.get_profile().name if owner.get_profile().name else owner.email),
+    #           'title': map_layer_title,
+    #           'url' : map_layer_url,
+    #           'site': current_site,
+    #           'username': user.username,
+    #           'password' : password })
+    #
+    # send_mail(subject, message, settings.NO_REPLY_EMAIL, [user.email])
 
 def get_suffix_if_custom(map):
     if map.use_custom_template:
