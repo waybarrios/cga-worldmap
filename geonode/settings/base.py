@@ -124,6 +124,7 @@ INSTALLED_APPS = (
     'autocomplete_light',
     'djcelery',
     'djkombu',
+    ''
 
     # GeoNode internal apps
     'geonode.core',
@@ -135,6 +136,7 @@ INSTALLED_APPS = (
     'geonode.capabilities',
     'geonode.queue',
     'geonode.certification',
+    'geonode.contrib.services',
     #'geonode.hoods',
     #'geonode.gazetteer',
     #'debug_toolbar',

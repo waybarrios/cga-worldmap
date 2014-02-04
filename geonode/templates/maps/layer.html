@@ -72,7 +72,9 @@
                     {map.zoomTo(1)}
                     else
                     {map.zoomToExtent(layerExtent)};
+                    {% if layer.publishing.default_style %}
                     Ext.get(Ext.DomQuery.select("input[@id='{{layer.publishing.default_style.name}}']")).elements[0].click();
+                    {% endif %}
 
                 },
                 "beforeunload": function() {
@@ -153,7 +155,11 @@
     function addToMap(selectInput) {
     	var selectedValue = selectInput.options[selectInput.selectedIndex].value;
     	if (selectedValue != '') {
-    		window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
+            {% if layer.local %}
+    		    window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
+            {% else %}
+                window.location.href='/maps/' + selectedValue + '/?layer={{layer.service.name}}:{{layer.typename}}'
+            {% endif %}
     	}
     }
     {% endautoescape %}
@@ -175,7 +181,12 @@
 {% block main %}
 <div class="twocol">
 	<div id="description">
-		<h3>{{ layer.resource.title|default:layer.typename }}</h3>
+		<h3>{{ layer.title|default:layer.typename }}</h3>
+
+        {% if not layer.local %}
+            <h4>{% trans "External layer - not hosted by WorldMap - use at your own risk" %}</h4>
+            <div><p>{% trans "Source:" %}<a href="/services/{{layer.service.id}}">{{ layer.service.title }}</a></p></div>
+        {% endif %}
         {% overall_rating layer "layer" as layer_rating %}
         <div class="overall_rating" data-rating="{{ layer_rating }}"></div>
 		<g:plusone size="small" href="http://{{ request.get_host }}{{ request.get_full_path }}"></g:plusone>
@@ -329,28 +340,26 @@
         {% for extension, type, link in layer.download_links %}
         <a href="{{link}}">{{type}}</a>
         {% endfor %}
-    </p>    
+    </p>
 
-    <p> <strong>{% trans "Metadata" %}: </strong>
-        {% for mimetype, mdtype, link in layer.metadata_links %}
-            <a href="{{link}}">{{mdtype}}</a>
-        {% empty %}
-            <em> {% trans "No metadata links provided for this data." noop %} </em>
-        {% endfor %}
-    </p> 
     {% endif %}
 
-   
+    <h3>{% trans "Metadata" %}: </h3>
+    <p>
+        {% for mimetype, mdtype, link in layer.metadata_links %}
+        <a href="{{link}}">{{mdtype}}</a>
+        {% empty %}
+        <em> {% trans "No metadata links provided for this data." noop %} </em>
+        {% endfor %}
+    </p>
 
     <h3> {% trans "Legend" %} </h3>
-    {% comment %}
-    {% blocktrans %}
-    The request below accepts more parameters, like fontName ( fontName=DejaVu ) and scale ( SCALE=17471330.182978604 ).
-    A full list of options can be found at: http://docs.geoserver.org/latest/en/user/services/wms/get_legend_graphic/legendgraphic.html
-    {% endblocktrans %}
-    {% endcomment %}
     <p>
-        <img src="{{ GEOSERVER_BASE_URL }}wms?request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer={{ layer.typename }}&format=image%2Fpng&legend_options=fontAntiAliasing%3Atrue%3BfontSize%3A12%3B" />
+    {% if layer.service and layer.service.ptype == "gxp_wmscsource" %}
+        <img src="{{ layer.service.base_url }}?request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer={{ layer.typename }}&version=1.1.0%2Fpng&legend_options=fontAntiAliasing%3Atrue%3BfontSize%3A12%3B" />
+    {% else %}
+        <img src="{{ GEOSERVER_BASE_URL }}wms?request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer={{ layer.typename }}&version=1.1.0&legend_options=fontAntiAliasing%3Atrue%3BfontSize%3A12%3B" />
+    {% endif %}
     </p>
 
     <h3>{% trans "Maps Which Use This Layer" %} </h3>
@@ -391,7 +400,7 @@
     {% is_certified user layer as certified %}
     {% object_certifications layer as certifications %}
     
-
+    {% if layer.local %}
     <h3> {% trans "Layer Styles" %} </h3>
     <p> {% trans "The following styles are associated with this data set.  Choose a style to view it in the preview to the left.  Click on a style name to view or edit the style." %}
         <br/>
@@ -437,6 +446,7 @@
         {% endif %}
 
     </p>
+    {% endif %}
 
 	<h3>Certifications</h3>
 	<ul>
@@ -471,15 +481,28 @@
     <ul>
         {% if user.is_authenticated %}
         {% if can_change %}
-        <li> <a href="{% url data_metadata layer.typename %}">
+        <li>
+            {% if layer.local %}
+            <a href="{% url data_metadata layer.typename %}">
+            {% else %}
+            <a href="{% url data_metadata layer.typename layer.service %}">
+            {% endif %}
             {% trans "Update the description of this data" %}
         </a> </li>
-        <li> <a href="{% url layer_contacts layer.typename %}">
+        <li>
+            {% if layer.local %}
+            <a href="{% url layer_contacts layer.typename%}">
+            {% else %}
+            <a href="{% url layer_contacts layer.typename layer.service%}">
+            {% endif %}
+
                 {% trans "Update the contacts for this data" %}
             </a> </li>
-        <li> <a href="{% url data_replace layer.typename %}">
+        {% if layer.local %}
+        <li> <a href="{% url data_replace layer.typename%}">
             {% trans "Upload a new version of this data" %}
         </a></li>
+        {% endif %}
         {% endif %}
         {% if can_delete %}
             <li><a href="{% url data_remove layer.typename %}">

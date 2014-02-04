@@ -7,7 +7,7 @@ paver
 pillow
 lxml
 
-OWSLib==0.4.0
+OWSLib
 Django==1.4
 django-extensions==0.8
 httplib2==0.7.4
@@ -32,8 +32,7 @@ defusedxml
 -e git+https://github.com/cga-harvard/geopy.git#egg=geopy
 geojson
 https://bitbucket.org/jespern/django-piston/get/5b3ef294fe89.zip
-#Uncomment the following to use the django debug toolbar
--e git+https://github.com/robhudson/django-debug-toolbar.git#egg=django-debug-toolbar
+
 boto
 #For scheduled tasks
 django-celery
@@ -47,3 +46,9 @@ jdcal
 vectorformats
 #For autocomplete
 django-autocomplete-light==1.4.5
+
+unidecode
+
+#ArcGIS REST services
+-e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest
+

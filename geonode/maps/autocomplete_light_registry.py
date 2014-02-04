@@ -1,5 +1,5 @@
 import autocomplete_light
-from models import Contact
+from geonode.maps.models import Contact
 from django.contrib.auth.models import User
 
 autocomplete_light.register(User,
@@ -10,7 +10,7 @@ autocomplete_light.register(User,
     autocomplete_js_attributes={'placeholder': 'name or email..',},
 )
 
-# This will generate a PersonAutocomplete class
+# This will generate a ContactAutocomplete class
 autocomplete_light.register(Contact,
     # Just like in ModelAdmin.search_fields
     search_fields=['^name',  '^email', '^user__username', '^user__email'],

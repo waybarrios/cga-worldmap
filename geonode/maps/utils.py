@@ -759,6 +759,11 @@ def _create_db_featurestore(name, data, overwrite = False, charset = None):
             cat.delete(ds, purge=True)
         raise
 
+def llbbox_to_mercator(llbbox):
+    minlonlat = forward_mercator([llbbox[0],llbbox[1]])
+    maxlonlat = forward_mercator([llbbox[2],llbbox[3]])
+    return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
+
 def forward_mercator(lonlat):
     """
         Given geographic coordinates, return a x,y tuple in spherical mercator.

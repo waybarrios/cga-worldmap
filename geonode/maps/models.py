@@ -2,7 +2,8 @@
 import threading
 from django.conf import settings
 from django.db import models
-from geonode.maps.owslib_csw import CatalogueServiceWeb
+from geoserver.resource import FeatureType
+from owslib.csw import CatalogueServiceWeb
 from geoserver.catalog import Catalog
 from geonode.core.models import PermissionLevelMixin
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
@@ -28,13 +29,13 @@ from django.core.cache import cache
 import sys
 import re
 from geonode.maps.encode import despam, XssCleaner
-from geonode.flexidates import FlexiDateField, FlexiDateFormField
 
 
 logger = logging.getLogger("geonode.maps.models")
 
 
 ows_sub = re.compile(r"[&\?]+SERVICE=WMS|[&\?]+REQUEST=GetCapabilities", re.IGNORECASE)
+
 
 
 def bbox_to_wkt(x0, x1, y0, y1, srid="4326"):
@@ -579,6 +580,13 @@ DEFAULT_CONTENT=_(
   and improve upon.</p>'
 )
 
+def _get_service_and_typename(layername):
+    service_typename = layername.split(":")
+    service = service_typename[0]
+    if service != settings.DEFAULT_WORKSPACE:
+        return [service, ':'.join(service_typename[1:])]
+    else:
+        return [None,layername]
 
 class GeoNodeException(Exception):
     pass
@@ -632,10 +640,32 @@ class Contact(models.Model):
     def username(self):
         return u"%s" % (self.name if self.name else self.user.username)
 
+class Role(models.Model):
+    """
+    Roles are a generic way to create groups of permissions.
+    """
+    value = models.CharField('Role', choices= [(x, x) for x in ROLE_VALUES], max_length=255, unique=True)
+    permissions = models.ManyToManyField(Permission, verbose_name=_('permissions'), blank=True)
+
+    created_dttm = models.DateTimeField(auto_now_add=True)
+    """
+    The date/time the object was created.
+    """
+
+    last_modified = models.DateTimeField(auto_now=True)
+    """
+    The last time the object was modified.
+    """
+
+    def __unicode__(self):
+        return self.get_value_display()
+
+
 def create_user_profile(sender, instance, created, **kwargs):
     profile, created = Contact.objects.get_or_create(user=instance, defaults={'name': instance.username})
 
 signals.post_save.connect(create_user_profile, sender=User)
+
 
 
 _viewer_projection_lookup = {
@@ -689,9 +719,10 @@ class LayerManager(models.Manager):
 
     def __init__(self):
         models.Manager.__init__(self)
+        self.geonetwork = GeoNetwork(settings.GEONETWORK_BASE_URL, settings.GEONETWORK_CREDENTIALS[0], settings.GEONETWORK_CREDENTIALS[1])
         url = "%srest" % settings.GEOSERVER_BASE_URL
         self.gs_catalog = Catalog(url, _user, _password)
-        self.geonetwork = GeoNetwork(settings.GEONETWORK_BASE_URL, settings.GEONETWORK_CREDENTIALS[0], settings.GEONETWORK_CREDENTIALS[1])
+
 
     @property
     def gn_catalog(self):
@@ -898,7 +929,7 @@ class Layer(models.Model, PermissionLevelMixin):
     uuid = models.CharField(max_length=36)
     typename = models.CharField(max_length=128, unique=True)
     owner = models.ForeignKey(User, blank=True, null=True)
-
+    service = models.ForeignKey('services.Service', null=True, blank=True, related_name='layer_set')
     contacts = models.ManyToManyField(Contact, through='ContactRole')
 
     # section 1
@@ -969,6 +1000,8 @@ class Layer(models.Model, PermissionLevelMixin):
     # Section 8
     data_quality_statement = models.TextField(_('data quality statement'), blank=True, null=True)
 
+
+
     # Section 9
     # see metadata_author property definition below
 
@@ -988,7 +1021,7 @@ class Layer(models.Model, PermissionLevelMixin):
         """Returns a list of (mimetype, URL) tuples for downloads of this data
         in various formats."""
 
-        if not self.downloadable:
+        if not self.downloadable or self.storeType == "remoteStore":
             return None
 
         bbox = self.llbbox_coords()
@@ -1140,7 +1173,7 @@ class Layer(models.Model, PermissionLevelMixin):
             msg = "CSW Record Missing for layer [%s]" % self.typename
             raise GeoNodeException(msg)
 
-        if(csw_layer.uri != self.get_absolute_url()):
+        if(csw_layer.uris and csw_layer.uris[0]['url'] != self.get_absolute_url()):
             msg = "CSW Layer URL does not match layer URL for layer [%s]" % self.typename
 
             # Visit get_absolute_url and make sure it does not give a 404
@@ -1165,6 +1198,23 @@ class Layer(models.Model, PermissionLevelMixin):
             logger.debug("cache created for layer %s", self.typename)
         return attribute_fields
 
+    def set_layer_attributes(self):
+        attrNames = self.attribute_names
+        if attrNames is not None:
+            logger.debug("Attributes are not None")
+            iter = 1
+            mark_searchable = True
+            for field, ftype in attrNames.iteritems():
+                if field is not None and  ftype.find("gml:") != 0:
+                    las = LayerAttribute.objects.filter(layer=self, attribute=field)
+                    if len(las) == 0:
+                        la = LayerAttribute.objects.create(layer=self, attribute=field, attribute_label=field.title(), attribute_type=ftype, searchable=(ftype == "xsd:string" and mark_searchable), display_order = iter)
+                        la.save()
+                        if la.searchable:
+                            mark_searchable = False
+                        iter+=1
+        else:
+            logger.debug("No attributes found")
 
     def attribute_config(self):
         #Get custom attribute sort order and labels if any
@@ -1217,8 +1267,9 @@ class Layer(models.Model, PermissionLevelMixin):
     @property
     def attribute_names(self):
         from ordereddict import OrderedDict
-        if self.resource.resource_type == "featureType":
-            dft_url = settings.GEOSERVER_BASE_URL + "wfs?" + urllib.urlencode({
+        if not self.local or self.resource.resource_type == "featureType":
+            dft_url = settings.GEOSERVER_BASE_URL if self.local else re.sub('wms\/?$', '/', self.service.base_url)
+            dft_url += "wfs?" + urllib.urlencode({
                 "service": "wfs",
                 "version": "1.0.0",
                 "request": "DescribeFeatureType",
@@ -1248,7 +1299,7 @@ class Layer(models.Model, PermissionLevelMixin):
             except Exception:
                 atts = {}
             return atts
-        elif self.resource.resource_type == "coverage":
+        elif self.local and self.resource.resource_type == "coverage":
             dc_url = settings.GEOSERVER_BASE_URL + "wcs?" + urllib.urlencode({
                 "service": "wcs",
                 "version": "1.1.0",
@@ -1278,6 +1329,7 @@ class Layer(models.Model, PermissionLevelMixin):
             except Exception:
                 atts = {}
             return atts
+        return {}
 
     @property
     def display_type(self):
@@ -1287,7 +1339,8 @@ class Layer(models.Model, PermissionLevelMixin):
             }).get(self.storeType, "Data")
 
     def delete_from_geoserver(self):
-        cascading_delete(Layer.objects.gs_catalog, self.resource)
+        if self.local:
+            cascading_delete(Layer.objects.gs_catalog, self.resource)
 
     def delete_from_geonetwork(self):
         gn = Layer.objects.gn_catalog
@@ -1307,29 +1360,35 @@ class Layer(models.Model, PermissionLevelMixin):
     @property
     def resource(self):
         if not hasattr(self, "_resource_cache"):
-            cat = Layer.objects.gs_catalog
-            try:
-                ws = cat.get_workspace(self.workspace)
-            except AttributeError:
-                # Geoserver is not running
-                raise RuntimeError("Geoserver cannot be accessed, are you sure it is running in: %s" %
-                                   (settings.GEOSERVER_BASE_URL))
-            try:
-                store = cat.get_store(self.store, ws)
-                self._resource_cache = cat.get_resource(self.name, store)
-            except:
-                logger.error("Store for %s does not exist", self.name)
+            if self.local:
+                cat = Layer.objects.gs_catalog
+                try:
+                    ws = cat.get_workspace(self.workspace)
+                except AttributeError:
+                    # Geoserver is not running
+                    raise RuntimeError("Geoserver cannot be accessed, are you sure it is running in: %s" %
+                                (settings.GEOSERVER_BASE_URL))
+                try:
+                    store = cat.get_store(self.store, ws)
+                    self._resource_cache = cat.get_resource(self.name, store)
+                except:
+                    logger.error("Store for %s does not exist", self.name)
+                    return None
+            else:
                 return None
         return self._resource_cache
 
+
     def _get_metadata_links(self):
-        return self.resource.metadata_links
+        if self.local:
+            return self.resource.metadata_links
+        return None
 
     def _set_metadata_links(self, md_links):
         try:
             self.resource.metadata_links = md_links
         except Exception, ex:
-            logger.error("Exception occurred in _set_metadata_links for %s: %s", str(ex))
+            logger.error("Exception occurred in _set_metadata_links:  %s", str(ex))
 
     metadata_links = property(_get_metadata_links, _set_metadata_links)
 
@@ -1372,6 +1431,39 @@ class Layer(models.Model, PermissionLevelMixin):
     def metadata_author_role(self):
         role = Role.objects.get(value='author')
         return role
+
+    @property
+    def local(self):
+        """
+        Tests whether this layer is served by the GeoServer instance that is
+        paired with the GeoNode site.
+        """
+        if self.service:
+            return self.service.base_url == (settings.GEOSERVER_BASE_URL + "wms")
+        else:
+            return True
+
+    @property
+    def ows_url(self):
+        if self.service:
+            return self.service.base_url
+        else:
+            return settings.GEOSERVER_BASE_URL + "wms"
+
+    @property
+    def default_stylename(self):
+        if self.local:
+            return self.default_style.name
+        else:
+            return ''
+
+    @property
+    def ptype(self):
+        if self.service and not self.local:
+            return self.service.ptype()
+        else:
+            return "gxp_gnsource"
+
 
     def _set_poc(self, poc):
         # reset any poc asignation to this layer
@@ -1485,7 +1577,10 @@ class Layer(models.Model, PermissionLevelMixin):
         self.geographic_bounding_box = bbox_to_wkt(box[0], box[1], box[2], box[3], srid=srid )
 
     def get_absolute_url(self):
-        return "/data/%s" % (self.typename)
+        if self.local:
+            return "/data/%s" % (self.typename)
+        else:
+            return "/data/%s:%s" % (self.service.name, self.typename)
 
     def __str__(self):
         return "%s Layer" % self.typename
@@ -1535,16 +1630,22 @@ class Layer(models.Model, PermissionLevelMixin):
             cfg['group'] = self.topic_category.title
         else:
             cfg['group'] = 'General'
-        cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
+        if self.local:
+            cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
+        else:
+            cfg['url'] = self.service.base_url
+            cfg['ptype'] = self.service.ptype()
         cfg['srs'] = self.srs
         cfg['bbox'] = json.loads(self.bbox)
         cfg['llbbox'] = json.loads(self.llbbox)
-        cfg['queryable'] = (self.storeType == 'dataStore')
+        cfg['queryable'] = (self.storeType != 'coverageStore')
         cfg['attributes'] = self.layer_attributes()
         cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=self)
         cfg['visibility'] = True
         cfg['abstract'] = self.abstract
         cfg['styles'] = ''
+        if not self.local:
+            cfg['source_params'] = {"ptype":self.ptype, "remote": True, "url": cfg["url"], "name": self.service.name}
         return cfg
 
     def queue_gazetteer_update(self):
@@ -1609,7 +1710,6 @@ class Layer(models.Model, PermissionLevelMixin):
         logger.info("Save new bounds to geonetwork")
         self.save_to_geonetwork()
 
-
 class LayerAttributeManager(models.Manager):
     """Helper class to access filtered attributes
     """
@@ -1645,6 +1745,38 @@ class LayerAttribute(models.Model):
 
     def __unicode__(self):
         return self.attribute
+
+class ContactRole(models.Model):
+    """
+    ContactRole is an intermediate model to bind Contacts and Layers and apply roles.
+    """
+    contact = models.ForeignKey(Contact)
+    layer = models.ForeignKey(Layer)
+    role = models.ForeignKey(Role)
+
+    def clean(self):
+        """
+        Make sure there is only one poc and author per layer
+        """
+        if (self.role == self.layer.poc_role) or (self.role == self.layer.metadata_author_role):
+            contacts = self.layer.contacts.filter(contactrole__role=self.role)
+            if contacts.count() == 1:
+                # only allow this if we are updating the same contact
+                if self.contact != contacts.get():
+                    raise ValidationError('There can be only one %s for a given layer' % self.role)
+        if self.contact.user is None:
+            # verify that any unbound contact is only associated to one layer
+            bounds = ContactRole.objects.filter(contact=self.contact).count()
+            if bounds > 1:
+                raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
+            elif bounds == 1:
+                # verify that if there was one already, it corresponds to this instace
+                if ContactRole.objects.filter(contact=self.contact).get().id != self.id:
+                    raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
+
+    class Meta:
+        unique_together = (("contact", "layer", "role"),)
+
 
 
 class Map(models.Model, PermissionLevelMixin):
@@ -1761,7 +1893,7 @@ class Map(models.Model, PermissionLevelMixin):
         layers = []
         for map_layer in map_layers:
             if map_layer.local():
-                layer =  Layer.objects.get(typename=map_layer.name)
+                layer =  Layer.objects.get(typename=map_layer.name,service=None)
                 layers.append(layer)
             else:
                 pass
@@ -2145,7 +2277,7 @@ class MapLayer(models.Model):
         if self.ows_url == (settings.GEOSERVER_BASE_URL + "wms"):
             isLocal = cache.get('islocal_' + self.name)
             if isLocal is None:
-                isLocal = Layer.objects.filter(typename=self.name).count() != 0
+                isLocal = Layer.objects.filter(typename=self.name,service=None).count() != 0
                 cache.add('islocal_' + self.name, isLocal)
             return isLocal
         else:
@@ -2189,7 +2321,7 @@ class MapLayer(models.Model):
 
         try:
             cfg = json.loads(self.layer_params)
-        except Exception:
+        except Exception, e:
             cfg = dict()
 
         if self.format: cfg['format'] = self.format
@@ -2205,36 +2337,36 @@ class MapLayer(models.Model):
             cfg['url'] = ows_sub.sub('', cfg['url'])
         if self.group: cfg["group"] = self.group
         cfg["visibility"] = self.visibility
-
-        if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
-            #Get parameters from GeoNode instead of WMS GetCapabilities
-            try:
-                gnLayer = Layer.objects.get(typename=self.name)
-                if gnLayer.srs: cfg['srs'] = gnLayer.srs
-                if gnLayer.bbox: cfg['bbox'] = json.loads(gnLayer.bbox)
-                if gnLayer.llbbox: cfg['llbbox'] = json.loads(gnLayer.llbbox)
-                cfg['attributes'] = (gnLayer.layer_attributes())
-                attribute_cfg = gnLayer.attribute_config()
-                if "getFeatureInfo" in attribute_cfg:
-                    cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
-                cfg['queryable'] = (gnLayer.storeType == 'dataStore'),
-                cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=gnLayer)
-                #cfg["displayOutsideMaxExtent"] = user is not None and  user.has_perm('maps.change_layer', obj=gnLayer)
-                cfg['visibility'] = cfg['visibility'] and not cfg['disabled']
-                cfg['abstract'] = gnLayer.abstract
-                cfg['styles'] = self.styles
-            except Exception, e:
-                # Give it some default values so it will still show up on the map, but disable it in the layer tree
-                cfg['srs'] = 'EPSG:900913'
-                cfg['llbbox'] = [-180,-90,180,90]
-                cfg['attributes'] = []
-                cfg['queryable'] =False,
-                cfg['disabled'] = True
-                cfg['visibility'] = False
-                cfg['abstract'] = ''
-                cfg['styles'] =''
-                logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
-        elif self.source_params.find( "gxp_hglsource") > -1:
+        source = json.loads(self.source_params)
+        if self.name is not None and (source["ptype"] == "gxp_gnsource"):
+            #Get parameters from GeoNode instead of WMS GetCapabilities if possible
+                try:
+                    gnLayer = Layer.objects.get(typename=self.name,service=None)
+                    if gnLayer.srs: cfg['srs'] = gnLayer.srs
+                    if gnLayer.bbox: cfg['bbox'] = json.loads(gnLayer.bbox)
+                    if gnLayer.llbbox: cfg['llbbox'] = json.loads(gnLayer.llbbox)
+                    cfg['attributes'] = (gnLayer.layer_attributes())
+                    attribute_cfg = gnLayer.attribute_config()
+                    if "getFeatureInfo" in attribute_cfg:
+                        cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
+                    cfg['queryable'] = re.search('dataStore',gnLayer.storeType) is not None,
+                    cfg['disabled'] =  user is not None and not user.has_perm('maps.view_layer', obj=gnLayer)
+                    cfg['visibility'] = cfg['visibility'] and not cfg['disabled']
+                    cfg['abstract'] = gnLayer.abstract
+                    cfg['styles'] = self.styles
+                except Exception, e:
+                    # Give it some default values so it will still show up on the map, but disable it in the layer tree
+                    if self.source_params.find( "gxp_gnsource") > -1:
+                        cfg['srs'] = 'EPSG:900913'
+                        cfg['llbbox'] = [-180,-90,180,90]
+                        cfg['attributes'] = []
+                        cfg['queryable'] =False,
+                        cfg['disabled'] = True
+                        cfg['visibility'] = False
+                        cfg['abstract'] = ''
+                        cfg['styles'] =''
+                        logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
+        if self.source_params.find( "gxp_hglsource") > -1:
             # call HGL ServiceStarter asynchronously to load the layer into HGL geoserver
             from geonode.queue.tasks import loadHGL
             loadHGL.delay(self.name)
@@ -2249,10 +2381,14 @@ class MapLayer(models.Model):
     @property
     def local_link(self):
         if self.local():
-            layer = Layer.objects.get(typename=self.name)
+            layer = Layer.objects.get(typename=self.name,service=None)
             link = "<a href=\"%s\">%s</a>" % (layer.get_absolute_url(),layer.title)
         else:
-            link = "<span>%s</span> " % self.name
+            remotelayer = Layer.objects.filter(typename=self.name,service__base_url=self.ows_url)
+            if len(remotelayer) == 1:
+                link = "<a href=\"%s\">%s</a>" % (remotelayer[0].get_absolute_url(),remotelayer[0].title)
+            else:
+                link = "<span>%s</span> " % self.name
         return link
 
     class Meta:
@@ -2261,57 +2397,6 @@ class MapLayer(models.Model):
     def __unicode__(self):
         return '%s?layers=%s' % (self.ows_url, self.name)
 
-class Role(models.Model):
-    """
-    Roles are a generic way to create groups of permissions.
-    """
-    value = models.CharField('Role', choices= [(x, x) for x in ROLE_VALUES], max_length=255, unique=True)
-    permissions = models.ManyToManyField(Permission, verbose_name=_('permissions'), blank=True)
-
-    created_dttm = models.DateTimeField(auto_now_add=True)
-    """
-    The date/time the object was created.
-    """
-
-    last_modified = models.DateTimeField(auto_now=True)
-    """
-    The last time the object was modified.
-    """
-
-    def __unicode__(self):
-        return self.get_value_display()
-
-
-class ContactRole(models.Model):
-    """
-    ContactRole is an intermediate model to bind Contacts and Layers and apply roles.
-    """
-    contact = models.ForeignKey(Contact)
-    layer = models.ForeignKey(Layer)
-    role = models.ForeignKey(Role)
-
-    def clean(self):
-        """
-        Make sure there is only one poc and author per layer
-        """
-        if (self.role == self.layer.poc_role) or (self.role == self.layer.metadata_author_role):
-            contacts = self.layer.contacts.filter(contactrole__role=self.role)
-            if contacts.count() == 1:
-                # only allow this if we are updating the same contact
-                if self.contact != contacts.get():
-                    raise ValidationError('There can be only one %s for a given layer' % self.role)
-        if self.contact.user is None:
-            # verify that any unbound contact is only associated to one layer
-            bounds = ContactRole.objects.filter(contact=self.contact).count()
-            if bounds > 1:
-                raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
-            elif bounds == 1:
-                # verify that if there was one already, it corresponds to this instace
-                if ContactRole.objects.filter(contact=self.contact).get().id != self.id:
-                    raise ValidationError('There can be one and only one layer linked to an unbound contact' % self.role)
-
-    class Meta:
-        unique_together = (("contact", "layer", "role"),)
 
 def delete_layer(instance, sender, **kwargs):
     """
@@ -2326,9 +2411,8 @@ def post_save_layer(instance, sender, **kwargs):
     if (re.search("coverageStore|dataStore", instance.storeType)):
         logger.info("Call save_to_geoserver for %s", instance.name)
         instance.save_to_geoserver()
-
-    if kwargs['created']:
-        instance._populate_from_gs()
+        if kwargs['created']:
+            instance._populate_from_gs()
 
     instance.save_to_geonetwork()
 
@@ -2344,6 +2428,7 @@ def post_save_layer(instance, sender, **kwargs):
 
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)
+
 
 
 

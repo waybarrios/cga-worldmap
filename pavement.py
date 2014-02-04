@@ -393,6 +393,17 @@ def package_bootstrap(options):
              "need this command, run: pip install virtualenv")
 
 @task
+@needs(['start'])
+@cmdopts([
+             ('bind=', 'b', 'Bind server to provided IP address and port number.')
+         ], share_with=['start_django'])
+def host():
+    """
+    Start GeoNode (Django, GeoServer & Client)
+    """
+    info("Deprecated - use 'paver start' instead")
+
+@task
 @needs(['install_deps',
         'start_django',
         'start_geoserver'])
@@ -436,7 +447,7 @@ def stop():
     ('bind=', 'b', 'Bind server to provided IP address and port number.')
 ])
 @task
-@needs(['install_dev_deps'])
+@needs(['install_deps'])
 def start_django():
     """
     Start the GeoNode Django application
@@ -450,10 +461,10 @@ def start_django():
     ('bind=', 'b', 'IP address to bind to. Default is localhost.')
 ])
 def start_geoserver(options):
-    from geonode.settings import GEOSERVER_BASE_URL 
+    from django.conf import settings
     
     url = "http://localhost:8080/geoserver/"
-    if GEOSERVER_BASE_URL != url:
+    if settings.GEOSERVER_BASE_URL != url:
         print 'your GEOSERVER_BASE_URL does not match %s' % url
         sys.exit(1)
 	
@@ -476,7 +487,7 @@ def start_geoserver(options):
 
     info("Logging servlet output to jetty.log...")
     info("Jetty is starting up, please wait...")
-    waitfor(GEOSERVER_BASE_URL)
+    waitfor(settings.GEOSERVER_BASE_URL)
     info("Development GeoServer/GeoNetwork is running")
     sh('python manage.py updatelayers') 
   

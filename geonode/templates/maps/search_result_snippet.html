@@ -20,11 +20,11 @@
 </p>
 
 <p><b>{% trans "Provided by:" %}</b>
-{% if rec.contact.name %} {# and rec.attribution.href %} #}
-  {% if rec.contact.onlineresource %}
-    <a href="{{ rec.contact.onlineresource.url }}">{{ rec.contact.name }}</a>
+{% if rec.contact.0.name %} {# and rec.contact.0.onlineresource %} #}
+  {% if rec.contact.0.onlineresource %}
+    <a href="{{ rec.contact.0.onlineresource.url }}">{{ rec.contact.0.name }}</a>
   {% else %}
-    {{ rec.contact.name }}
+    {{ rec.contact.0.name }}
   {% endif %}
 {% else %}
 <em>{% trans "No attribution information is provided for this layer." %}</em>

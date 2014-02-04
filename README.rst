@@ -94,6 +94,8 @@ user: wm_user
 password: wm_password
 
 
+  mkvirtualenv worldmap
+
   git clone git://github.com/cga-harvard/cga-worldmap.git cga-worldmap
   
   cd cga-worldmap

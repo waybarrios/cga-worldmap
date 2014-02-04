@@ -20,7 +20,8 @@ from django.template.defaultfilters import slugify
 
 import math
 import httplib2
-from owslib.csw import namespaces
+from owslib import fes
+from owslib.csw import namespaces, CswRecord
 from owslib.util import nspath
 import re
 from urllib import urlencode
@@ -29,13 +30,13 @@ import unicodedata
 from django.db.models import Q
 import logging
 from geonode.flexidates import FlexiDateFormField
+from geonode.contrib.services.models import Service
 import taggit
 from geonode.maps.utils import forward_mercator
-from geonode.maps.owslib_csw import CswRecord
 from django.utils.html import escape
 from django.forms.models import inlineformset_factory
 from django.core.cache import cache
-from geonode.maps.forms import LayerCreateForm, GEOMETRY_CHOICES
+from geonode.maps.forms import LayerCreateForm, GEOMETRY_CHOICES, MapForm, LayerForm, GazetteerForm, PocForm, LayerContactForm
 
 import itertools
 from registration.models import RegistrationProfile
@@ -46,8 +47,9 @@ from datetime import datetime, timedelta
 from geonode.maps.gs_helpers import get_sld_for, get_postgis_bbox
 from geonode.maps.encode import num_encode, num_decode
 from django.db import transaction
-import autocomplete_light
 from geonode.maps.encode import despam, XssCleaner
+import geonode.maps.autocomplete_light_registry
+from geonode.maps.models import _get_service_and_typename
 
 logger = logging.getLogger("geonode.maps.views")
 
@@ -87,94 +89,6 @@ def default_map_config():
 
 def bbox_to_wkt(x0, x1, y0, y1, srid="4326"):
     return 'SRID='+srid+';POLYGON(('+x0+' '+y0+','+x0+' '+y1+','+x1+' '+y1+','+x1+' '+y0+','+x0+' '+y0+'))'
-
-
-class GazetteerForm(forms.Form):
-
-    project = forms.CharField(label=_('Project'), max_length=128, required=False)
-    startDate = forms.ModelChoiceField(label = _("Start Date attribute"),
-        required=False,
-        queryset = LayerAttribute.objects.none())
-
-    startDateFormat = forms.CharField(label=_("Date format"), max_length=256, required=False)
-
-    endDate = forms.ModelChoiceField(label = _("End Date attribute"),
-        required=False,
-        queryset = LayerAttribute.objects.none())
-
-    endDateFormat = forms.CharField(label=_("Date format"), max_length=256, required=False)
-
-
-class LayerContactForm(forms.Form):
-    poc = forms.ModelChoiceField(empty_label = _("Person outside WorldMap (fill form)"),
-        label = "*" + _("Point Of Contact"), required=False,
-        queryset = Contact.objects.exclude(user=None),
-        widget=autocomplete_light.ChoiceWidget('ContactAutocomplete'))
-
-    metadata_author = forms.ModelChoiceField(empty_label = _("Person outside WorldMap (fill form)"),
-        label = _("Metadata Author"), required=False,
-        queryset = Contact.objects.exclude(user=None),
-        widget=autocomplete_light.ChoiceWidget('ContactAutocomplete'))
-
-    class Meta:
-        model = Contact
-
-
-class LayerForm(forms.ModelForm):
-    from geonode.maps.models import CONSTRAINT_OPTIONS
-    CONSTRAINT_HELP = _('''<p>Please choose the appropriate type of restriction (if any) for the use of your data. 
-    Then use the "Constraints Other" form below to provide any necessary details.</p>
-    <p>
-    Public Domain Dedication and License<br />
-    http://opendatacommons.org/licenses/pddl/
-    </p>
-    <p>
-    Attribution License (ODC-By)<br />
-    http://opendatacommons.org/licenses/by/
-    </p>
-    <p>
-    Open Database License (ODC-ODbL)<br />
-    http://opendatacommons.org/licenses/odbl/
-    </p>
-    <p>
-    CC-BY-SA<br />
-    http://creativecommons.org/licenses/by-sa/2.0/
-    ''')
-    
-    map_id = forms.CharField(widget=forms.HiddenInput(), initial='', required=False)
-    date = forms.DateTimeField(label='*' + (_('Date')), widget=forms.SplitDateTimeWidget)
-    date.widget.widgets[0].attrs = {"class":"date"}
-    date.widget.widgets[1].attrs = {"class":"time"}
-    temporal_extent_start = FlexiDateFormField(required=False,label= _('Temporal Extent Start Date'))
-    temporal_extent_end = FlexiDateFormField(required=False,label= _('Temporal Extent End Date'))
-    title = forms.CharField(label = '*' + _('Title'), max_length=255)
-    abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea(attrs={'cols': 60}))
-    constraints_use = forms.ChoiceField(label= _('Contraints'), choices=CONSTRAINT_OPTIONS, 
-                                        help_text=CONSTRAINT_HELP)
-    keywords = taggit.forms.TagField(required=False)
-    class Meta:
-        model = Layer
-        exclude = ('owner', 'contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename', 'topic_category', 'bbox', 'llbbox', 'srs', 'geographic_bounding_box', 'in_gazetteer', 'gazetteer_project' ) #, 'topic_category'
-
-class RoleForm(forms.ModelForm):
-    class Meta:
-        model = ContactRole
-        exclude = ('contact', 'layer')
-
-class PocForm(forms.Form):
-    contact = forms.ModelChoiceField(label = _("New point of contact"),
-                                     queryset = Contact.objects.exclude(user=None))
-
-
-class MapForm(forms.ModelForm):
-    keywords = taggit.forms.TagField(required=False)
-    title = forms.CharField()
-    abstract = forms.CharField(widget=forms.Textarea(attrs={'cols': 40, 'rows': 10}), required=False)
-    content = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, 'rows': 10, 'id':'mapdescription'}), required=False)
-
-    class Meta:
-        model = Map
-        exclude = ('contact', 'zoom', 'projection', 'center_x', 'center_y', 'owner', 'officialurl', 'urlsuffix', 'keywords', 'use_custom_template', 'group_params')
 
 
 
@@ -719,7 +633,8 @@ def additional_layers(request, map_obj, layerlist):
     bbox = None
     for layer_name in layerlist:
         try:
-            layer = Layer.objects.get(typename=layer_name)
+            service, typename = _get_service_and_typename(layer_name)
+            layer = Layer.objects.get(typename=typename, service__name=service)
         except ObjectDoesNotExist:
             # bad layer, skip
             continue
@@ -731,16 +646,18 @@ def additional_layers(request, map_obj, layerlist):
         group = layer.topic_category.title if layer.topic_category else "General"
         if group not in groups:
             groups.add(group)
-                
+
         layers.append(MapLayer(
                     map = map_obj,
                     name = layer.typename,
-                    ows_url = settings.GEOSERVER_BASE_URL + "wms",
+                    ows_url = layer.ows_url,
                     visibility = request.user.has_perm('maps.view_layer', obj=layer),
                     styles='',
                     group=group,
-                    source_params = u'{"ptype": "gxp_gnsource"}',
-                    layer_params= u'{"tiled":true, "title":" '+ layer.title + '", "format":"image/png","queryable":true}')
+                    source_params = json.dumps({"ptype":layer.ptype, "remote": (service is not None),
+                                                "name": (None if service is None else service)}),
+                    layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '","bbox":' \
+                                  + layer.bbox + ',"format":"image/png","queryable":true}')
                 )    
     return layers, groups, bbox
 
@@ -968,8 +885,12 @@ class LayerDescriptionForm(forms.Form):
 
 
 @login_required
-def layer_metadata(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+def layer_metadata(request, layername, service=None):
+    if service is not None:
+        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
+    else:
+        layer = get_object_or_404(Layer, typename=layername, service=None)
+
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
             return HttpResponse(loader.render_to_string('401.html',
@@ -1080,12 +1001,17 @@ def layer_metadata(request, layername):
                     return HttpResponse('success', status=200)
                 elif mapid != '' and str(mapid).lower() != 'new':
                     logger.debug("adding layer to map [%s]", str(mapid))
+
+                    ows_url = layer.service.base_url if layer.storeType == 'remoteStore' \
+                        else settings.GEOSERVER_BASE_URL + "wms"
+
+
                     maplayer = MapLayer.objects.create(map=Map.objects.get(id=mapid),
                         name = layer.typename,
                         group = layer.topic_category.title if layer.topic_category else 'General',
                         layer_params = '{"selected":true, "title": "' + layer.title + '"}',
                         source_params = '{"ptype": "gxp_gnsource"}',
-                        ows_url = settings.GEOSERVER_BASE_URL + "wms",
+                        ows_url = ows_url,
                         visibility = True,
                         stack_order = MapLayer.objects.filter(id=mapid).count()
                     )
@@ -1095,7 +1021,10 @@ def layer_metadata(request, layername):
                     if str(mapid) == "new":
                         return HttpResponseRedirect("/maps/new?layer" + layer.typename)
                     else:
-                        return HttpResponseRedirect("/data/" + layer.typename)
+                        if layer.local:
+                            return HttpResponseRedirect("/data/" + layer.typename)
+                        else:
+                            return HttpResponseRedirect("/data/" + layer.typename + "/" + layer.service.name)
 
         #Deal with a form submission via ajax
         if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
@@ -1199,8 +1128,13 @@ def layer_style(request, layername):
     else:
         return HttpResponse("Not allowed",status=403)
 
-def layer_detail(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+def layer_detail(request, layername, service=None):
+
+    service, typename = _get_service_and_typename(layername)
+
+
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+
     if not request.user.has_perm('maps.view_layer', obj=layer):
         return HttpResponse(loader.render_to_string('401.html',
             RequestContext(request, {'error_message':
@@ -1208,7 +1142,14 @@ def layer_detail(request, layername):
 
     metadata = layer.metadata_csw()
 
-    maplayer = MapLayer(name = layer.typename, styles=[layer.default_style.name], source_params = '{"ptype": "gxp_gnsource"}', ows_url = settings.GEOSERVER_BASE_URL + "wms",  layer_params= '{"tiled":true, "title":" '+ layer.title + '", ' + json.dumps(layer.attribute_config()) + '}')
+    attributes = (json.dumps(layer.attribute_config()) + ",") if layer.local else ''
+
+
+    maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
+        source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
+                        +  (None if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
+        layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
+        attributes + '"bbox": ' + layer.bbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     map_obj = Map(projection="EPSG:900913")
@@ -1301,7 +1242,7 @@ def upload_layer(request):
 
 @login_required
 def layer_replace(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+    layer = get_object_or_404(Layer, typename=layername, local=True)
     if not request.user.has_perm('maps.change_layer', obj=layer):
         return HttpResponse(loader.render_to_string('401.html',
             RequestContext(request, {'error_message':
@@ -1347,22 +1288,7 @@ def layer_replace(request, layername):
                                 la.delete()
 
                     #Add new layer attributes if they dont already exist
-                    if attrNames is not None:
-                        logger.debug("Attributes are not None")
-                        iter = 1
-                        mark_searchable = True
-                        for field, ftype in attrNames.iteritems():
-                            if re.search('geom|oid|objectid|gid', field, flags=re.I) is None:
-                                logger.debug("Field is [%s]", field)
-                                las = LayerAttribute.objects.filter(layer=saved_layer, attribute=field)
-                                if len(las) == 0:
-                                    la = LayerAttribute.objects.create(layer=saved_layer, attribute=field, attribute_label=field.title(), attribute_type=ftype, searchable=(ftype == "xsd:string" and mark_searchable), display_order = iter)
-                                    la.save()
-                                    if la.searchable:
-                                        mark_searchable = False
-                                    iter+=1
-                    else:
-                        logger.debug("No attributes found")
+                    saved_layer.set_layer_attributes()
 
                 except Exception, ex:
                     logger.debug("Attributes could not be saved:[%s]", str(ex))
@@ -1702,13 +1628,19 @@ def metadata_search(request):
     for doc in result['rows']:
         try:
             layer = Layer.objects.get(uuid=doc['uuid'])
-            doc['_local'] = True
-            doc['_permissions'] = {
-                'view': request.user.has_perm('maps.view_layer', obj=layer),
-                'change': request.user.has_perm('maps.change_layer', obj=layer),
-                'delete': request.user.has_perm('maps.delete_layer', obj=layer),
-                'change_permissions': request.user.has_perm('maps.change_layer_permissions', obj=layer),
-            }
+            is_local = layer.local
+            doc['_local'] = is_local
+            if is_local:
+                doc['_permissions'] = {
+                    'view': request.user.has_perm('maps.view_layer', obj=layer),
+                    'change': request.user.has_perm('maps.change_layer', obj=layer),
+                    'delete': request.user.has_perm('maps.delete_layer', obj=layer),
+                    'change_permissions': request.user.has_perm('maps.change_layer_permissions', obj=layer),
+                }
+            else:
+                doc['_permissions'] = {
+                    'view': request.user.has_perm('maps.view_layer', obj=layer),
+                    }
         except Layer.DoesNotExist:
             doc['_local'] = False
             pass
@@ -1716,14 +1648,16 @@ def metadata_search(request):
     result['success'] = True
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
-def _metadata_search(query, start, limit, sortby, sortorder, **kw):
+def _metadata_search(query, start, limit, sortby, sortorder='ASC', **kw):
 
     csw = get_csw()
 
     keywords = _split_query(query)
 
     if sortby:
-        sortby = 'dc:' + sortby
+        sortproperty = fes.SortBy([fes.SortProperty(sortby, sortorder)])
+    else:
+        sortproperty = None
 
     #Filter by category if present
     category = kw.get('topic_category', None)
@@ -1741,8 +1675,19 @@ def _metadata_search(query, start, limit, sortby, sortorder, **kw):
         for keyword in keywords:
             cql += " and csw:AnyText like '%%%s%%'" % keyword
 
+    constraints = []
+    if category:
+        constraints.append(fes.PropertyIsEqualTo(propertyname='gmd:topicCategory', literal=category))
 
-    csw.getrecords(keywords=keywords, startposition=start+1, maxrecords=limit, bbox=kw.get('bbox', None), sortby=sortby, sortorder=sortorder, cql=cql)
+    if profile:
+        constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal='%%profiles/%s/' % profile))
+
+    for keyword in keywords:
+        constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal=('%%%s%%' % keyword)))
+    if kw.get('bbox'):
+        constraints.append(fes.BBox(kw.get('bbox')))
+
+    csw.getrecords2(constraints=constraints, esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
 
     # build results
     # XXX this goes directly to the result xml doc to obtain
@@ -1868,21 +1813,10 @@ def _build_search_result(doc):
     result['uuid'] = rec.identifier
     result['abstract'] = rec.abstract
     result['keywords'] = [x for x in rec.subjects if x]
-    result['detail'] = rec.uri or ''
+    result['detail'] = rec.uris[0]['url'] or ''
 
     # XXX needs indexing ? how
     result['attribution'] = {'title': '', 'href': ''}
-
-    # XXX !_! pull out geonode 'typename' if there is one
-    # index this directly...
-    if rec.uri:
-        try:
-            result['name'] = urlparse(rec.uri).path.split('/')[-1]
-        except Exception:
-            pass
-    # fallback: use geonetwork uuid
-    if not result.get('name', ''):
-        result['name'] = rec.identifier
 
     # Take BBOX from GeoNetwork Result...
     # XXX this assumes all our bboxes are in this
@@ -2381,12 +2315,16 @@ def addlayers(request):
 
 def addLayerJSON(request):
     logger.debug("Enter addLayerJSON")
-    layername = request.POST.get('layername', False)
-    logger.debug("layername is [%s]", layername)
-    
-    if layername:
+    uuid = request.POST.get('uuid', False)
+    service_name = request.POST.get('service_name', False)
+    logger.debug("layername is [%s]", uuid)
+
+    if uuid or service_name:
         try:
-            layer = Layer.objects.get(typename=layername)
+            if uuid:
+                layer = Layer.objects.get(uuid=uuid)
+            else:
+                layer = _get_service_and_typename(service_name)
             if not request.user.has_perm("maps.view_layer", obj=layer):
                 return HttpResponse(status=401)
             sfJSON = {'layer': layer.layer_config(request.user)}
@@ -2396,12 +2334,13 @@ def addLayerJSON(request):
             logger.debug("Could not find matching layer: [%s]", str(e))
             return HttpResponse(str(e), status=500)
 
+
     else:
         return HttpResponse(status=500)
 
 
 def ajax_layer_edit_check(request, layername):
-    layer = get_object_or_404(Layer, typename=layername);
+    layer = get_object_or_404(Layer, typename=layername)
     editable = request.user.has_perm("maps.change_layer", obj=layer)
     return HttpResponse(
         str(editable),
@@ -2791,7 +2730,11 @@ def create_pg_layer(request):
             return HttpResponse(layer_form.errors, status='500')
 
 @login_required
-def layer_contacts(request, layername):
+def layer_contacts(request, layername, service=None):
+    if service is not None:
+        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
+    else:
+        layer = get_object_or_404(Layer, typename=layername, service=None)
     layer = get_object_or_404(Layer, typename=layername)
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
@@ -2843,7 +2786,10 @@ def layer_contacts(request, layername):
                 layer.poc = new_poc
                 layer.metadata_author = new_author
                 layer.save()
-                return HttpResponseRedirect("/data/" + layer.typename)
+                if layer.local:
+                    return HttpResponseRedirect("/data/" + layer.typename)
+                else:
+                    return HttpResponseRedirect("/data/" + service + "/" + layer.typename)
 
 
 
@@ -2908,3 +2854,4 @@ def mobilemap(request, mapid=None, snapshot=None):
         'maptitle': map_obj.title,
         'urlsuffix': get_suffix_if_custom(map_obj),
     }))
+

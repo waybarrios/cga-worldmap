@@ -79,7 +79,14 @@
 {% block main %}
 <div class="twocol">
     <h2> {% trans "Editing details for " %} {{ layer.typename }} </h2>
-    <form action="{% url data_metadata layer.typename %}" method="POST">
+
+    {% if layer.local %}
+    <form action="{% url data_metadata  layer.typename %}" method="POST">
+    {% else %}
+    <form action="{% url data_metadata layer.typename layer.service %}" method="POST">
+    {% endif %}
+
+
         {% csrf_token %}
         <ul class="form">
             {{ layer_form.as_ul }}

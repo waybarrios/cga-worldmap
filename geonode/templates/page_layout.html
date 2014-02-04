@@ -51,7 +51,14 @@
             	{% endautoescape %}
     		});
 		}
-   </script>        
+
+        $(document).ajaxStart(function ()
+        {
+            $('html').addClass('wait');
+        }).ajaxComplete(function () {
+            $('html').removeClass('wait');
+        });
+    </script>
 </head>
 <body>
 {% block start_body_js %}{% endblock %}
