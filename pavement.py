@@ -184,6 +184,15 @@ def build(options):
 
 @task
 @needs([
+    'build'
+])
+def setup(options):
+    """Get dependencies and generally prepare a WorldMap development environment."""
+    info("""Deprecated - use 'paver setup' instead""")
+
+
+@task
+@needs([
     'install_deps',
     'setup_geonode_client',
     'sync_django_db',
@@ -412,14 +421,14 @@ def host():
 ], share_with=['start_django'])
 def start():
     """
-    Start GeoNode (Django, GeoServer & Client)
+    Start WorldMap (Django, GeoServer & Client)
     """
-    info("GeoNode is now available.")
+    info("WorldMap is now available.")
 
 @task
 def stop_django():
     """
-    Stop the GeoNode Django application
+    Stop the WorldMap Django application
     """
     kill('python', 'runserver')
 
@@ -435,9 +444,9 @@ def stop_geoserver():
 @task
 def stop():
     """
-    Stop GeoNode
+    Stop WorldMap
     """
-    info("Stopping GeoNode ...")
+    info("Stopping WorldMap ...")
     stop_django()
     stop_geoserver()
 
@@ -450,7 +459,7 @@ def stop():
 @needs(['install_deps'])
 def start_django():
     """
-    Start the GeoNode Django application
+    Start the WorldMap Django application
     """
     bind = options.get('bind', '')
     sh('python manage.py runserver %s &' % bind)
@@ -646,14 +655,14 @@ def package(options):
     import geonode
 
     version = geonode.get_version()
-    # Use GeoNode's version for the package name.
+    # Use WorldMap's version for the package name.
     pkgname = 'worldmap-%s-all' % version
 
     # Create the output directory.
     out_pkg = path(pkgname)
     out_pkg_tar = path("%s.tar.gz" % pkgname)
 
-    # Create a distribution in zip format for the geonode python package.
+    # Create a distribution in zip format for the WorldMap python package.
     dist_dir = path('dist')
     dist_dir.rmtree()
     sh('python setup.py sdist --formats=zip')
