@@ -94,6 +94,7 @@ database name: wm_db
 user: wm_user
 password: wm_password
 
+Here are the instructions for Ubuntu 12.04, after above dependencies have been installed::
 
   # Setup virtualenv tools
   sudo pip install virtualenvwrapper
