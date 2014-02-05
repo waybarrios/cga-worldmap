@@ -1327,6 +1327,9 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 select: function(combo, record, index) {
                     var source = this.layerSources[record.get("id")];
                     var store = source.store;
+                    if (store.data.items.length == 0){
+                        store.reload();
+                    }
                     store.setDefaultSort('title', 'asc');
                     store.filterBy(function(r) {
                         return !!source.getProjection(r);
@@ -1347,7 +1350,13 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             iconCls: 'icon-add',
             cls: 'x-btn-link-medium x-btn-text',
             handler: function() {
-                newSourceWindow.show();
+                new Ext.Window({
+                    title: gxp.NewSourceDialog.prototype.title,
+                    modal: true,
+                    hideBorders: true,
+                    width: 300,
+                    items: newSourceDialog
+                }).show();
             }
         });
 
@@ -1359,20 +1368,35 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             handler: function() {
                 this.showFeedDialog();
                 this.searchWindow.hide();
-                newSourceWindow.hide();
-
             },
             scope: this
         });
 
         var app = this;
-        var newSourceWindow = new gxp.NewSourceWindow({
-            modal: true,
+        var newSourceDialog = {
+            xtype: "gxp_newsourcedialog",
+            header: false,
             listeners: {
-                "server-added": function(url, type) {
-                    newSourceWindow.setLoading();
+                "hide": function(cmp) {
+                    if (!this.outputTarget) {
+                        cmp.ownerCt.hide();
+                    }
+                },
+                "urlselected": function(newSourceDialog, url, type) {
+                    newSourceDialog.setLoading();
+                    var ptype;
+                    switch (type) {
+                        case 'TMS':
+                            ptype = "gxp_tmssource";
+                            break;
+                        case 'REST':
+                            ptype = 'gxp_arcrestsource';
+                            break;
+                        default:
+                            ptype = 'gxp_wmscsource';
+                    }
                     app.addLayerSource({
-                        config: {url: url, ptype: type},
+                        config: {url: url, ptype: ptype},
                         callback: function(id) {
                             // add to combo and select
                             var record = new sources.recordType({
@@ -1381,23 +1405,22 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                             });
                             sources.insert(0, [record]);
                             sourceComboBox.onSelect(record, 0);
-                            newSourceWindow.hide();
+                            newSourceDialog.hide();
                         },
-                        fallback: function() {
+                        fallback: function(source,msg) {
                             // TODO: wire up success/failure
-                            newSourceWindow.setError("Error contacting server.\nPlease check the url and try again.");
+                            newSourceDialog.setError(
+                                new Ext.Template(newSourceDialog.addLayerSourceErrorText).apply({type: type, msg: msg})
+                            );
                             app.busyMask.hide();
                         },
-                        scope: app
+                        scope: this
                     });
-                }
-            },
-            // hack to get the busy mask so we can close it in case of a
-            // communication failure
-            addSource: function(url, success, failure, scope) {
-                app.busyMask = scope.loadMask;
+                },
+                scope: this
             }
-        });
+        };
+
 
 
         var addLayerButton = new Ext.Button({
