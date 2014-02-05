@@ -2521,6 +2521,7 @@ def _send_permissions_email(user_email, map_layer_title, map_layer_url, map_laye
     #
     # send_mail(subject, message, settings.NO_REPLY_EMAIL, [user.email])
 
+
 def get_suffix_if_custom(map):
     if map.use_custom_template:
         if map.officialurl:

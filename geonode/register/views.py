@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth import login
+from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -121,8 +122,42 @@ def registercompleteOrganizationUser(request, template_name='registration/regist
                 return HttpResponseRedirect(request.user.get_profile().get_absolute_url())
 
     return render_to_response(template_name, RequestContext(request))
-    
-    
+
+def forgot_username(request):
+    """ Look up a username based on an email address, and send an email
+    containing the username if found"""
+
+    username_form = ForgotUsernameForm()
+
+    message = ''
+
+    site = Site.objects.get_current()
+
+    email_subject = _("Your username for " + site.name)
+
+    if request.method == 'POST':
+        username_form = ForgotUsernameForm(request.POST)
+        if username_form.is_valid():
+
+            users = User.objects.filter(
+                email=username_form.cleaned_data['email'])
+            if len(users) > 0:
+                username = users[0].username
+                email_message = email_subject + " : " + username
+                send_mail(email_subject, email_message,
+                          settings.DEFAULT_FROM_EMAIL,
+                          [username_form.cleaned_data['email']],
+                          fail_silently=False)
+                message = _("Your username has been emailed to you.")
+            else:
+                message = _("No user could be found with that email address.")
+
+    return render_to_response('account/forgot_username_form.html',
+                              RequestContext(request, {
+                                  'message': message,
+                                  'form': username_form
+                              }))
+
     
     
     
