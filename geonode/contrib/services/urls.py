@@ -27,5 +27,4 @@ urlpatterns = patterns('geonode.contrib.services.views',
     url(r'^(?P<service_id>\d+)/edit$', 'edit_service', name='edit_service'),
     url(r'^(?P<service_id>\d+)/remove', 'remove_service', name='remove_service'),
     url(r'^(?P<service_id>\d+)/ajax-permissions$', 'ajax_service_permissions', name='ajax_service_permissions'),
-    url(r'^service_layers$', 'service_layers', name='service_layers'),
 )

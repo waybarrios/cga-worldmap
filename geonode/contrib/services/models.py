@@ -71,6 +71,7 @@ class Service(models.Model, PermissionLevelMixin):
     LEVEL_WRITE = 'service_readwrite'
     LEVEL_ADMIN = 'service_admin'
 
+
     def set_default_permissions(self):
         self.set_gen_level(ANONYMOUS_USERS, self.LEVEL_READ)
         self.set_gen_level(AUTHENTICATED_USERS, self.LEVEL_READ)
