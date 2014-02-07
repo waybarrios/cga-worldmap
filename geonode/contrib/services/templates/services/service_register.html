@@ -9,7 +9,7 @@ $( document ).ready(function() {
     $("#service_register_form").submit(function(e) {
         $("#responseDiv").hide();
         $("#tableDiv").hide();
-        $("#errorDiv").hide();
+        $(".error").hide();
         $("#dataTable").html("");
         e.preventDefault();
         var url = $("#service_register_form").attr( "action" );
@@ -30,7 +30,8 @@ $( document ).ready(function() {
                     $("#tableDiv").show();
                 }
                 if (data.service_id) {
-                    $('#service_link').attr('href', "/services/" + data.service_id);
+                    $('#service_link').attr('href', "/services/" +
+                            data.service_id).text(data.service_title||data.service_name);
                 }
                 else {
                     $("#responseDiv").html(data.msg);
@@ -38,8 +39,8 @@ $( document ).ready(function() {
                 $("#responseDiv").show();
             },
             error: function(data) {
-                $("#errorDiv").html(data.responseText);
-                $("#errorDiv").show();
+                $(".error").html(data.responseText);
+                $(".error").show();
             }
         });
 
@@ -66,10 +67,12 @@ $( document ).ready(function() {
     </form>
 
     <div id="responseDiv" style="display:none;">
-        <p><a id="service_link">{%  trans "Service has been created." %}</a></p>
+        <h4>{%  trans "Service has been created:" %}</h4>
+        <h4><a id="service_link"></a>.</h4>
+        <p>{%  trans "Layers are being imported and will soon be available through Worldmap's search interface." %}.</p>
     </div>
 
-    <div id="errorDiv" style="display:none;">
+    <div class="error" style="display:none;">
     </div>
 
     <div id="tableDiv" style="display:none;">

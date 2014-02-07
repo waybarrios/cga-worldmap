@@ -1240,3 +1240,8 @@ table .span24 {
 }
 
 html.wait, html.wait * {cursor:wait !important;}
+
+.error {
+    color: #ff0000;
+    font-weight: bold;
+}

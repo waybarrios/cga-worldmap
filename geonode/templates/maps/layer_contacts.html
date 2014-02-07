@@ -40,7 +40,7 @@
             mapCrumb = "<a href=\"/maps/{{lastmap}}/\">{{lastmapTitle}}</a><span>&nbsp;/&nbsp;</span>";
         }
 
-        var titleTemplate = new Ext.Template(mapCrumb + "<a  href=\"/data/{{layer.typename}}\">{{layer.title|default:layer.typename}}</a><span>&nbsp;/&nbsp;Edit</span>");
+        var titleTemplate = new Ext.Template(mapCrumb + "<a  href=\"/data/{{layer.service_typename}}\">{{layer.title|default:layer.typename}}</a><span>&nbsp;/&nbsp;Edit</span>");
         Ext.DomHelper.overwrite(Ext.get("page-breadcrumb"), titleTemplate.apply());
 
         {% endautoescape %}
@@ -50,7 +50,7 @@
 {% block main %}
 <div class="twocol">
     <h2> {% trans "Editing contacts for " %} {{ layer.typename }} </h2>
-    <form action="{% url layer_contacts layer.service layer.typename %}" method="POST">
+    <form action="{% url layer_contacts layer.service_typename %}" method="POST">
         {% csrf_token %}
         <ul class="form">
             {{ contact_form.as_ul }}

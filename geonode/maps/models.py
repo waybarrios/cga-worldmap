@@ -926,7 +926,7 @@ class Layer(models.Model, PermissionLevelMixin):
     store = models.CharField(max_length=128)
     storeType = models.CharField(max_length=128)
     name = models.CharField(max_length=128)
-    uuid = models.CharField(max_length=36)
+    uuid = models.CharField(max_length=36,db_index=True)
     typename = models.CharField(max_length=128, unique=True)
     owner = models.ForeignKey(User, blank=True, null=True)
     service = models.ForeignKey('services.Service', null=True, blank=True, related_name='layer_set')
@@ -1414,6 +1414,8 @@ class Layer(models.Model, PermissionLevelMixin):
             return "WCS"
         if self.storeType == 'dataStore':
             return "WFS"
+        if self.storeType == 'remoteStore':
+            return self.service.type
 
     @property
     def publishing(self):
@@ -1464,6 +1466,12 @@ class Layer(models.Model, PermissionLevelMixin):
         else:
             return "gxp_gnsource"
 
+
+    def service_typename(self):
+        if self.local:
+            return self.typename
+        else:
+            return "%s:%s" % (self.service.name, self.typename)
 
     def _set_poc(self, poc):
         # reset any poc asignation to this layer
@@ -2368,8 +2376,8 @@ class MapLayer(models.Model):
                         logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
         if self.source_params.find( "gxp_hglsource") > -1:
             # call HGL ServiceStarter asynchronously to load the layer into HGL geoserver
-            from geonode.queue.tasks import loadHGL
-            loadHGL.delay(self.name)
+            from geonode.queue.tasks import load_hgl_layer
+            load_hgl_layer.delay(self.name)
 
 
         #Create cache of maplayer config that will last for 60 seconds (in case permissions or maplayer properties are changed)

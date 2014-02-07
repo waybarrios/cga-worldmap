@@ -483,29 +483,29 @@
         {% if can_change %}
         <li>
             {% if layer.local %}
-            <a href="{% url data_metadata layer.typename %}">
+            <a href="{% url data_metadata layer.service_typename %}">
             {% else %}
-            <a href="{% url data_metadata layer.typename layer.service %}">
+            <a href="{% url data_metadata layer.service_typename  %}">
             {% endif %}
             {% trans "Update the description of this data" %}
         </a> </li>
         <li>
             {% if layer.local %}
-            <a href="{% url layer_contacts layer.typename%}">
+            <a href="{% url layer_contacts layer.service_typename%}">
             {% else %}
-            <a href="{% url layer_contacts layer.typename layer.service%}">
+            <a href="{% url layer_contacts layer.service_typename%}">
             {% endif %}
 
                 {% trans "Update the contacts for this data" %}
             </a> </li>
         {% if layer.local %}
-        <li> <a href="{% url data_replace layer.typename%}">
+        <li> <a href="{% url data_replace layer.service_typename%}">
             {% trans "Upload a new version of this data" %}
         </a></li>
         {% endif %}
         {% endif %}
         {% if can_delete %}
-            <li><a href="{% url data_remove layer.typename %}">
+            <li><a href="{% url data_remove layer.service_typename %}">
             {% trans "Remove" %}
         </a></li>
         {% endif %}
@@ -514,10 +514,12 @@
         {% endif %}
     </ul>
     {% endif %}
+    {% if layer.local %}
     {% has_obj_perm user layer "maps.change_layer_permissions" as can_change_permissions %}
     {% if can_change_permissions %}
     <h3>{% trans "Permissions" %}</h3>
     <div id="permissions_form"></div>
+    {% endif %}
     {% endif %}
     {% endif %}
 </div>

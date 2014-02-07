@@ -30,7 +30,7 @@ DEBUG = TEMPLATE_DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'wm_db',
+        'NAME': 'wm_db_services',
         'USER': 'wm_user',
         'PASSWORD': 'wm_password',
         'HOST': 'localhost', 'PORT': '5432'
@@ -123,8 +123,8 @@ INSTALLED_APPS = (
     'south',
     'autocomplete_light',
     'djcelery',
-    'djkombu',
-    ''
+    'kombu.transport.django',
+
 
     # GeoNode internal apps
     'geonode.core',
@@ -465,8 +465,12 @@ USE_GAZETTEER = False
 #and gazetteer updates
 USE_QUEUE = False
 QUEUE_INTERVAL = '*/10'
+SERVICE_UPDATE_INTERVAL = '*/1'
+
 CELERY_IMPORTS = ("geonode.queue", )
 BROKER_URL = "django://"
+
+
 if USE_QUEUE:
     import djcelery
     djcelery.setup_loader()

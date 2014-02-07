@@ -886,10 +886,9 @@ class LayerDescriptionForm(forms.Form):
 
 @login_required
 def layer_metadata(request, layername, service=None):
-    if service is not None:
-        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
-    else:
-        layer = get_object_or_404(Layer, typename=layername, service=None)
+
+    service, typename = _get_service_and_typename(layername)
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
@@ -1021,10 +1020,7 @@ def layer_metadata(request, layername, service=None):
                     if str(mapid) == "new":
                         return HttpResponseRedirect("/maps/new?layer" + layer.typename)
                     else:
-                        if layer.local:
-                            return HttpResponseRedirect("/data/" + layer.typename)
-                        else:
-                            return HttpResponseRedirect("/data/" + layer.typename + "/" + layer.service.name)
+                        return HttpResponseRedirect("/data/" + layer.service_typename())
 
         #Deal with a form submission via ajax
         if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
@@ -1147,7 +1143,7 @@ def layer_detail(request, layername, service=None):
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
         source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
-                        +  (None if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
+                        +  ('null' if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
         attributes + '"bbox": ' + layer.bbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
@@ -2731,11 +2727,10 @@ def create_pg_layer(request):
 
 @login_required
 def layer_contacts(request, layername, service=None):
-    if service is not None:
-        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
-    else:
-        layer = get_object_or_404(Layer, typename=layername, service=None)
-    layer = get_object_or_404(Layer, typename=layername)
+
+    service, typename = _get_service_and_typename(layername)
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
             return HttpResponse(loader.render_to_string('401.html',
@@ -2786,10 +2781,7 @@ def layer_contacts(request, layername, service=None):
                 layer.poc = new_poc
                 layer.metadata_author = new_author
                 layer.save()
-                if layer.local:
-                    return HttpResponseRedirect("/data/" + layer.typename)
-                else:
-                    return HttpResponseRedirect("/data/" + service + "/" + layer.typename)
+                return HttpResponseRedirect("/data/" + layer.service_typename())
 
 
 

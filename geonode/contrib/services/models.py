@@ -6,6 +6,7 @@ from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS
 from geonode.maps.models import Contact, Role, Layer
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import signals
+from geonode.queue.models import STATUS_VALUES
 
 """
 geonode.contrib.services
@@ -17,9 +18,9 @@ class Service(models.Model, PermissionLevelMixin):
 
     type = models.CharField(max_length=4, choices=SERVICE_TYPES)
     method = models.CharField(max_length=1, choices=SERVICE_METHODS)
-    base_url = models.URLField(unique=True) # with service, version and request etc stripped off
+    base_url = models.URLField(unique=True,db_index=True) # with service, version and request etc stripped off
     version = models.CharField(max_length=10, null=True, blank=True)
-    name = models.CharField(max_length=255, unique=True) #Should force to slug?
+    name = models.CharField(max_length=255, unique=True,db_index=True) #Should force to slug?
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     abstract = models.TextField(null=True, blank=True)
@@ -102,6 +103,16 @@ class ServiceLayer(models.Model):
     description = models.TextField(_("Layer Description"), null=True)
     layer = models.ForeignKey(Layer, null=True)
     styles = models.TextField(_("Layer Styles"), null=True)
+
+
+class WebServiceHarvestLayersJob(models.Model):
+    service = models.ForeignKey(Service, blank=False, null=False, unique=True)
+    status = models.CharField(choices= [(x, x) for x in STATUS_VALUES], max_length=10, blank=False, null=False, default='pending')
+
+class WebServiceRegistrationJob(models.Model):
+    base_url = models.URLField(unique=True)
+    type = models.CharField(max_length=4, choices=SERVICE_TYPES)
+    status = models.CharField(choices= [(x, x) for x in STATUS_VALUES], max_length=10, blank=False, null=False, default='pending')
 
 def post_save_service(instance, sender, created, **kwargs):
     if created:
