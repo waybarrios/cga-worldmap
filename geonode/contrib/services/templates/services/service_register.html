@@ -8,9 +8,11 @@
 $( document ).ready(function() {
     $("#service_register_form").submit(function(e) {
         $("#responseDiv").hide();
+        $(".result").remove();
         $("#tableDiv").hide();
-        $(".error").hide();
         $("#dataTable").html("");
+        $(".error").html("");
+
         e.preventDefault();
         var url = $("#service_register_form").attr( "action" );
         $.ajax({
@@ -20,23 +22,27 @@ $( document ).ready(function() {
             data: $("#service_register_form").serialize(), // serializes the form's elements.
             success: function(data)
             {
+                for (var item in data) {
+                    if (data[item].available_layers) {
+                        $.each(data[item].available_layers,function(i,row){
+                            $('<tr>').attr('id',i).
+                                    append($('<td>').text(row[0])).
+                                    append($('<td>').text(row[1])).appendTo('#dataTable');
+                        });
+                        $("#tableDiv").show();
+                    }
+                    if (data[item].service_id) {
+                        $('<div>').attr("class", "result").append($('<a>').
+                            attr('href', "/services/" + data[item].service_id).
+                            text(data[item].service_title||data[item].service_name)).
+                            appendTo("#responseDiv");
+                    }
+                    else {
+                       $('<h4>').attr("class", "result").text(data[item].msg).appendTo("#responseDiv");
+                    }
+                    $("#responseDiv").show();
+                }
 
-                if (data.available_layers) {
-                    $.each(data.available_layers,function(i,row){
-                        $('<tr>').attr('id',i).
-                                append($('<td>').text(row[0])).
-                                append($('<td>').text(row[1])).appendTo('#dataTable');
-                    });
-                    $("#tableDiv").show();
-                }
-                if (data.service_id) {
-                    $('#service_link').attr('href', "/services/" +
-                            data.service_id).text(data.service_title||data.service_name);
-                }
-                else {
-                    $("#responseDiv").html(data.msg);
-                }
-                $("#responseDiv").show();
             },
             error: function(data) {
                 $(".error").html(data.responseText);
@@ -68,8 +74,6 @@ $( document ).ready(function() {
 
     <div id="responseDiv" style="display:none;">
         <h4>{%  trans "Service has been created:" %}</h4>
-        <h4><a id="service_link"></a>.</h4>
-        <p>{%  trans "Layers are being imported and will soon be available through Worldmap's search interface." %}.</p>
     </div>
 
     <div class="error" style="display:none;">

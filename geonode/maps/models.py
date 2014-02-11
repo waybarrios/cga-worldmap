@@ -927,7 +927,7 @@ class Layer(models.Model, PermissionLevelMixin):
     storeType = models.CharField(max_length=128)
     name = models.CharField(max_length=128)
     uuid = models.CharField(max_length=36,db_index=True)
-    typename = models.CharField(max_length=128, unique=True)
+    typename = models.CharField(max_length=128)
     owner = models.ForeignKey(User, blank=True, null=True)
     service = models.ForeignKey('services.Service', null=True, blank=True, related_name='layer_set')
     contacts = models.ManyToManyField(Contact, through='ContactRole')

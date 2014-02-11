@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from taggit.managers import TaggableManager
 from geonode.core.models import PermissionLevelMixin, ANONYMOUS_USERS, AUTHENTICATED_USERS, CUSTOM_GROUP_USERS
 from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS, GXP_PTYPES
 from geonode.maps.models import Contact, Role, Layer
@@ -24,7 +25,7 @@ class Service(models.Model, PermissionLevelMixin):
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     abstract = models.TextField(null=True, blank=True)
-    keywords = models.TextField(null=True, blank=True)
+    keywords = TaggableManager(_('keywords'), blank=True)
     online_resource = models.URLField(False, null=True, blank=True)
     fees = models.CharField(max_length=1000, null=True, blank=True)
     access_contraints = models.CharField(max_length=255, null=True, blank=True)

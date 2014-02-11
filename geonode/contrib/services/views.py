@@ -41,7 +41,7 @@ from owslib.wms import WebMapService
 from owslib.wfs import WebFeatureService
 from owslib.tms import TileMapService
 from owslib.csw import CatalogueServiceWeb
-from arcrest import server as ArcService
+from arcrest import Folder as ArcFolder, MapService as ArcMapService
 from urlparse import urlsplit, urlunsplit
 
 
@@ -52,7 +52,7 @@ from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSet, ServiceForm
 from geonode.utils import slugify
 import re
-from geonode.maps.utils import llbbox_to_mercator
+from geonode.maps.utils import llbbox_to_mercator, mercator_to_llbbox
 from django.db import transaction
 
 logger = logging.getLogger("geonode.core.layers.views")
@@ -119,8 +119,7 @@ def register_service(request):
             if type == "WMS" or type == "OWS":
                 return _process_wms_service(url, type, user, password, owner=request.user)
             elif type == "ARC":
-                return _process_arcgis_service(url, user, password, owner=request.user)
-
+                return _register_arcgis_url(url, user, password, owner=request.user)
             else:
                 return HttpResponse('Not Implemented (Yet)', status=501)
         except Exception, e:
@@ -146,6 +145,9 @@ def _is_unique(url):
         return True
 
 def _clean_url(base_url):
+    """
+    Remove all parameters from a URL
+    """
     urlprop = urlsplit(base_url)
     url = urlunsplit((urlprop.scheme, urlprop.netloc, urlprop.path, None, None))
     return url
@@ -154,13 +156,14 @@ def _get_valid_name(proposed_name):
     """
     Return a unique slug name for a service
     """
-    name = proposed_name
-    if len(proposed_name)>40:
-        name = proposed_name[:40]
+    slug_name = slugify(proposed_name)
+    name = slug_name
+    if len(slug_name)>40:
+        name = slug_name[:40]
     existing_service = Service.objects.filter(name=name)
     iter = 1
     while existing_service.count() > 0:
-        name = proposed_name + str(iter)
+        name = slug_name + str(iter)
         existing_service = Service.objects.filter(name=name)
         iter+=1
     return name
@@ -190,7 +193,8 @@ def _verify_service_type(base_url, type=None):
             pass
     if type == "ARC" or type is None:
         try:
-            service = ArcService(base_url)
+            service = ArcFolder(base_url)
+            service.services
             return "ARC"
         except:
             pass
@@ -200,7 +204,7 @@ def _verify_service_type(base_url, type=None):
             return "CSW"
         except:
             pass
-    if type in "OGP":
+    if type in ["OGP", None]:
         try:
             # service = OpenGeoPortalService(base_url)
             # return "OGP"
@@ -208,8 +212,13 @@ def _verify_service_type(base_url, type=None):
         except:
             return None
 
+def register_service_by_type(request):
+    """
+    Register a service based on a specified type
+    """
+    url = request.POST.get("url")
+    type = request.POST.get("type")
 
-def register_service_by_type(url, type, username=None, password=None, owner=None):
     try:
         url = _clean_url(url)
         service = Service.objects.get(base_url=url)
@@ -218,13 +227,14 @@ def register_service_by_type(url, type, username=None, password=None, owner=None
         type = _verify_service_type(url, type)
 
         if type == "WMS" or type == "OWS":
-            _process_wms_service(url, type, username, password, owner=None)
+            return _process_wms_service(url, type, None, None)
         elif type == "ARC":
-            _process_arcgis_service(url, username, password, owner=None)
-
+            return _process_arcgis_service(url, None, None)
 
 def _process_wms_service(url, type, username, password, owner=None):
-
+    """
+    Create a new WMS/OWS service, cascade it if necessary
+    """
     server = WebMapService(url)
     try:
         base_url = _clean_url(server.getOperationByName('GetMap').methods['Get']['url'])
@@ -249,9 +259,9 @@ def _process_wms_service(url, type, username, password, owner=None):
 
     title = server.identification.title
     if title:
-        name = _get_valid_name(slugify(title))
+        name = _get_valid_name(title)
     else:
-        name = _get_valid_name(slugify(urlsplit(url).netloc))
+        name = _get_valid_name(urlsplit(url).netloc)
     try:
         supported_crs  = ','.join(server.contents.itervalues().next().crsOptions)
     except:
@@ -417,13 +427,13 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
             _register_indexed_layers(service, wms=wms, owner=owner)
 
         message = "Service %s registered" % service.name
-        return_dict = {'status': 'ok',
+        return_dict = [{'status': 'ok',
                        'msg': message,
                        'service_id': service.pk,
                        'service_name': service.name,
                        'service_title': service.title,
                        'available_layers': available_resources
-        }
+        }]
         return HttpResponse(json.dumps(return_dict),
                             mimetype='application/json',
                             status=200)
@@ -438,16 +448,7 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
             mimetype="text/plain",
             status=400)
 
-def update_layers(service):
-    if service.method == "C":
-        _register_cascaded_layers(service, None, owner=service.owner)
-    elif service.type in ["WMS","OWS"]:
-        _register_indexed_layers(service, owner=service.owner)
-    elif service.type in ["ARC"]:
-        _register_arcgis_layers(service, None, owner=service.owner)
-
-
-def _register_indexed_layers(service, wms=None, verbosity=False, owner=None):
+def _register_indexed_layers(service, wms=None, verbosity=False):
     """
     Register layers for an indexed service (only WMS/OWS currently supported
     """
@@ -496,7 +497,7 @@ def _register_indexed_layers(service, wms=None, verbosity=False, owner=None):
                     title=wms_layer.title,
                     abstract=abstract,
                     uuid=layer_uuid,
-                    owner=owner,
+                    owner=None,
                     srs=srs,
                     bbox = llbbox_to_mercator(list(wms_layer.boundingBoxWGS84)),
                     llbbox = list(wms_layer.boundingBoxWGS84)
@@ -563,24 +564,135 @@ def _register_harvested_service(type, url, name, username, password, owner=None)
             status=400
         )
 
-def _process_arcgis_service(url,username, password, server, owner=None):
+def _register_arcgis_url(url,username, password, owner=None):
     """
-    Register an ArcGIS REST service - maybe do this from _register_indexed_service instead?
+    Register an ArcGIS REST service URL
     """
     #http://maps1.arcgisonline.com/ArcGIS/rest/services
+
+    baseurl = _clean_url(url)
+    if re.search("\/MapServer\/*(f=json)*", baseurl):
+        #This is a MapService
+        arcserver = ArcMapService(baseurl)
+        return_json = [_process_arcgis_service(arcserver, owner)]
+
+    else:
+        #This is a Folder
+        arcserver = ArcFolder(baseurl)
+        return_json = _process_arcgis_folder(arcserver, services=[], owner=owner)
+
+    return HttpResponse(json.dumps(return_json),
+                        mimetype='application/json',
+                        status=200)
+
+def _register_arcgis_layers(service, arc=None, verbosity=False):
+    """
+    Register layers from an ArcGIS REST service
+    """
+    arc = arc or ArcMapService(service.base_url)
+    for layer in arc.layers:
+        count = 0
+        layer_uuid = str(uuid.uuid1())
+        layer_bbox = [layer.extent.xmin, layer.extent.ymin, layer.extent.xmax, layer.extent.ymax]
+        # Need to check if layer already exists??
+        saved_layer, created = Layer.objects.get_or_create(
+            service=service,
+            typename=layer.id,
+            defaults=dict(
+                name=layer.id,
+                store=service.name, #??
+                storeType="remoteStore",
+                workspace="remoteWorkspace",
+                title=layer.name,
+                abstract=layer._json_struct['description'],
+                uuid=layer_uuid,
+                owner=None,
+                srs="EPSG:%s" % layer.extent.spatialReference.wkid,
+                bbox = layer_bbox,
+                llbbox = mercator_to_llbbox(layer_bbox)
+            )
+        )
+        if created:
+            saved_layer.set_default_permissions()
+            #saved_layer.set_layer_attributes()
+
+            service_layer, created = ServiceLayer.objects.get_or_create(
+                service=service,
+                typename=layer.id
+            )
+            service_layer.layer = saved_layer
+            service_layer.title=layer.name,
+            service_layer.description=saved_layer.abstract,
+            service_layer.styles=None
+            service_layer.save()
+        count += 1
+    message = "%d Layers Registered" % count
+    return_dict = {'status': 'ok', 'msg': message }
+    return HttpResponse(json.dumps(return_dict),
+                        mimetype='application/json',
+                        status=200)
+
+def _process_arcgis_folder(folder, services=[], owner=None):
+    """
+    Iterate through folders and services in an ArcGIS REST service folder
+    """
+    for service in folder.services:
+        if  isinstance(service,ArcMapService) and service.spatialReference.wkid in [102100,3857,900913]:
+            print "Base URL is %s" % service.url
+            result_json = _process_arcgis_service(service, owner)
+            services.append(result_json)
+        else:
+            return_dict = {}
+            return_dict['msg'] =  _("Could not find any layers in a compatible projection:") + service.url
+            services.append(return_dict)
+    for subfolder in folder.folders:
+        _process_arcgis_folder(subfolder, services, owner)
+    return services
+
+def _process_arcgis_service(arcserver, owner):
+    """
+    Create a Service model instance for an ArcGIS REST service
+    """
+    arc_url = _clean_url(arcserver.url)
     try:
-        service = Service.objects.get(base_url=url)
+        service = Service.objects.get(base_url=arc_url)
         return_dict = {}
         return_dict['service_id'] = service.pk
         return_dict['msg'] = "This is an existing Service"
-        return HttpResponse(json.dumps(return_dict),
-                            mimetype='application/json',
-                            status=200)
+        return service.base_url
     except:
         pass
 
-def _register_arcgis_layers(service, perm_spec, verbosity=False, owner=None):
-    pass
+        service, created = Service.objects.get_or_create(base_url = arc_url)
+        if created:
+            service.type = 'ARC'
+            service.method='I'
+            service.name = _get_valid_name(arcserver.mapName)
+            service.title = arcserver.mapName
+            service.abstract = arcserver.serviceDescription
+            service.online_resource = arc_url
+            service.owner=owner
+            service.save()
+
+            available_resources = []
+            for layer in list(arcserver.layers):
+                available_resources.append([layer.id, layer.name])
+
+        if settings.USE_QUEUE:
+            #Create a layer import job
+            WebServiceHarvestLayersJob.objects.get_or_create(service=service)
+        else:
+            _register_arcgis_layers(service, arc=arcserver)
+
+        message = "Service %s registered" % service.name
+        return_dict = {'status': 'ok',
+                       'msg': message,
+                       'service_id': service.pk,
+                       'service_name': service.name,
+                       'service_title': service.title,
+                       'available_layers': available_resources
+        }
+        return return_dict
 
 def harvest_ogp_service(url, num_rows=25, start=0,owner=None):
     base_query_str =  """q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0),
@@ -670,12 +782,12 @@ def service_detail(request, service_id):
     This view shows the details of a service 
     '''
     service = get_object_or_404(Service,pk=service_id)
-    """
+
     if not request.user.has_perm('maps.view_service', obj=map):
         return HttpResponse(loader.render_to_string('401.html',
             RequestContext(request, {'error_message':
                 _("You are not allowed to view this Service.")})), status=401)
-    """
+
     layers = Layer.objects.filter(service=service) 
     return render_to_response("services/service_detail.html", RequestContext(request, {
         'service': service,
@@ -689,16 +801,36 @@ def edit_service(request, service_id):
     Edit an existing Service
     """
     service_obj = get_object_or_404(Service,pk=service_id)
-    service_form = ServiceForm(instance=service_obj, prefix="service")
 
 
-    if request.method == 'GET':
-        return render_to_response("services/service_edit.html", RequestContext(request, {
-            "service": service_obj,
-            "service_form": service_form
-        }))
+    if request.method == "POST":
+        service_form = ServiceForm(request.POST, instance=service_obj, prefix="service")
+        if service_form.is_valid():
+            service_obj = service_form.save(commit=False)
+            service_obj.keywords.clear()
+            service_obj.keywords.add(*service_form.cleaned_data['keywords'])
+            service_obj.save()
+
+            return HttpResponseRedirect(service_obj.get_absolute_url())
+    else:
+        service_form = ServiceForm(instance=service_obj, prefix="service")
 
 
+    return render_to_response("services/service_edit.html", RequestContext(request, {
+                "service": service_obj,
+                "service_form": service_form
+            }))
+
+def update_layers(service):
+    """
+    Import/update layers for an existing service
+    """
+    if service.method == "C":
+        _register_cascaded_layers(service, None, owner=service.owner)
+    elif service.type in ["WMS","OWS"]:
+        _register_indexed_layers(service)
+    elif service.type in ["ARC"]:
+        _register_arcgis_layers(service, None)
 
 @login_required
 def remove_service(request, service_id):
@@ -763,16 +895,3 @@ def ajax_service_permissions(request, service_id):
         "Permissions updated",
         status=200,
         mimetype='text/plain')
-
-@login_required
-def create_service_import_job(request):
-    try:
-        url = request.POST.get("url")
-        type = _verify_service_type(url, request.POST.get("type"))
-        WebServiceRegistrationJob.objects.get_or_create(base_url=url, type=type)
-        return HttpResponse(mimetype='application/json',
-                            status=200)
-    except Exception, e:
-        logger.info("Error creating WebServiceRegistrationJob: %s" % str(e))
-        return HttpResponse(mimetype='application/json',
-                            status=500)

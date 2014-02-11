@@ -1123,7 +1123,6 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                         //console.log('Created record');
                         ////console.log('GROUP:' + record.get("group"));
                         if (record) {
-
                             if (record.get("group") === "background") {
                                 var pos = layerStore.queryBy(
                                     function(rec) {
@@ -1281,7 +1280,6 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
 
         var addLayers = function() {
             var key = sourceComboBox.getValue();
-            var layerStore = this.mapPanel.layers;
             var source = this.layerSources[key];
             var records = capGridPanel.getSelectionModel().getSelections();
             this.addLayerAjax(source, key, records);
@@ -1328,6 +1326,11 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                     var source = this.layerSources[record.get("id")];
                     var store = source.store;
                     if (store.data.items.length == 0){
+                        store.on("load", function() {
+                            store.filterBy(function(r) {
+                                return !!source.getProjection(r);
+                            }, this);
+                        });
                         store.reload();
                     }
                     store.setDefaultSort('title', 'asc');
@@ -1406,6 +1409,14 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                             sources.insert(0, [record]);
                             sourceComboBox.onSelect(record, 0);
                             newSourceDialog.hide();
+                            Ext.Ajax.request({
+                                url: "/services/registerbytype/",
+                                method: 'POST',
+                                params: {url: url, type: type},
+                                failure: function(response, options) {
+                                    //do nothing, silent fail
+                                }
+                            });
                         },
                         fallback: function(source,msg) {
                             // TODO: wire up success/failure

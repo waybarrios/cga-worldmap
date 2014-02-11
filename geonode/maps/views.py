@@ -657,7 +657,7 @@ def additional_layers(request, map_obj, layerlist):
                     source_params = json.dumps({"ptype":layer.ptype, "remote": (service is not None),
                                                 "name": (None if service is None else service)}),
                     layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '","bbox":' \
-                                  + layer.bbox + ',"format":"image/png","queryable":true}')
+                                  + layer.bbox + ',"format":"png","queryable":true}')
                 )    
     return layers, groups, bbox
 
@@ -1145,7 +1145,7 @@ def layer_detail(request, layername, service=None):
         source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
                         +  ('null' if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
-        attributes + '"bbox": ' + layer.bbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
+        attributes + '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     map_obj = Map(projection="EPSG:900913")

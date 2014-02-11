@@ -5,29 +5,19 @@ from geonode.contrib.services.models import WebServiceHarvestLayersJob, WebServi
 from geonode.contrib.services.views import update_layers, register_service_by_type, _register_indexed_layers
 from geonode.maps import autocomplete_light_registry
 
-
-@task
-def import_indexed_wms_service_layers(service, wms=None, owner=None):
-    _register_indexed_layers(service, wms=wms, owner=owner)
-
-
-@task
-def import_indexed_service(url, type, username=None, password=None, owner=None):
-    register_service_by_type(url, type, username=username, password=password, owner=owner)
-
 @periodic_task(run_every=crontab(minute=settings.SERVICE_UPDATE_INTERVAL))
 def harvest_service_layers():
-    harvestJobs = WebServiceHarvestLayersJob.objects.all()
-    for job in harvestJobs.exclude(status="process"):
-        try:
-            job.status = "process"
-            job.save()
-            update_layers(job.service)
-            job.delete()
-        except Exception, e:
-            print e
-            job.status = 'failed'
-            job.save()
+    if WebServiceHarvestLayersJob.objects.filter(status="process").count() == 0:
+        for job in WebServiceHarvestLayersJob.objects.exclude(status="process").exclude(status="done"):
+            try:
+                job.status = "process"
+                job.save()
+                update_layers(job.service)
+                job.delete()
+            except Exception, e:
+                print e
+                job.status = 'failed'
+                job.save()
 
 @periodic_task(run_every=crontab(minute=settings.SERVICE_UPDATE_INTERVAL))
 def import_service():

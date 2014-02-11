@@ -764,6 +764,11 @@ def llbbox_to_mercator(llbbox):
     maxlonlat = forward_mercator([llbbox[2],llbbox[3]])
     return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
 
+def mercator_to_llbbox(bbox):
+    minlonlat = inverse_mercator([bbox[0],bbox[1]])
+    maxlonlat = inverse_mercator([bbox[2],bbox[3]])
+    return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
+
 def forward_mercator(lonlat):
     """
         Given geographic coordinates, return a x,y tuple in spherical mercator.
