@@ -240,7 +240,7 @@ def package_dir(options):
     """
     package_path = path(package_outdir)
     if not package_path.exists():
-        package_outdir.mkdir()
+        package_path.mkdir()
 
 
 @task

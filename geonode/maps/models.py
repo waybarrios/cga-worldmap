@@ -2385,10 +2385,6 @@ class MapLayer(models.Model):
                         cfg['abstract'] = ''
                         cfg['styles'] =''
                         logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
-        if self.source_params.find( "gxp_hglsource") > -1:
-            # call HGL ServiceStarter asynchronously to load the layer into HGL geoserver
-            from geonode.queue.tasks import load_hgl_layer
-            load_hgl_layer.delay(self.name)
 
 
         #Create cache of maplayer config that will last for 60 seconds (in case permissions or maplayer properties are changed)
