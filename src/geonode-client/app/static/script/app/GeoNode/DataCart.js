@@ -21,7 +21,7 @@ GeoNode.DataCart = Ext.extend(Ext.util.Observable, {
     getSelectedLayerIds: function() {
         var layerIds = [];
         this.grid.selModel.each(function(rec) {
-            layerIds.push(rec.get('name'));
+            layerIds.push(rec.get('uuid'));
         });
         return layerIds;
     },

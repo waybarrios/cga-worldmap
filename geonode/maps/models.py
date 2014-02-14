@@ -1375,15 +1375,23 @@ class Layer(models.Model, PermissionLevelMixin):
                     logger.error("Store for %s does not exist", self.name)
                     return None
             else:
-                return None
+                remote_resource = LayerRemoteResource()
+                remote_resource.metadata_links = zip(["text/xml"], ["TC211"], [settings.GEONETWORK_BASE_URL + \
+                    "srv/en/csw?" + urllib.urlencode({
+                    "request": "GetRecordById",
+                    "service": "CSW",
+                    "version": "2.0.2",
+                    "OutputSchema": "http://www.isotc211.org/2005/gmd",
+                    "ElementSetName": "full",
+                    "id": self.uuid
+                })])
+                remote_resource.resource_type = self.storeType
+                self._resource_cache = remote_resource
         return self._resource_cache
 
 
     def _get_metadata_links(self):
-        if self.local:
-            return self.resource.metadata_links
-        return None
-
+        return self.resource.metadata_links
     def _set_metadata_links(self, md_links):
         try:
             self.resource.metadata_links = md_links
@@ -1753,6 +1761,9 @@ class LayerAttribute(models.Model):
 
     def __unicode__(self):
         return self.attribute
+
+class LayerRemoteResource(object):
+    pass
 
 class ContactRole(models.Model):
     """
@@ -2421,18 +2432,6 @@ def post_save_layer(instance, sender, **kwargs):
         instance.save_to_geoserver()
         if kwargs['created']:
             instance._populate_from_gs()
-
-    instance.save_to_geonetwork()
-
-    if kwargs['created']:
-        logger.debug("populate from geonetwork")
-        try:
-            instance._populate_from_gn()
-            instance.save(force_update=True)
-        except:
-            logger.warning("Exception populating from geonetwork record for [%s]", instance.name)
-            raise
-        logger.debug("save instance")
 
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)

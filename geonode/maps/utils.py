@@ -444,7 +444,10 @@ def create_django_record(user, title, keywords, abstract, gs_resource, permissio
                     title=title or gs_resource.title,
                     uuid=layer_uuid,
                     abstract=abstract or gs_resource.abstract or '',
-                    owner=user)
+                    owner=user,
+                    distribution_url="%sdata/%s" % (settings.SITEURL,typename),
+                    distribution_description=_("Online link to layer description")
+                    )
     saved_layer, created = Layer.objects.get_or_create(name=gs_resource.name,
                                                        workspace=gs_resource.store.workspace.name,
                                                        defaults=defaults)

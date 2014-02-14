@@ -334,7 +334,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         if (!config.map) {
             config.map = {};
         }
-        config.map.numZoomLevels = 21;
+        config.map.numZoomLevels = 22;
 
         OpenLayers.Map.prototype.Z_INDEX_BASE = {
             BaseLayer: 100,
@@ -344,7 +344,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             Control: 4000
         };
 
-
+        OpenLayers.DOTS_PER_INCH = 90.71428571428572;
 
         GeoExplorer.superclass.constructor.apply(this, arguments);
 

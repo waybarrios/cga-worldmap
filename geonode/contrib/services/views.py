@@ -80,7 +80,6 @@ def services(request):
     }))
 
 @login_required
-@transaction.commit_on_success()
 def register_service(request):
     """
     This view is used for manually registering a new service, with only URL as a
@@ -118,12 +117,14 @@ def register_service(request):
 
             if type == "WMS" or type == "OWS":
                 return _process_wms_service(url, type, user, password, owner=request.user)
-            elif type == "ARC":
+            elif type == "REST":
                 return _register_arcgis_url(url, user, password, owner=request.user)
+            elif type == "OGP":
+                return harvest_ogp_service(url)
             else:
                 return HttpResponse('Not Implemented (Yet)', status=501)
         except Exception, e:
-            logger.error("Unexpected Error", exc_info=1) 
+            logger.error("Unexpected Error", exc_info=1)
             return HttpResponse('Unexpected Error: %s' % e, status=500)
     elif request.method == 'PUT':
         # Update a previously registered Service
@@ -185,17 +186,17 @@ def _verify_service_type(base_url, type=None):
             return service_type
         except:
             pass
-    if type == "TMS" or type is None:
+    if type in ["TMS",None]:
         try:
             service = TileMapService(base_url)
             return "TMS"
         except:
             pass
-    if type == "ARC" or type is None:
+    if type in ["REST", None]:
         try:
             service = ArcFolder(base_url)
             service.services
-            return "ARC"
+            return "REST"
         except:
             pass
     if type in ["CSW", None]:
@@ -205,12 +206,10 @@ def _verify_service_type(base_url, type=None):
         except:
             pass
     if type in ["OGP", None]:
-        try:
-            # service = OpenGeoPortalService(base_url)
-            # return "OGP"
-            return None
-        except:
-            return None
+        #Just use a specific OGP URL for now
+        if base_url == settings.OGP_URL:
+            return "OGP"
+        return None
 
 def register_service_by_type(request):
     """
@@ -228,7 +227,7 @@ def register_service_by_type(request):
 
         if type == "WMS" or type == "OWS":
             return _process_wms_service(url, type, None, None)
-        elif type == "ARC":
+        elif type == "REST":
             return _process_arcgis_service(url, None, None)
 
 def _process_wms_service(url, type, username, password, owner=None):
@@ -397,7 +396,7 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
     """
     Register a service - WMS or OWS currently supported
     """
-    if type == 'WMS' or type == "OWS":
+    if type in ['WMS',"OWS","HGL"]:
         # TODO: Handle for errors from owslib
         if wms is None:
             wms = WebMapService(url)
@@ -485,7 +484,11 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
                                 mimetype='application/json',
                                 status=200)
 
+            llbbox = list(wms_layer.boundingBoxWGS84)
+            bbox = llbbox_to_mercator(llbbox)
+
             # Need to check if layer already exists??
+            llbbox = list(wms_layer.boundingBoxWGS84)
             saved_layer, created = Layer.objects.get_or_create(
                 service=service,
                 typename=wms_layer.name,
@@ -499,14 +502,18 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
                     uuid=layer_uuid,
                     owner=None,
                     srs=srs,
-                    bbox = llbbox_to_mercator(list(wms_layer.boundingBoxWGS84)),
-                    llbbox = list(wms_layer.boundingBoxWGS84)
+                    bbox = bbox,
+                    llbbox = llbbox,
+                    geographic_bounding_box=bbox_to_wkt(str(llbbox[0]), str(llbbox[1]),
+                                                        str(llbbox[2]), str(llbbox[3]), srid="EPSG:4326")
                 )
             )
             if created:
+                saved_layer.save()
                 saved_layer.set_default_permissions()
                 saved_layer.keywords.add(*keywords)
                 saved_layer.set_layer_attributes()
+                saved_layer.save_to_geonetwork()
 
                 service_layer, created = ServiceLayer.objects.get_or_create(
                     service=service,
@@ -594,6 +601,7 @@ def _register_arcgis_layers(service, arc=None, verbosity=False):
         count = 0
         layer_uuid = str(uuid.uuid1())
         layer_bbox = [layer.extent.xmin, layer.extent.ymin, layer.extent.xmax, layer.extent.ymax]
+        llbbox =  mercator_to_llbbox(layer_bbox)
         # Need to check if layer already exists??
         saved_layer, created = Layer.objects.get_or_create(
             service=service,
@@ -609,12 +617,15 @@ def _register_arcgis_layers(service, arc=None, verbosity=False):
                 owner=None,
                 srs="EPSG:%s" % layer.extent.spatialReference.wkid,
                 bbox = layer_bbox,
-                llbbox = mercator_to_llbbox(layer_bbox)
+                llbbox = llbbox,
+                geographic_bounding_box=bbox_to_wkt(str(llbbox[0]), str(llbbox[1]),
+                                                    str(llbbox[2]), str(llbbox[3]), srid="EPSG:4326" )
             )
         )
         if created:
             saved_layer.set_default_permissions()
-            #saved_layer.set_layer_attributes()
+            saved_layer.save()
+            saved_layer.save_to_geonetwork()
 
             service_layer, created = ServiceLayer.objects.get_or_create(
                 service=service,
@@ -665,7 +676,7 @@ def _process_arcgis_service(arcserver, owner):
 
         service, created = Service.objects.get_or_create(base_url = arc_url)
         if created:
-            service.type = 'ARC'
+            service.type = 'REST'
             service.method='I'
             service.name = _get_valid_name(arcserver.mapName)
             service.title = arcserver.mapName
@@ -694,20 +705,25 @@ def _process_arcgis_service(arcserver, owner):
         }
         return return_dict
 
-def harvest_ogp_service(url, num_rows=25, start=0,owner=None):
-    base_query_str =  """q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0),
-        map(MaxX,-180.0,180.0,1,0),map(MinY,-90.0,90.0,1,0),map(MaxY,-90.0,90.0,1,0)),4,4,1,0))),0,0)%22&debugQuery=
-        false&&fq={!frange+l%3D1+u%3D10}product(2.0,map(sum(map(sub(abs(sub(0,CenterX)),sum(171.03515625,HalfWidth)),0,
-        400000,1,0),map(sub(abs(sub(0,CenterY)),sum(75.84516854027,HalfHeight)),0,400000,1,0)),0,0,1,0))&wt=json
-        &fl=Name,CollectionId,Institution,Access,DataType,Availability,LayerDisplayName,Publisher,GeoReferenced,
-        Originator,Location,MinX,MaxX,MinY,MaxY,ContentDate,LayerId,score,WorkspaceName,SrsProjectionCode
-        &sort=score+desc&fq=DataType%3APoint+OR+DataType%3ALine+OR+DataType%3APolygon+OR+DataType%3ARaster
-        +OR+DataType%3APaper+Map&fq=Access:Public"""
+
+
+def harvest_ogp_service(url, num_rows=100, start=0,owner=None):
+    base_query_str =  "?q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0)," +  \
+        "map(MaxX,-180.0,180.0,1,0),map(MinY,-90.0,90.0,1,0),map(MaxY,-90.0,90.0,1,0)),4,4,1,0))),0,0)%22" + \
+        "&debugQuery=false&&fq={!frange+l%3D1+u%3D10}product(2.0,map(sum(map(sub(abs(sub(0,CenterX))," + \
+        "sum(171.03515625,HalfWidth)),0,400000,1,0),map(sub(abs(sub(0,CenterY)),sum(75.84516854027,HalfHeight))," + \
+        "0,400000,1,0)),0,0,1,0))&wt=json&fl=Name,CollectionId,Institution,Access,DataType,Availability," + \
+        "LayerDisplayName,Publisher,GeoReferenced,Originator,Location,MinX,MaxX,MinY,MaxY,ContentDate,LayerId," + \
+        "score,WorkspaceName,SrsProjectionCode&sort=score+desc&fq=DataType%3APoint+OR+DataType%3ALine+OR+" + \
+        "DataType%3APolygon+OR+DataType%3ARaster+OR+DataType%3APaper+Map&fq=Access:Public"
+
+    #base_query_str += "&fq=Institution%3AHarvard"
 
     fullurl = url + base_query_str + ("&rows=%d&start=%d" % (num_rows, start))
-    response = json.loads(urllib.urlopen(url).read())
-    result_count =  response["response"]["numFound"]
-    process_ogp_results(response)
+    response = urllib.urlopen(fullurl).read()
+    json_response = json.loads(response)
+    result_count =  json_response["response"]["numFound"]
+    process_ogp_results(json_response)
 
     while start < result_count:
         start = start + num_rows
@@ -715,13 +731,19 @@ def harvest_ogp_service(url, num_rows=25, start=0,owner=None):
 
 def process_ogp_results(result_json, owner=None):
     for doc in result_json["response"]["docs"]:
-        locations = doc["Location"]
+        try:
+            locations = json.loads(doc["Location"])
+        except:
+            continue
         if "tilecache" in locations:
-            service_url = doc["Location"]["tilecache"]
+            service_url = locations["tilecache"][0]
             service_type = "WMS"
         elif "wms" in locations:
-            service_url = doc["Location"]["tilecache"]
-            service_type = "WMS"
+            service_url = locations["wms"][0]
+            if "wfs" in locations:
+                service_type = "OWS"
+            else:
+                service_type = "WMS"
         else:
             pass
 
@@ -729,53 +751,62 @@ def process_ogp_results(result_json, owner=None):
         if doc["Institution"] == "Harvard":
             service_type = "HGL"
 
+        service = None
         try:
             service = Service.objects.get(base_url=service_url)
         except Service.DoesNotExist:
-            name = slugify(service_url)
-            if service_type == "WMS":
+            if service_type in ["WMS","OWS", "HGL"]:
                 try:
-                    r_json = json.loads(_register_indexed_service(service_type, service_url, name, owner=owner))
-                    service = r_json["id"]
+                    response = _process_wms_service(service_url, service_type, None, None)
+                    r_json = json.loads(response.content)
+                    service = Service.objects.get(id=r_json[0]["service_id"])
                 except Exception, e:
                     print str(e)
-                    service = Service(type = type,
-                                      method='I',
-                                      base_url = service_url,
-                                      name = name,
-                                      online_resource = service_url,
-                                      owner=owner)
 
-            if service:
+        if service:
                 typename = doc["Name"]
-                if doc["Workspace"]:
-                    typename = doc["Workspace"] + ":" + typename
-                service_layer = ServiceLayer(service=service,typename=typename)
-                service_layer.save()
+                if service_type == "HGL":
+                    typename = typename.replace("SDE.","")
+                elif doc["WorkspaceName"]:
+                    typename = doc["WorkspaceName"] + ":" + typename
+
+
                 bbox = (
                     float(doc['MinX']),
                     float(doc['MinY']),
                     float(doc['MaxX']),
                     float(doc['MaxY']),
                 )
-                abstract = json.dumps(doc)
-                saved_layer, created = Layer.objects.get_or_create(service=service, typename=typename,
-                                                                   defaults=dict(
-                                                                       service = service,
-                                                                       store=service.name, #??
-                                                                       storeType="remoteStore",
-                                                                       workspace="remoteWorkspace",
-                                                                       abstract=abstract,
-                                                                       title=doc["LayerDisplayName"],
-                                                                       owner=owner,
-                                                                       srs="EPSG:900913", #Assumption
-                                                                       geographic_bounding_box = bbox,
-                                                                       )
-                )
 
-                if created:
+                layer_uuid = str(uuid.uuid1())
+                saved_layer, created = Layer.objects.get_or_create(service=service, typename=typename,
+                    defaults=dict(
+                    name=doc["Name"],
+                    service = service,
+                    uuid=layer_uuid,
+                    store=service.name, #??
+                    storeType="remoteStore",
+                    workspace=doc["WorkspaceName"],
+                    title=doc["LayerDisplayName"],
+                    owner=None,
+                    srs="EPSG:900913", #Assumption
+                    bbox = llbbox_to_mercator(list(bbox)),
+                    llbbox = list(bbox),
+                    geographic_bounding_box=bbox_to_wkt(str(bbox[0]), str(bbox[1]),
+                                                        str(bbox[2]), str(bbox[3]), srid="EPSG:4326" )
+                    )
+                )
+                saved_layer.set_default_permissions()
+                saved_layer.save()
+                saved_layer.save_to_geonetwork()
+                service_layer, created = ServiceLayer.objects.get_or_create(service=service,typename=typename,
+                                                                            defaults=dict(
+                                                                                title=doc["LayerDisplayName"]
+                                                                            )
+                )
+                if service_layer.layer is None:
                     service_layer.layer = saved_layer
-                    service_layer.save
+                    service_layer.save()
 
 def service_detail(request, service_id):
     '''
@@ -829,7 +860,7 @@ def update_layers(service):
         _register_cascaded_layers(service, None, owner=service.owner)
     elif service.type in ["WMS","OWS"]:
         _register_indexed_layers(service)
-    elif service.type in ["ARC"]:
+    elif service.type in ["REST"]:
         _register_arcgis_layers(service, None)
 
 @login_required

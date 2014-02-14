@@ -67,7 +67,11 @@
             listeners: {
                 "ready": function() {
                     var map = app.mapPanel.map;
-                    layerExtent = map.layers.slice(-1)[0].maxExtent;
+                    var layer = map.layers.slice(-1)[0];
+                    var layerExtent = layer.maxExtent;
+                    if (layer.url.indexOf("hgl.harvard.edu") > -1 && layer.restrictedExtent ){
+                        layerExtent = layer.restrictedExtent;
+                    }
                     if (layerExtent.left <= map.maxExtent.left || layerExtent.right >= map.maxExtent.right || layerExtent.top >= map.maxExtent.top || layerExtent.bottom <= map.maxExtent.bottom)
                     {map.zoomTo(1)}
                     else
@@ -155,11 +159,7 @@
     function addToMap(selectInput) {
     	var selectedValue = selectInput.options[selectInput.selectedIndex].value;
     	if (selectedValue != '') {
-            {% if layer.local %}
-    		    window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
-            {% else %}
-                window.location.href='/maps/' + selectedValue + '/?layer={{layer.service.name}}:{{layer.typename}}'
-            {% endif %}
+    	    window.location.href='/maps/' + selectedValue + '/?layer={{layer.uuid}}'
     	}
     }
     {% endautoescape %}
@@ -184,8 +184,9 @@
 		<h3>{{ layer.title|default:layer.typename }}</h3>
 
         {% if not layer.local %}
-            <h4>{% trans "External layer - not hosted by WorldMap - use at your own risk" %}</h4>
+            <h4>{% trans "External layer - not hosted by WorldMap" %}</h4>
             <div><p>{% trans "Source:" %}<a href="/services/{{layer.service.id}}">{{ layer.service.title }}</a></p></div>
+            <div><p>{% trans "Type:" %}{{ layer.service.type }}</p></div>
         {% endif %}
         {% overall_rating layer "layer" as layer_rating %}
         <div class="overall_rating" data-rating="{{ layer_rating }}"></div>

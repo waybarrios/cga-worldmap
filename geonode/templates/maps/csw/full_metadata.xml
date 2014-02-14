@@ -34,7 +34,7 @@
                </gmd:facsimile>
              </gmd:CI_Telephone>
            </gmd:phone>
-           {% if poc.user %}
+           {% if poc.user and layer.local %}
            <gmd:onlineResource>
                 <gmd:CI_OnlineResource>
                     <gmd:linkage>
@@ -297,7 +297,7 @@
                  <gco:CharacterString />
                </gmd:name>
                <gmd:description>
-                 <gco:CharacterString>Online link to the '{{layer.resource.title}}' description on WorldMap</gco:CharacterString>
+                 <gco:CharacterString>Online link to the '{{layer.title}}' description on WorldMap</gco:CharacterString>
                </gmd:description>
              </gmd:CI_OnlineResource>
            </gmd:onLine>
@@ -319,6 +319,24 @@
              </gmd:CI_OnlineResource>
            </gmd:onLine>
            {% endfor %}
+           {%  if not layer.local %}
+               <gmd:onLine>
+                   <gmd:CI_OnlineResource>
+                       <gmd:linkage>
+                           <gmd:URL>{{  layer.service.base_url }}</gmd:URL>
+                       </gmd:linkage>
+                       <gmd:protocol>
+                           <gco:CharacterString>WWW:LINK-1.0-http--link</gco:CharacterString>
+                       </gmd:protocol>
+                       <gmd:name gco:nilReason="missing">
+                           <gco:CharacterString />
+                       </gmd:name>
+                       <gmd:description>
+                           <gco:CharacterString>Base URL of the originating map service</gco:CharacterString>
+                       </gmd:description>
+                   </gmd:CI_OnlineResource>
+               </gmd:onLine>
+           {%  endif %}
            <!--
            <gmd:onLine>
              <gmd:CI_OnlineResource>
