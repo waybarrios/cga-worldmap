@@ -1325,14 +1325,14 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 select: function(combo, record, index) {
                     var source = this.layerSources[record.get("id")];
                     var store = source.store;
-                    if (store.data.items.length == 0){
-                        store.on("load", function() {
-                            store.filterBy(function(r) {
-                                return !!source.getProjection(r);
-                            }, this);
-                        });
-                        store.reload();
-                    }
+//                    if (store.data.items.length == 0){
+//                        store.on("load", function() {
+//                            store.filterBy(function(r) {
+//                                return !!source.getProjection(r);
+//                            }, this);
+//                        });
+//                        store.reload();
+//                    }
                     store.setDefaultSort('title', 'asc');
                     store.filterBy(function(r) {
                         return !!source.getProjection(r);
@@ -1399,7 +1399,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                             ptype = 'gxp_wmscsource';
                     }
                     app.addLayerSource({
-                        config: {url: url, ptype: ptype},
+                        config: {url: url, ptype: ptype, forceLoad: true},
                         callback: function(id) {
                             // add to combo and select
                             var record = new sources.recordType({

@@ -813,12 +813,6 @@ def service_detail(request, service_id):
     This view shows the details of a service 
     '''
     service = get_object_or_404(Service,pk=service_id)
-
-    if not request.user.has_perm('maps.view_service', obj=map):
-        return HttpResponse(loader.render_to_string('401.html',
-            RequestContext(request, {'error_message':
-                _("You are not allowed to view this Service.")})), status=401)
-
     layers = Layer.objects.filter(service=service) 
     return render_to_response("services/service_detail.html", RequestContext(request, {
         'service': service,
