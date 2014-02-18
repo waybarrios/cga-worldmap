@@ -26,6 +26,7 @@ import os.path
 from tempfile import mkstemp
 from geoserver.resource import FeatureType
 from geoserver.resource import Coverage
+from tempfile import mkstemp
 
 import zipfile
 import os
@@ -130,6 +131,7 @@ def _rename_files(file_names):
     return renamed
 
 
+<<<<<<< HEAD
 def _rename_zip(oldname, newname):
     """Create ZipFile object from uploaded data """
     handle, tempfile = mkstemp()
@@ -148,6 +150,24 @@ def _rename_zip(oldname, newname):
     oldzip.close()
     newzip.close()
     os.rename(tempfile,oldname)
+=======
+def _rename_zip(old_name, valid_name):
+    """Rename files inside zip """
+    handle, tempfile = mkstemp()
+    old_zip = zipfile.ZipFile(old_name, 'r')
+    new_zip = zipfile.ZipFile(open(tempfile, "wb"), "w")
+
+    files_zip = old_zip.namelist()
+    files = ['.shp', '.prj', '.shx', '.dbf', '.sld']
+    for file in files_zip:
+        name, ext = os.path.splitext(file)
+        if ext.lower() in files:
+            files.remove(ext) #OS X creates hidden subdirectory with garbage files having same extensions; ignore.
+            new_zip.writestr(valid_name + ext, old_zip.read(file))
+    old_zip.close()
+    new_zip.close()
+    os.rename(tempfile,old_name)
+>>>>>>> gncore/master
 
 def _find_sld_files(file_names):
     return filter( lambda f: f.lower().endswith('.sld'), file_names)
@@ -201,3 +221,4 @@ def scan_file(file_name):
                             "matching files were found for them.")
                 
     return found
+

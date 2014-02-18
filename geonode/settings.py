@@ -49,6 +49,8 @@ DEBUG = TEMPLATE_DEBUG = True
 
 
 # Set to True to load non-minified versions of (static) client dependencies
+# Requires to set-up Node and tools that are required for static development 
+# otherwise it will raise errors for the missing non-minified dependencies
 DEBUG_STATIC = False
 
 
@@ -756,8 +758,31 @@ if LOCKDOWN_GEONODE:
     MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + ('geonode.security.middleware.LoginRequiredMiddleware',)
 
 
+# A tuple of hosts the proxy can send requests to.
+PROXY_ALLOWED_HOSTS = ("*")
+
+# The proxy to use when making cross origin requests.
+PROXY_URL = '/proxy/?url='
+
+
+
 # Load more settings from a file called local_settings.py if it exists
 try:
     from local_settings import *
 except ImportError:
     pass
+
+# Available download formats
+DOWNLOAD_FORMATS_METADATA = [
+    'Atom', 'DIF', 'Dublin Core', 'ebRIM', 'FGDC', 'TC211',
+]
+DOWNLOAD_FORMATS_VECTOR = [
+    'JPEG', 'PDF', 'PNG', 'Zipped Shapefile', 'GML 2.0', 'GML 3.1.1', 'CSV', 
+    'Excel', 'GeoJSON', 'KML', 'View in Google Earth', 'Tiles',
+]
+DOWNLOAD_FORMATS_RASTER = [
+    'JPEG', 'PDF', 'PNG', 'ArcGrid', 'GeoTIFF', 'Gtopo30', 'ImageMosaic', 'KML',
+    'View in Google Earth', 'Tiles',
+]
+
+

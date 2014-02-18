@@ -19,12 +19,13 @@
 #########################################################################
 
 from django.http import HttpResponse
-from httplib import HTTPConnection
+from httplib import HTTPConnection,HTTPSConnection
 from urlparse import urlsplit
 import httplib2
 import urllib
 from django.utils import simplejson as json
 from django.conf import settings
+<<<<<<< HEAD
 from django.contrib.auth.decorators import login_required
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
@@ -34,6 +35,10 @@ from geonode.layers.models import Layer
 from geonode.worldmap.stats.models import LayerStats
 import re
 import random
+=======
+from django.utils.http import is_safe_url
+from django.http.request import validate_host
+>>>>>>> gncore/master
 from geonode.utils import ogc_server_settings
 
 
@@ -43,6 +48,8 @@ HGL_URL = 'http://hgl.harvard.edu:8080/HGL'
 
 @csrf_exempt
 def proxy(request):
+    PROXY_ALLOWED_HOSTS = (ogc_server_settings.hostname,) + getattr(settings, 'PROXY_ALLOWED_HOSTS', ())
+
     if 'url' not in request.GET:
         return HttpResponse(
                 "The proxy service requires a URL-encoded URL as a parameter.",
@@ -50,24 +57,35 @@ def proxy(request):
                 content_type="text/plain"
                 )
 
-    url = urlsplit(request.GET['url'])
+    raw_url = request.GET['url']
+    url = urlsplit(raw_url)
+
     locator = url.path
     if url.query != "":
         locator += '?' + url.query
     if url.fragment != "":
         locator += '#' + url.fragment
 
+    if not settings.DEBUG:
+        if not validate_host(url.hostname, PROXY_ALLOWED_HOSTS):
+            return HttpResponse(
+                    "DEBUG is set to False but the host of the path provided to the proxy service is not in the"
+                    " PROXY_ALLOWED_HOSTS setting.",
+                    status=403,
+                    content_type="text/plain"
+                    )
     headers = {}
-    if settings.SESSION_COOKIE_NAME in request.COOKIES:
+
+    if settings.SESSION_COOKIE_NAME in request.COOKIES and is_safe_url(url=raw_url, host=ogc_server_settings.netloc):
         headers["Cookie"] = request.META["HTTP_COOKIE"]
 
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
         headers["Content-Type"] = request.META["CONTENT_TYPE"]
 
-    if request.META.get('HTTP_AUTHORIZATION'):
-        headers['AUTHORIZATION'] = request.META.get('HTTP_AUTHORIZATION')
-
-    conn = HTTPConnection(url.hostname, url.port)
+    if url.scheme =='https':
+        conn = HTTPSConnection(url.hostname, url.port)
+    else:
+        conn = HTTPConnection(url.hostname, url.port)
     conn.request(request.method, locator, request.raw_post_data, headers)
     result = conn.getresponse()
     response = HttpResponse(
@@ -75,9 +93,6 @@ def proxy(request):
             status=result.status,
             content_type=result.getheader("Content-Type", "text/plain")
             )
-
-    if result.getheader('www-authenticate'):
-        response['www-authenticate'] = result.getheader('www-authenticate')
 
     return response
 

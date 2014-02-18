@@ -208,6 +208,7 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
+<<<<<<< HEAD
 
         # Removing unique constraint on 'ContactRole', fields ['contact', 'layer', 'role']
         db.delete_unique('maps_contactrole', ['contact_id', 'layer_id', 'role_id'])
@@ -244,6 +245,9 @@ class Migration(SchemaMigration):
 
         # Deleting model 'ContactRole'
         db.delete_table('maps_contactrole')
+=======
+        raise RuntimeError("Cannot reverse this migration.")
+>>>>>>> gncore/master
 
         # Deleting model 'MapStats'
         db.delete_table('maps_mapstats')
