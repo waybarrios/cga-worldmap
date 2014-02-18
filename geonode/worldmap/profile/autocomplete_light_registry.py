@@ -1,5 +1,4 @@
 import autocomplete_light
-from models import WorldmapProfile
 from geonode.people.models import Profile
 from django.contrib.auth.models import User
 
@@ -20,12 +19,4 @@ autocomplete_light.register(Profile,
     autocomplete_js_attributes={'placeholder': 'name or email..',},
 )
 
-# This will generate a PersonAutocomplete class
-autocomplete_light.register(WorldmapProfile,
-    # Just like in ModelAdmin.search_fields
-    search_fields=['^name',  '^email', '^user__username', '^user__email'],
-    # This will actually data-minimum-characters which will set
-    # widget.autocomplete.minimumCharacters.
-    autocomplete_js_attributes={'placeholder': 'name or email..',},
-)
 

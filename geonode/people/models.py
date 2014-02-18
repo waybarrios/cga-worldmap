@@ -59,13 +59,11 @@ class Profile(models.Model):
     email = models.EmailField(blank=True, null=True, help_text=_('address of the electronic mailbox of the responsible organization or individual'))
     keywords = TaggableManager(_('keywords'), blank=True, help_text=_('commonly used word(s) or formalised word(s) or phrase(s) used to describe the subject (space or comma-separated'))
 
-    ##### WorldMap Custom Fields #####
-#     display_email = models.BooleanField(_('Display my email address on my profile'), blank=False, default=False, null=False)
-#     is_org_member = models.BooleanField(settings.CUSTOM_ORG_AUTH_TEXT, blank=True, null=False, default=False)
-#     member_expiration_dt = models.DateField(_('Affiliation expires on: '), blank=False, null=False, default=datetime.today())
-#     created_dttm = models.DateTimeField(auto_now_add=True)
-#     last_modified = models.DateTimeField(auto_now=True)
-    ##### WorldMap Custom Fields #####
+    #### WorldMap Custom Fields #####
+    display_email = models.BooleanField(_('Display my email address on my profile'), blank=False, default=False, null=False)
+    is_org_member = models.BooleanField(settings.CUSTOM_ORG_AUTH_TEXT, blank=True, null=False, default=False)
+    member_expiration_dt = models.DateField(_('Affiliation expires on: '), blank=False, null=False, default=datetime.today())
+    #### WorldMap Custom Fields #####
         
     def clean(self):
         # the specification says that either name or organization should be provided
@@ -88,7 +86,7 @@ def user_post_save(sender, **kwargs):
     """
     Create a Profile instance for all newly created User instances. We only
     run on user creation to avoid having to check for existence on each call
-    to User.save.
+    togeonode.se User.save.
     """
     user, created = kwargs["instance"], kwargs["created"]
     if created:

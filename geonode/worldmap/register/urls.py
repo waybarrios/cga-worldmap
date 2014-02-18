@@ -6,6 +6,9 @@ urlpatterns = patterns('',
                        url(r"^signup/$", SignupView.as_view(), name="account_signup"),
                        url(r'^forgotname/$',
                            forgotUsername, name="account_forgotname"),
+                       url(r'^registercomplete/$',
+                           registercompleteOrganizationUser,
+                           name='registration_complete'),
                        (r'', include('account.urls')),
                        )
 

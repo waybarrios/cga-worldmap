@@ -413,7 +413,7 @@ SOUTH_MIGRATION_MODULES = {
 SOUTH_TESTS_MIGRATE=False
 
 # Settings for Social Apps
-AUTH_PROFILE_MODULE = 'profile.WorldMapProfile'
+AUTH_PROFILE_MODULE = 'people.Profile'
 REGISTRATION_OPEN = True
 
 # Email for users to contact admins.

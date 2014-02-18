@@ -13,7 +13,7 @@ import logging
 import account.views
 from account.utils import default_redirect
 from django.contrib.sites.models import Site
-from geonode.worldmap.profile.models import WorldmapProfile
+from geonode.people.models import Profile
 import re
 
 logger = logging.getLogger("geonode.worldmap.register.views")
@@ -95,7 +95,7 @@ def confirm(request):
 
 
 def registercompleteOrganizationUser(request, template_name='register/registration_complete.html',):
-    if "group_username" in request.session and settings.CUSTOM_ORG_COOKIE in request.COOKIES:
+    if "group_username" in request.session:
         username = request.session["group_username"]
         user = User.objects.get(username=username)
         userProfile = user.get_profile()
@@ -139,7 +139,7 @@ def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner
     new_user.is_active = False
     new_user.save()
     if new_user:
-        new_profile = WorldmapProfile.objects.get_or_create(user=new_user, name=new_user.username, email=new_user.email)
+        new_profile = Profile.objects.get_or_create(user=new_user, name=new_user.username, email=new_user.email)
         if settings.USE_CUSTOM_ORG_AUTHORIZATION and new_user.email.endswith(settings.CUSTOM_GROUP_EMAIL_SUFFIX):
             new_profile.is_org_member = True
             new_profile.member_expiration_dt = datetime.today() + timedelta(days=365)
@@ -156,7 +156,7 @@ def _send_permissions_email(user_email, map_layer_title, map_layer_url, map_laye
 
     current_site = Site.objects.get_current()
     user = User.objects.get(email = user_email)
-    profile = WorldmapProfile.objects.get(user=user)
+    profile = Profile.objects.get(user=user)
     owner = User.objects.get(id=map_layer_owner_id)
 
     subject = render_to_string('register/new_user_email_subject.txt',
