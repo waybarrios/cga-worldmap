@@ -208,46 +208,7 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-<<<<<<< HEAD
-
-        # Removing unique constraint on 'ContactRole', fields ['contact', 'layer', 'role']
-        db.delete_unique('maps_contactrole', ['contact_id', 'layer_id', 'role_id'])
-
-        # Deleting model 'Contact'
-        db.delete_table('maps_contact')
-
-        # Deleting model 'LayerCategory'
-        db.delete_table('maps_layercategory')
-
-        # Deleting model 'Layer'
-        db.delete_table('maps_layer')
-
-        # Deleting model 'LayerAttribute'
-        db.delete_table('maps_layerattribute')
-
-        # Deleting model 'Map'
-        db.delete_table('maps_map')
-
-        # Deleting model 'MapSnapshot'
-        db.delete_table('maps_mapsnapshot')
-
-        # Deleting model 'SocialExplorerLocation'
-        db.delete_table('maps_socialexplorerlocation')
-
-        # Deleting model 'MapLayer'
-        db.delete_table('maps_maplayer')
-
-        # Deleting model 'Role'
-        db.delete_table('maps_role')
-
-        # Removing M2M table for field permissions on 'Role'
-        db.delete_table('maps_role_permissions')
-
-        # Deleting model 'ContactRole'
-        db.delete_table('maps_contactrole')
-=======
         raise RuntimeError("Cannot reverse this migration.")
->>>>>>> gncore/master
 
         # Deleting model 'MapStats'
         db.delete_table('maps_mapstats')

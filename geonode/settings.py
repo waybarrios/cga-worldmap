@@ -759,7 +759,7 @@ if LOCKDOWN_GEONODE:
 
 
 # A tuple of hosts the proxy can send requests to.
-PROXY_ALLOWED_HOSTS = ("*")
+PROXY_ALLOWED_HOSTS = ()
 
 # The proxy to use when making cross origin requests.
 PROXY_URL = '/proxy/?url='

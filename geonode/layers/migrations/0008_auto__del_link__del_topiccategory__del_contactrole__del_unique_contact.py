@@ -137,83 +137,8 @@ class Migration(SchemaMigration):
         ct = ContentType.objects.get(app_label='layers', model='contactrole')
         ct.delete()
 
-
-<<<<<<< HEAD
-        # Adding field 'Layer.temporal_extent_start'
-        db.add_column('layers_layer', 'temporal_extent_start', self.gf('django.db.models.fields.DateField')(null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.bbox_x1'
-        db.add_column('layers_layer', 'bbox_x1', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=19, decimal_places=10, blank=True), keep_default=False)
-
-        # Adding field 'Layer.bbox_x0'
-        db.add_column('layers_layer', 'bbox_x0', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=19, decimal_places=10, blank=True), keep_default=False)
-
-        # Adding field 'Layer.distribution_description'
-        db.add_column('layers_layer', 'distribution_description', self.gf('django.db.models.fields.TextField')(null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.abstract'
-        db.add_column('layers_layer', 'abstract', self.gf('django.db.models.fields.TextField')(default='', blank=True), keep_default=False)
-
-        # Adding field 'Layer.supplemental_information'
-        db.add_column('layers_layer', 'supplemental_information', self.gf('django.db.models.fields.TextField')(default=u'No information provided'), keep_default=False)
-
-        # Adding field 'Layer.edition'
-        db.add_column('layers_layer', 'edition', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.id'
-        db.add_column('layers_layer', 'id', self.gf('django.db.models.fields.AutoField')(default=0, primary_key=True), keep_default=False)
-
-        # Adding field 'Layer.category'
-        db.add_column('layers_layer', 'category', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['layers.TopicCategory'], null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.spatial_representation_type'
-        db.add_column('layers_layer', 'spatial_representation_type', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.bbox_y0'
-        db.add_column('layers_layer', 'bbox_y0', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=19, decimal_places=10, blank=True), keep_default=False)
-
-        # Adding field 'Layer.bbox_y1'
-        db.add_column('layers_layer', 'bbox_y1', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=19, decimal_places=10, blank=True), keep_default=False)
-
-        # Adding field 'Layer.topic_category'
-        #db.add_column('layers_layer', 'topic_category', self.gf('django.db.models.fields.CharField')(default='location', max_length=255), keep_default=False)
-
-        # Adding field 'Layer.purpose'
-        db.add_column('layers_layer', 'purpose', self.gf('django.db.models.fields.TextField')(null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.srid'
-        db.add_column('layers_layer', 'srid', self.gf('django.db.models.fields.CharField')(default='EPSG:4326', max_length=255), keep_default=False)
-
-        # Adding field 'Layer.language'
-        db.add_column('layers_layer', 'language', self.gf('django.db.models.fields.CharField')(default='eng', max_length=3), keep_default=False)
-
-        # Adding field 'Layer.keywords_region'
-        db.add_column('layers_layer', 'keywords_region', self.gf('django.db.models.fields.CharField')(default='USA', max_length=3), keep_default=False)
-
-        # Adding field 'Layer.maintenance_frequency'
-        db.add_column('layers_layer', 'maintenance_frequency', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True), keep_default=False)
-
-        # Adding field 'Layer.csw_anytext'
-        db.add_column('layers_layer', 'csw_anytext', self.gf('django.db.models.fields.TextField')(null=True), keep_default=False)
-
-        # Adding field 'Layer.csw_type'
-        db.add_column('layers_layer', 'csw_type', self.gf('django.db.models.fields.CharField')(default='dataset', max_length=32), keep_default=False)
-
-        # Adding field 'Layer.metadata_uploaded'
-        db.add_column('layers_layer', 'metadata_uploaded', self.gf('django.db.models.fields.BooleanField')(default=False), keep_default=False)
-
-        # Adding field 'Layer.csw_wkt_geometry'
-        db.add_column('layers_layer', 'csw_wkt_geometry', self.gf('django.db.models.fields.TextField')(default='SRID=4326;POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))'), keep_default=False)
-
-        # Adding field 'Layer.constraints_use'
-        db.add_column('layers_layer', 'constraints_use', self.gf('django.db.models.fields.CharField')(default='copyright', max_length=255), keep_default=False)
-
-        # Deleting field 'Layer.resourcebase_ptr'
-        db.delete_column('layers_layer', 'resourcebase_ptr_id')
-=======
     def backwards(self, orm):
         raise RuntimeError("Cannot reverse this migration.")
->>>>>>> gncore/master
 
 
     models = {

@@ -47,7 +47,7 @@ def resource_urls(request):
         USE_CUSTOM_ORG_AUTHORIZATION = settings.USE_CUSTOM_ORG_AUTHORIZATION,
         CUSTOM_GROUP_NAME = settings.CUSTOM_GROUP_NAME,
         GOOGLE_API_KEY=settings.GOOGLE_API_KEY,
-        GOOGLE_ANALYTICS_CODE=settings.GOOGLE_ANALYTICS_CODE
+        GOOGLE_ANALYTICS_CODE=settings.GOOGLE_ANALYTICS_CODE,
         PROXY_URL = getattr(settings, 'PROXY_URL', '/proxy/?url='),
         SOCIAL_BUTTONS = getattr(settings, 'SOCIAL_BUTTONS', True)
     )

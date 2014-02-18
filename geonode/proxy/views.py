@@ -22,23 +22,11 @@ from django.http import HttpResponse
 from httplib import HTTPConnection,HTTPSConnection
 from urlparse import urlsplit
 import httplib2
-import urllib
-from django.utils import simplejson as json
 from django.conf import settings
-<<<<<<< HEAD
-from django.contrib.auth.decorators import login_required
-from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
 import logging
-from urlparse import urlparse
-from geonode.layers.models import Layer
-from geonode.worldmap.stats.models import LayerStats
-import re
-import random
-=======
 from django.utils.http import is_safe_url
 from django.http.request import validate_host
->>>>>>> gncore/master
 from geonode.utils import ogc_server_settings
 
 
