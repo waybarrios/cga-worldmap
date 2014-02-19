@@ -3,16 +3,31 @@
 Custom views for creating, editing and viewing site-specific user profiles.
 
 """
+from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+from django.utils.translation import ugettext_lazy as _
+from geonode.maps.models import Contact
 from geonode.profile.forms import ContactProfileForm
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from datetime import datetime
+from geonode.register.forms import ForgotUsernameForm
+
+
+def profile_detail(request, username):
+    profile = get_object_or_404(Contact, user__username=username)
+
+    return render_to_response("profiles/profile_detail.html", RequestContext(request, {
+        "profile": profile,
+        }))
+
 
 def edit_profile(request, form_class=None, success_url=None,
                  template_name='profiles/edit_profile.html',
@@ -83,7 +98,7 @@ def edit_profile(request, form_class=None, success_url=None,
     #
     
     if success_url is None:
-        success_url = reverse('profiles_profile_detail',
+        success_url = reverse('profile_detail',
                               kwargs={ 'username': request.user.username })
     if form_class is None:
         form_class = ContactProfileForm(instance=profile_obj)
@@ -112,4 +127,6 @@ def edit_profile(request, form_class=None, success_url=None,
                                 'org_expiration_dt': datetime.today().date().strftime("%B %d %Y") if profile_obj.member_expiration_dt is None else profile_obj.member_expiration_dt.strftime("%B %d %Y")
                                 },
                               context_instance=context)
+
+
 edit_profile = login_required(edit_profile)

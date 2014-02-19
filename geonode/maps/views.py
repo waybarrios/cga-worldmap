@@ -630,10 +630,9 @@ def additional_layers(request, map_obj, layerlist):
     groups = set()
     layers = []
     bbox = None
-    for layer_name in layerlist:
+    for uuid in layerlist:
         try:
-            service, typename = _get_service_and_typename(layer_name)
-            layer = Layer.objects.get(typename=typename, service__name=service)
+            layer = Layer.objects.get(uuid=uuid)
         except ObjectDoesNotExist:
             # bad layer, skip
             continue
@@ -646,6 +645,9 @@ def additional_layers(request, map_obj, layerlist):
         if group not in groups:
             groups.add(group)
 
+        format = "image/png"
+        if (layer.service and layer.service.type == "REST"):
+            format="png"
         layers.append(MapLayer(
                     map = map_obj,
                     name = layer.typename,
@@ -653,10 +655,10 @@ def additional_layers(request, map_obj, layerlist):
                     visibility = request.user.has_perm('maps.view_layer', obj=layer),
                     styles='',
                     group=group,
-                    source_params = json.dumps({"ptype":layer.ptype, "remote": (service is not None),
-                                                "name": (None if service is None else service)}),
+                    source_params = json.dumps({"ptype":layer.ptype, "remote": (layer.service is not None),
+                                                "name": (None if layer.service is None else layer.service.name)}),
                     layer_params= u'{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '","bbox":' \
-                                  + layer.bbox + ',"format":"image/png","queryable":true}')
+                                  + layer.bbox + ',"format":"' + format + '","queryable":true}')
                 )    
     return layers, groups, bbox
 
@@ -745,46 +747,6 @@ def ajax_start_twitter(request):
             status=500
         )
 
-# def chawellness(request, snapshot=None):
-#     '''
-#         Custom view for a particular map
-#     '''
-#     map_obj = get_object_or_404(Map,urlsuffix="CHAwellness")
-#     config = map_obj.viewer_json(request.user)  
-#     
-#     if snapshot is None:
-#         config = map_obj.viewer_json(request.user)
-#     else:
-#         config = snapshot_config(snapshot, map_obj, request.user)
-# 
-#     first_visit = True
-#     if request.session.get('visit' + str(map_obj.id), False):
-#         first_visit = False
-#     else:
-#         request.session['visit' + str(map_obj.id)] = True
-# 
-#     mapstats, created = MapStats.objects.get_or_create(map=map_obj)
-#     mapstats.visits += 1
-#     if created or first_visit:
-#             mapstats.uniques+=1
-#     mapstats.save()
-# 
-#     #Remember last visited map
-#     request.session['lastmap'] = map_obj.id
-#     request.session['lastmapTitle'] = map_obj.title
-# 
-#     config['first_visit'] = first_visit
-#     config['uid'] = request.user.id
-#     config['edit_map'] = request.user.has_perm('maps.change_map', obj=map_obj)
-#     config['topic_categories'] = category_list()    
-#     
-#     return render_to_response("maps/CHAwellness.html", RequestContext(request, {
-#         'config': json.dumps(config),
-#         'GOOGLE_API_KEY' : settings.GOOGLE_API_KEY,
-#         'GEOSERVER_BASE_URL' : settings.GEOSERVER_BASE_URL,
-#         'maptitle': map_obj.title,
-#         'urlsuffix': get_suffix_if_custom(map_obj)
-#         }))      
 
 def tweetview(request):
     map = get_object_or_404(Map,urlsuffix="tweetmap")
@@ -885,10 +847,9 @@ class LayerDescriptionForm(forms.Form):
 
 @login_required
 def layer_metadata(request, layername, service=None):
-    if service is not None:
-        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
-    else:
-        layer = get_object_or_404(Layer, typename=layername, service=None)
+
+    service, typename = _get_service_and_typename(layername)
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
@@ -989,6 +950,7 @@ def layer_metadata(request, layername, service=None):
                     if the_layer.in_gazetteer:
                         the_layer.gazetteer_project = gazetteer_form.cleaned_data["project"]
                 the_layer.save()
+                the_layer.save_to_geonetwork()
 
                 if settings.USE_GAZETTEER and show_gazetteer_form:
                     if settings.USE_QUEUE:
@@ -1020,10 +982,7 @@ def layer_metadata(request, layername, service=None):
                     if str(mapid) == "new":
                         return HttpResponseRedirect("/maps/new?layer" + layer.typename)
                     else:
-                        if layer.local:
-                            return HttpResponseRedirect("/data/" + layer.typename)
-                        else:
-                            return HttpResponseRedirect("/data/" + layer.typename + "/" + layer.service.name)
+                        return HttpResponseRedirect("/data/" + layer.service_typename())
 
         #Deal with a form submission via ajax
         if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
@@ -1134,6 +1093,11 @@ def layer_detail(request, layername, service=None):
 
     layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
+    if not layer.local and layer.service.type == "HGL":
+        from geonode.queue.tasks import load_hgl_layer
+        load_hgl_layer(layer.typename)
+
+
     if not request.user.has_perm('maps.view_layer', obj=layer):
         return HttpResponse(loader.render_to_string('401.html',
             RequestContext(request, {'error_message':
@@ -1146,11 +1110,12 @@ def layer_detail(request, layername, service=None):
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
         source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
-                        +  (None if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
+                        +  ('null' if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
-        attributes + '"bbox": ' + layer.bbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
+        attributes + '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
+    #unless its HGL
     map_obj = Map(projection="EPSG:900913")
     DEFAULT_BASE_LAYERS = default_map_config()[1]
 
@@ -2731,11 +2696,10 @@ def create_pg_layer(request):
 
 @login_required
 def layer_contacts(request, layername, service=None):
-    if service is not None:
-        layer = get_object_or_404(Layer, typename=layername, service=Service.objects.get(name=service))
-    else:
-        layer = get_object_or_404(Layer, typename=layername, service=None)
-    layer = get_object_or_404(Layer, typename=layername)
+
+    service, typename = _get_service_and_typename(layername)
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.change_layer', obj=layer):
             return HttpResponse(loader.render_to_string('401.html',
@@ -2786,10 +2750,7 @@ def layer_contacts(request, layername, service=None):
                 layer.poc = new_poc
                 layer.metadata_author = new_author
                 layer.save()
-                if layer.local:
-                    return HttpResponseRedirect("/data/" + layer.typename)
-                else:
-                    return HttpResponseRedirect("/data/" + service + "/" + layer.typename)
+                return HttpResponseRedirect("/data/" + layer.service_typename())
 
 
 

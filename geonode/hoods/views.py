@@ -55,7 +55,7 @@ def create_hood(request):
         )
     request.session["bra_harvard_redirect"] = request.get_full_path()
     if not request.user.is_authenticated():
-        return HttpResponseRedirect('/accounts/login?next=' + request.get_full_path())
+        return HttpResponseRedirect('/account/login?next=' + request.get_full_path())
 
     mapid = settings.HOODS_TEMPLATE_ID
     mapTemplate= get_object_or_404(Map,pk=mapid)

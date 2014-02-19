@@ -444,7 +444,10 @@ def create_django_record(user, title, keywords, abstract, gs_resource, permissio
                     title=title or gs_resource.title,
                     uuid=layer_uuid,
                     abstract=abstract or gs_resource.abstract or '',
-                    owner=user)
+                    owner=user,
+                    distribution_url="%sdata/%s" % (settings.SITEURL,typename),
+                    distribution_description=_("Online link to layer description")
+                    )
     saved_layer, created = Layer.objects.get_or_create(name=gs_resource.name,
                                                        workspace=gs_resource.store.workspace.name,
                                                        defaults=defaults)
@@ -762,6 +765,11 @@ def _create_db_featurestore(name, data, overwrite = False, charset = None):
 def llbbox_to_mercator(llbbox):
     minlonlat = forward_mercator([llbbox[0],llbbox[1]])
     maxlonlat = forward_mercator([llbbox[2],llbbox[3]])
+    return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
+
+def mercator_to_llbbox(bbox):
+    minlonlat = inverse_mercator([bbox[0],bbox[1]])
+    maxlonlat = inverse_mercator([bbox[2],bbox[3]])
     return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
 
 def forward_mercator(lonlat):

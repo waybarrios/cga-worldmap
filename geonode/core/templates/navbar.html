@@ -9,7 +9,7 @@
   	{% for officialsite in officialsites %}
   	<option value="/{{officialsite.officialurl}}">{{officialsite.title}}</option>
   	{% endfor%}
-  	<option value="{% url maps_search %}?sort=last_modified&dir=DESC">More Maps</option>
+  	<option value="{% url "maps_search" %}?sort=last_modified&dir=DESC">More Maps</option>
   </select>
   </li>
   

@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 {% load geonode_auth %}
 {% load dialogos_tags %}
@@ -13,12 +13,12 @@
 {{ block.super }}
 <script type="text/javascript">
     var app;
-    var mapurl = "{% url geonode.maps.views.view map.id %}";
+    var mapurl = "{% url "geonode.maps.views.view" "map.id" %}";
     {% if map.officialurl %}
-        mapurl="{% url geonode.maps.views.official_site map.officialurl %}";
+        mapurl="{% url "geonode.maps.views.official_site" "map.officialurl" %}";
         {% else %}
         {% if map.url %}
-            mapurl="{% url geonode.maps.views.view map.url %}";
+            mapurl="{% url "geonode.maps.views.view" "map.url" %}";
             {% endif %}
             {% endif %}
 
@@ -46,13 +46,13 @@
                         'none': '_none'
                     },
                     renderTo: "permissions_form",
-                    submitTo: "{% url geonode.maps.views.ajax_map_permissions_by_email map.id  %}",
-                    userLookup: "{% url geonode.views.ajax_lookup_email %}",
+                    submitTo: "{% url "geonode.maps.views.ajax_map_permissions_by_email" "map.id" %}",
+                    userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
                     customGroup: "{{ customGroup }}",
                     permissions: {{ permissions_json }},
             listeners: {
                 updated: function(perms) {
-                    var submitTo = "{% url geonode.maps.views.ajax_map_permissions_by_email map.id %}";
+                    var submitTo = "{% url "geonode.maps.views.ajax_map_permissions_by_email" "map.id" %}";
                     Ext.Ajax.request({ url: submitTo, jsonData: perms.writePermissions() });
                 }
             }
@@ -78,7 +78,7 @@
 }(document, 'script', 'facebook-jssdk'));</script>
 {% endblock %}
 
-{% block main %}
+{% block body %}
 <div class="twocol">
    {% overall_rating map "map" as map_rating %}
     <h3>{{map.title}}</h3>
@@ -130,7 +130,7 @@
                 <input type="hidden" name="next" value="{{ request.path }}" />
             </form>
         {% else %}
-            <p><a href="{% url auth_login %}">{% trans "Login to add a comment" %}</a></p>
+            <p><a href="{% url "auth_login" %}">{% trans "Login to add a comment" %}</a></p>
         {% endif %}
     </div>
 
@@ -145,7 +145,7 @@
 <div id="sidebar" class="threecol">
     <!--
         <h3>{% trans "Download" %}</h3>
-        <p><a href="{% url geonode.maps.views.map_download map.id %}">{% trans "Download all layers included in this map" %}</a></p>
+        <p><a href="{% url "geonode.maps.views.map_download" "map.id" %}">{% trans "Download all layers included in this map" %}</a></p>
     -->
     <h3>{% trans "Map Layers" %}</h3>
     <p>{% trans "This map uses the following layers" %} </p>
@@ -158,7 +158,7 @@
     </ul>
     <!-- Uncomment this to expose map-specific GetCapabilities document
 	<p>{% trans "WMS GetCapabilities" %}:<br/>
-	<a href="{% url capabilities_map map.id %}">{{ SITE_URL }}{% url capabilities_map map.id %}</a><p>
+	<a href="{% url "capabilities_map" "map.id" %}">{{ SITE_URL }}{% url "capabilities_map" "map.id" %}</a><p>
  	-->
     <h3>{% trans "Map Views" %}</h3>
     <p>{% trans "This map has been viewed " %} {{ mapstats.visits }} {% trans "time(s) " %}  {% trans "by " %} {{ mapstats.uniques }} {% trans "user(s)" %}  </p>
@@ -200,26 +200,26 @@
 
 
         {% if map.officialurl %}
-        <li><a href="{% url geonode.maps.views.official_site map.officialurl %}">
+        <li><a href="{% url "geonode.maps.views.official_site" "map.officialurl" %}">
             {% else %}
             {% if map.url %}
-            <li><a href="{% url geonode.maps.views.view map.url %}">
+            <li><a href="{% url "geonode.maps.views.view" "map.url" %}">
                 {% else %}
-                <li><a href="{% url geonode.maps.views.view map.id %}">
+                <li><a href="{% url "geonode.maps.views.view" "map.id" %}">
                     {% endif %}
                     {% endif %}
                     {% trans "View map" %}</a></li>
 
                 {% if can_change %}
-                <li><a href="{% url geonode.maps.views.map_controller map.id %}/describe/">{% trans "Edit map information" %}</a></li>
+                <li><a href="{% url "geonode.maps.views.map_controller" "map.id" %}/describe/">{% trans "Edit map information" %}</a></li>
                 {% endif %}
                 {% if can_change_permissions %}
-                <li><a href="{% url edit_map_permissions map.id %}">{% trans "Edit map permissions" %}</a></li>
+                <li><a href="{% url "edit_map_permissions" "map.id" %}">{% trans "Edit map permissions" %}</a></li>
                 {% endif %}
                 {% if can_delete %}
-                <li><a href="{% url geonode.maps.views.map_controller map.id %}?remove">{% trans "Delete map" %}</a></li>
+                <li><a href="{% url "geonode.maps.views.map_controller" "map.id" %}?remove">{% trans "Delete map" %}</a></li>
                 {% endif %}
-                <!--li><a href="{% url geonode.maps.views.newmap %}?copy={{map.id}}">{% trans "Duplicate map" %}</a></li-->
+                <!--li><a href="{% url "geonode.maps.views.newmap" %}?copy={{map.id}}">{% trans "Duplicate map" %}</a></li-->
     </ul>
     {% has_obj_perm user map "maps.change_map_permissions" as can_change_permissions %}
     {% if can_change_permissions %}

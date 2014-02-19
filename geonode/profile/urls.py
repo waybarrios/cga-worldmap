@@ -31,4 +31,6 @@ urlpatterns = patterns('',
                        url(r'^edit/$',
                            views.edit_profile,
                            name='profiles_edit_profile'),
+                       url(r"^(?P<username>[^/]*)/$", views.profile_detail, name="profile_detail"),
                        )
+

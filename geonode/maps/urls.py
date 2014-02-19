@@ -62,7 +62,6 @@ datapatterns = patterns('geonode.maps.views',
 
     (r'^(?P<layername>[^/]*)/ajax-edit-check/?$', 'ajax_layer_edit_check'),
     (r'^(?P<layername>[^/]*)/ajax_layer_update/?$', 'ajax_layer_update'),
-    (r'^layerstats/?$', 'ajax_increment_layer_stats'),
     url(r'^addlayers/?$', 'addlayers', name='addlayers'),
     url(r'^api/batch_permissions_by_email/?$', 'batch_permissions_by_email'),
     url(r'^create_pg_layer', 'create_pg_layer', name='create_pg_layer'),

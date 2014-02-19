@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 {% block title %} {% trans "Welcome!" %} - {{ block.super }} {% endblock %}
 {% block indexclass %} class="here" {% endblock %}
@@ -81,7 +81,7 @@
 </style>
 {% endblock %}
 
-{% block main %}
+{% block body %}
 <div class="onecol">
     <!-- TODO: i18n on the text here -->
     <div id="content">

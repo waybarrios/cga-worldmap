@@ -133,16 +133,33 @@ Here are the instructions for Ubuntu 12.04, after above dependencies have been i
   paver stop
 
 
+Installation Notes
+==================
+
+When running "paver setup" command, if error about version string parsing occurs, 
+edit ~/.venvs/worldmap/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py, 
+search for "ver = geos_version()" under "def geos_version_info()", edit "ver = geos_version()" 
+to "ver = geos_version().split(' ')[0]". In this case the space between the version will be deleted. 
+Finally, run "paver setup" again.
 
 
-* note:
 
-  When running "paver setup" command, if error about version string parsing occurs,
-  edit ~/cga-worldmap/lib/python2.7/site-packages/django/contrib/gis/geos/libgeos.py,
-  search for "ver = geos_version()" under "def geos_version_info()", 
-  edit "ver = geos_version()" to "ver = geos_version().split(' ')[0]".
-  In this case the space between the version will be deleted.
-  Finally, run "pave build" again.
+If you receive the following error::
+
+  File "pavement.py", line 243, in package_dir
+  package_outdir.mkdir()
+  AttributeError: 'str' object has no attribute 'mkdir'
+
+Then, go to ~/cga-worldmap/pavement.py, change::
+
+  "package_outdir.mkdir()" 
+
+to::
+
+  "os.mkdir(package_outdir)".
+
+
+
 
 This command::
 

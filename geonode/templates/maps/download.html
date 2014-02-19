@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block head %} 
@@ -12,7 +12,7 @@
 
         function update() { 
             Ext.Ajax.request({
-                url : "{% url maps_download_check %}",
+                url : "{% url "maps_download_check" %}",
                 method: "GET",              
                 success: function(result) { 
                     process = Ext.util.JSON.decode(result.responseText);
@@ -60,7 +60,7 @@
 </script>
 {% endblock %} 
 
-{% block main %}
+{% block body %}
 <div class="twocol">
   <h3>Download {{map.title}}</h3>
   <p>

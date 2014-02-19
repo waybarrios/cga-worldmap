@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block content %}
@@ -10,7 +10,7 @@
   <input type="hidden" name="next" value="{{ next }}" />
 </form>
 
-<p>{% trans "Forgot password" %}? <a href="{% url auth_password_reset %}">{% trans "Reset it" %}</a>!</p>
-<p>{% trans "Not member" %}? <a href="{% url registration_register %}">{% trans "Register" %}</a>!</p>
+<p>{% trans "Forgot password" %}? <a href="{% url "auth_password_reset" %}">{% trans "Reset it" %}</a>!</p>
+<p>{% trans "Not member" %}? <a href="{% url "registration_register" %}">{% trans "Register" %}</a>!</p>
 </div>
 {% endblock %}

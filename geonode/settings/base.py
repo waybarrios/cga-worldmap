@@ -30,7 +30,7 @@ DEBUG = TEMPLATE_DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'wm_db',
+        'NAME': 'wm_db_django15',
         'USER': 'wm_user',
         'PASSWORD': 'wm_password',
         'HOST': 'localhost', 'PORT': '5432'
@@ -112,6 +112,12 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.messages',
 
+
+    # Theme
+    "pinax_theme_bootstrap_account",
+    "pinax_theme_bootstrap",
+    'django_forms_bootstrap',
+
     # Third party apps
     'django_extensions',
     'account',
@@ -122,8 +128,8 @@ INSTALLED_APPS = (
     'south',
     'autocomplete_light',
     'djcelery',
-    'djkombu',
-    ''
+    'kombu.transport.django',
+
 
     # GeoNode internal apps
     'geonode.core',
@@ -135,7 +141,9 @@ INSTALLED_APPS = (
     'geonode.capabilities',
     'geonode.queue',
     'geonode.certification',
+    'geonode.hoods',
     'geonode.contrib.services',
+
     #'geonode.hoods',
     #'geonode.gazetteer',
     #'debug_toolbar',
@@ -200,10 +208,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.request',
+    'account.context_processors.account',
+    'pinax_theme_bootstrap_account.context_processors.theme',
     # The context processor belows add things like SITEURL
     # and GEOSERVER_BASE_URL to all pages that use a RequestContext
-    'geonode.maps.context_processors.resource_urls',
-    'account.context_processors.account',
+    'geonode.context_processors.resource_urls',
+
 )
 
 MIDDLEWARE_CLASSES = (
@@ -339,7 +349,10 @@ DEFAULT_LAYER_SOURCE = {
 
 REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 30
-SERVE_MEDIA = DEBUG;
+# Email for users to contact admins.
+THEME_ACCOUNT_CONTACT_EMAIL = 'admin@example.com'
+
+SERVE_MEDIA = DEBUG
 
 
 MAP_BASELAYERS = [
@@ -467,8 +480,12 @@ USE_GAZETTEER = False
 #and gazetteer updates
 USE_QUEUE = False
 QUEUE_INTERVAL = '*/10'
+SERVICE_UPDATE_INTERVAL = '*/1'
+
 CELERY_IMPORTS = ("geonode.queue", )
 BROKER_URL = "django://"
+
+
 if USE_QUEUE:
     import djcelery
     djcelery.setup_loader()
@@ -510,5 +527,5 @@ SESSION_COOKIE_HTTPONLY = True
 # Only works with Django 1.6+
 CSRF_COOKIE_HTTPONLY = True
 
-
+OGP_URL = ""
 

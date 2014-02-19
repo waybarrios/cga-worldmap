@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import threading
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.db import models
 from geoserver.resource import FeatureType
 from owslib.csw import CatalogueServiceWeb
@@ -631,8 +632,8 @@ class Contact(models.Model):
             raise ValidationError(_('The email address is already registered.'))
 
     def get_absolute_url(self):
-        return ('profiles_profile_detail', (), { 'username': self.user.username })
-    get_absolute_url = models.permalink(get_absolute_url)
+        return reverse('profile_detail', args=[self.user.username,])
+
 
     def __unicode__(self):
         return u"%s (%s)" % (self.name if self.name else self.user.username, self.organization)
@@ -926,8 +927,8 @@ class Layer(models.Model, PermissionLevelMixin):
     store = models.CharField(max_length=128)
     storeType = models.CharField(max_length=128)
     name = models.CharField(max_length=128)
-    uuid = models.CharField(max_length=36)
-    typename = models.CharField(max_length=128, unique=True)
+    uuid = models.CharField(max_length=36,db_index=True)
+    typename = models.CharField(max_length=128)
     owner = models.ForeignKey(User, blank=True, null=True)
     service = models.ForeignKey('services.Service', null=True, blank=True, related_name='layer_set')
     contacts = models.ManyToManyField(Contact, through='ContactRole')
@@ -1375,15 +1376,23 @@ class Layer(models.Model, PermissionLevelMixin):
                     logger.error("Store for %s does not exist", self.name)
                     return None
             else:
-                return None
+                remote_resource = LayerRemoteResource()
+                remote_resource.metadata_links = zip(["text/xml"], ["TC211"], [settings.GEONETWORK_BASE_URL + \
+                    "srv/en/csw?" + urllib.urlencode({
+                    "request": "GetRecordById",
+                    "service": "CSW",
+                    "version": "2.0.2",
+                    "OutputSchema": "http://www.isotc211.org/2005/gmd",
+                    "ElementSetName": "full",
+                    "id": self.uuid
+                })])
+                remote_resource.resource_type = self.storeType
+                self._resource_cache = remote_resource
         return self._resource_cache
 
 
     def _get_metadata_links(self):
-        if self.local:
-            return self.resource.metadata_links
-        return None
-
+        return self.resource.metadata_links
     def _set_metadata_links(self, md_links):
         try:
             self.resource.metadata_links = md_links
@@ -1414,6 +1423,8 @@ class Layer(models.Model, PermissionLevelMixin):
             return "WCS"
         if self.storeType == 'dataStore':
             return "WFS"
+        if self.storeType == 'remoteStore':
+            return self.service.type
 
     @property
     def publishing(self):
@@ -1464,6 +1475,12 @@ class Layer(models.Model, PermissionLevelMixin):
         else:
             return "gxp_gnsource"
 
+
+    def service_typename(self):
+        if self.local:
+            return self.typename
+        else:
+            return "%s:%s" % (self.service.name, self.typename)
 
     def _set_poc(self, poc):
         # reset any poc asignation to this layer
@@ -1745,6 +1762,9 @@ class LayerAttribute(models.Model):
 
     def __unicode__(self):
         return self.attribute
+
+class LayerRemoteResource(object):
+    pass
 
 class ContactRole(models.Model):
     """
@@ -2366,10 +2386,6 @@ class MapLayer(models.Model):
                         cfg['abstract'] = ''
                         cfg['styles'] =''
                         logger.info("Could not retrieve Layer with typename of %s : %s", self.name, str(e))
-        if self.source_params.find( "gxp_hglsource") > -1:
-            # call HGL ServiceStarter asynchronously to load the layer into HGL geoserver
-            from geonode.queue.tasks import loadHGL
-            loadHGL.delay(self.name)
 
 
         #Create cache of maplayer config that will last for 60 seconds (in case permissions or maplayer properties are changed)
@@ -2413,18 +2429,6 @@ def post_save_layer(instance, sender, **kwargs):
         instance.save_to_geoserver()
         if kwargs['created']:
             instance._populate_from_gs()
-
-    instance.save_to_geonetwork()
-
-    if kwargs['created']:
-        logger.debug("populate from geonetwork")
-        try:
-            instance._populate_from_gn()
-            instance.save(force_update=True)
-        except:
-            logger.warning("Exception populating from geonetwork record for [%s]", instance.name)
-            raise
-        logger.debug("save instance")
 
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)

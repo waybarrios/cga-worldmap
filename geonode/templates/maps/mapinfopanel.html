@@ -48,13 +48,13 @@
             'none': '_none'
         },
         renderTo: "map_permissions_form",
-        submitTo: "{% url geonode.maps.views.ajax_map_permissions_by_email map.id %}",
-        userLookup: "{% url geonode.views.ajax_lookup_email %}",
+        submitTo: "{% url "geonode.maps.views.ajax_map_permissions_by_email" "map.id" %}",
+        userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
         customGroup: "{{ customGroup }}",
         permissions: {{ permissions_json }},
         listeners: {
             updated: function(perms) {
-                var submitTo = "{% url geonode.maps.views.ajax_map_permissions_by_email map.id %}";
+                var submitTo = "{% url "geonode.maps.views.ajax_map_permissions_by_email" "map.id" %}";
                 Ext.Ajax.request({ url: submitTo, jsonData: perms.writePermissions() });
             }
         }
@@ -65,7 +65,7 @@ mpe.fireEvent("updated", mpe);
 
  function handleResponse(btn){
         if (btn == 'yes'){
-            window.location = "{% url geonode.maps.views.map_controller map.id %}?removenow";
+            window.location = "{% url "geonode.maps.views.map_controller" "map.id" %}?removenow";
         }
     };
 

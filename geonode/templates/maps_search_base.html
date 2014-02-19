@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block title %} {% trans "Search Maps" %} - {{ block.super }} {% endblock %}
@@ -14,9 +14,9 @@ Ext.onReady(function(){
     var searchTable = new GeoNode.MapSearchTable({
         renderTo: 'search_results',
         trackSelection: true,
-        permalinkURL: '{% url maps_search %}',
-        searchURL: '{% url maps_search_api %}',
-        mapDetailURL: '{% url map_search_detail %}',
+        permalinkURL: '{% url "maps_search" %}',
+        searchURL: '{% url "maps_search_api" %}',
+        mapDetailURL: '{% url "map_search_detail" %}',
         searchParams: {{init_search}}
     });
 
@@ -31,7 +31,7 @@ Ext.onReady(function(){
 </script>
 {% endblock %}
 
-{% block main %} 
+{% block body %}
 <div class="twocol">
   <div class="block">
     <h2>{% trans "Search" %} <span class="subtitle">{% trans "for maps" %}</span></h2>

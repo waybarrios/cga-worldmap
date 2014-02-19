@@ -30,6 +30,7 @@ General Styles
 -----------------------*/
 html {
     font-size: 100%;
+    height: 100%;
 }
 
 body {
@@ -40,6 +41,18 @@ body {
     border-bottom: 1px solid #d5d5d5;
     font-size: 75%;
     font-family:Helvetica,Arial,sans-serif;
+    height:100%;
+}
+
+#wrap {
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    margin: 0 auto -4em;
+}
+
+#push {
+    height: 4em;
 }
 
 a {
@@ -393,7 +406,8 @@ Layout
 
 #main {
 background: #fff url(img/main-bg.png) repeat-x;
-    border-bottom: 1px solid #d5d5d5;
+    overflow:auto;
+    padding-bottom: 4em;
 }
 
 #main .wrap {
@@ -407,39 +421,46 @@ Columns
     width: 920px;
     margin: 0 10px;
     padding: 10px 20px;
-background: url(img/1col-bg.png) no-repeat;
+    background: url(img/1col-bg.png) no-repeat;
+    min-height: 250px;
 }
 
 .twocol {
     width: 600px;
     margin: 0 10px;
     padding: 10px 20px;
-background: url(img/2col-bg.png) no-repeat;
+    background: url(img/2col-bg.png) no-repeat;
     float: left;
+    min-height: 250px;
 }
 
 .threecol {
     width: 260px;
     margin: 0 10px;
     padding: 10px 20px;
-background: url(img/3col-bg.png) no-repeat;
+    background: url(img/3col-bg.png) no-repeat;
     float: left;
+    min-height: 250px;
 }
 
 #footer {
     background: #f1f6f7;
     border-top: 3px solid #cde2e8;
     border-bottom: 3px solid #cde2e8;
+    position: relative;
+    margin-top: -4em; /* negative value of footer height */
+    height: 4em;
+
 }
 
-#footer .onecol {
+#footer .onecolft {
     width: 920px;
     margin: 0 10px;
     padding: 10px 20px;
     background: #f1f6f7;
 }
 
-#footer .twocol {
+#footer .twocolft {
     width: 600px;
     margin: 0 10px;
     padding: 10px 20px;
@@ -447,7 +468,7 @@ background: url(img/3col-bg.png) no-repeat;
     background: #f1f6f7;
 }
 
-#footer .threecol {
+#footer .threecolft {
     width: 260px;
     margin: 0 10px;
     padding: 10px 20px;
@@ -1219,3 +1240,8 @@ table .span24 {
 }
 
 html.wait, html.wait * {cursor:wait !important;}
+
+.error {
+    color: #ff0000;
+    font-weight: bold;
+}

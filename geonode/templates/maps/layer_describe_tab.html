@@ -61,7 +61,7 @@
     <p style="font-weight:bold;color:Red;">{%  trans "Fields marked with an asterisk(*) are required." %}</p>
 
     {% if layer.local %}
-    <form action="{% url data_metadata layer.typename %}" method="POST"  id="worldmap_describe_form">
+    <form action="{% url "data_metadata" "layer.typename" %}" method="POST"  id="worldmap_describe_form">
     {% else %}
     <form action="{% url data_metadata layer.service layer.typename %}" method="POST"  id="worldmap_describe_form">
     {% endif %}

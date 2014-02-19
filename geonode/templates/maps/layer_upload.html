@@ -1,5 +1,5 @@
 
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block title %} {% trans "Upload Layer"  %} - {{ block.super }} {% endblock %}
@@ -16,7 +16,7 @@
 </script>
 {% endblock %}
 
-{% block main %}
+{% block body %}
 <div class="twocol">
     <h2>{% trans "Add data" %}</h2>
     {% if errors %}
@@ -35,7 +35,7 @@
 Ext.onReady(function(){
     Ext.QuickTips.init();
 
-    var form_target = "{% url data_upload %}";
+    var form_target = "{% url "data_upload" %}";
     var xml_unsafe = /(^[^a-zA-Z\._]+)|([^a-zA-Z0-9\._])/g;
     var layer_title = new Ext.form.TextField({
         id: 'layer_title',
@@ -72,12 +72,12 @@ Ext.onReady(function(){
     });
 
 
-    var mapurl = "{% url geonode.maps.views.view map.id %}";
+    var mapurl = "{% url "geonode.maps.views.view" "map.id" %}";
     {% if map.officialurl %}
-        mapurl="{% url geonode.maps.views.official_site map.officialurl %}";
+        mapurl="{% url "geonode.maps.views.official_site" "map.officialurl" %}";
         {% else %}
         {% if map.url %}
-            mapurl="{% url geonode.maps.views.view map.url %}";
+            mapurl="{% url "geonode.maps.views.view" "map.url" %}";
             {% endif %}
             {% endif %}
 
@@ -304,7 +304,7 @@ disable_encoding_input();
 
 var permissionsEditor = new GeoNode.WorldMapPermissionsEditor({
     renderTo: "permissions_form",
-    userLookup: "{% url geonode.views.ajax_lookup_email %}",
+    userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
     customGroup: "{{ customGroup }}",
     listeners: {
         updated: function(pe) {

@@ -22,7 +22,7 @@
 <!--[if lte IE 6]><link rel="stylesheet" href="{{STATIC_URL}}themeboilerplate-ie-min.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}/{{ theSite.urlSuffix }}/site.css" media="screen" />
 <script type="text/javascript" src="{% url django.views.i18n.javascript_catalog %}"></script>
-<script type="text/javascript" src="{% url geonode.views.lang %}"></script>
+<script type="text/javascript" src="{% url "geonode.views.lang" %}"></script>
 
 
 <script type="text/javascript">
@@ -38,7 +38,7 @@ Ext.onReady(function() {
          * maps on the server for sharing and editing.
          */
         rest: "/maps/",
-        homeUrl: "{% url home %}",
+        homeUrl: "{% url "home" %}",
         localGeoServerBaseUrl: "{{ GEOSERVER_BASE_URL }}",
         csrfToken: "{{ csrf_token }}"
     }, {{ config }});

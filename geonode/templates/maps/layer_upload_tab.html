@@ -50,7 +50,7 @@
 
     Ext.QuickTips.init();
 
-    var form_target = "{% url geonode.maps.views.upload_layer %}";
+    var form_target = "{% url "geonode.maps.views.upload_layer" %}";
     var xml_unsafe = /(^[^a-zA-Z\._]+)|([^a-zA-Z0-9\._])/g;
 
     var layer_title = new Ext.form.TextField({
@@ -285,7 +285,7 @@
 
     var permissionsEditorUpload = new GeoNode.WorldMapPermissionsEditor({
         renderTo: "permissions_form",
-        userLookup: "{% url geonode.views.ajax_lookup_email %}",
+        userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
         customGroup: "{{ CUSTOM_GROUP_NAME }}",
         listeners: {
             updated: function(pe) {

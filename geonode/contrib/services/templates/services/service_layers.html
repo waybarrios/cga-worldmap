@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="twocol">
-    <p>{% trans "Service:" %} <a href="{% url service_detail service.id %}">{{ service.title }}</a></p>
+    <p>{% trans "Service:" %} <a href="{% url "service_detail" "service.id" %}">{{ service.title }}</a></p>
     {% if layers.count > 0 %}
     <p>{% trans "The following layers will soon be added to the data catalog:" %}</p>
     <table>

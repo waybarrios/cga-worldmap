@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block title %} {{ map.title }} - {{ block.super }} {% endblock %}
@@ -8,12 +8,12 @@
 
 <script type="text/javascript">
     var app;
-    var mapurl = "{% url geonode.maps.views.view map.id %}";
+    var mapurl = "{% url "geonode.maps.views.view" "map.id" %}";
     {% if map.officialurl %}
-        mapurl="{% url geonode.maps.views.official_site map.officialurl %}";
+        mapurl="{% url "geonode.maps.views.official_site" "map.officialurl" %}";
         {% else %}
         {% if map.url %}
-            mapurl="{% url geonode.maps.views.view map.url %}";
+            mapurl="{% url "geonode.maps.views.view" "map.url" %}";
             {% endif %}
             {% endif %}
 
@@ -24,7 +24,7 @@
             });
 </script>
 {% endblock %}
-{% block main %}
+{% block body %}
 <h3>{% trans "Are you sure you want to delete"  %} <strong>{{ map.title }}</strong>?</h3>
 
  <div style="float:left;">

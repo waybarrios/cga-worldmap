@@ -1,5 +1,5 @@
 
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block title %} {% trans "Twitter Server maintenance"  %} - {{ block.super }} {% endblock %}
@@ -14,7 +14,7 @@
 
 {% endblock %}
 
-{% block main %}
+{% block body %}
 <div class="twocol" style="min-height:800px">
     <h2>{% trans "Tweetmap Maintenance" %}</h2>
     <div style="font-weight:bold;">

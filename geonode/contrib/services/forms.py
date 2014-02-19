@@ -1,4 +1,5 @@
 from django import forms
+import taggit
 from geonode.contrib.services.models import Service, ServiceLayer
 from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS
 from django.utils.translation import ugettext_lazy as _
@@ -14,10 +15,16 @@ class CreateServiceForm(forms.Form):
     # method = forms.ChoiceField(label=_("Service Type"),choices=SERVICE_METHODS,initial='I',required=True)
 
 
-class ServiceForm:
+class ServiceForm(forms.ModelForm):
+    title = forms.CharField(label =  _('Title'), max_length=255, widget=forms.TextInput(
+        attrs={'size':'60', 'class':'inputText'}))
+    description = forms.CharField(label = _('Description'), widget=forms.Textarea(attrs={'cols': 60}))
+    abstract = forms.CharField(label=_("Abstract"), widget=forms.Textarea(attrs={'cols': 60}))
+    keywords = taggit.forms.TagField(required=False)
+
     class Meta:
         model = Service
-        exclude = ['method', 'type', 'contacts', 'uuid', 'noanswer', 'first_noanswer', 'last_updated' 'created']
+        fields = ('title', 'description', 'abstract', 'keywords', )
 
 
 class ServiceLayerFormSet(forms.ModelForm):

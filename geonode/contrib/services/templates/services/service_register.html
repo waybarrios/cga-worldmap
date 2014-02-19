@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block head %}
@@ -8,9 +8,11 @@
 $( document ).ready(function() {
     $("#service_register_form").submit(function(e) {
         $("#responseDiv").hide();
+        $(".result").remove();
         $("#tableDiv").hide();
-        $("#errorDiv").hide();
         $("#dataTable").html("");
+        $(".error").html("");
+
         e.preventDefault();
         var url = $("#service_register_form").attr( "action" );
         $.ajax({
@@ -20,26 +22,31 @@ $( document ).ready(function() {
             data: $("#service_register_form").serialize(), // serializes the form's elements.
             success: function(data)
             {
+                for (var item in data) {
+                    if (data[item].available_layers) {
+                        $.each(data[item].available_layers,function(i,row){
+                            $('<tr>').attr('id',i).
+                                    append($('<td>').text(row[0])).
+                                    append($('<td>').text(row[1])).appendTo('#dataTable');
+                        });
+                        $("#tableDiv").show();
+                    }
+                    if (data[item].service_id) {
+                        $('<div>').attr("class", "result").append($('<a>').
+                            attr('href', "/services/" + data[item].service_id).
+                            text(data[item].service_title||data[item].service_name)).
+                            appendTo("#responseDiv");
+                    }
+                    else {
+                       $('<h4>').attr("class", "result").text(data[item].msg).appendTo("#responseDiv");
+                    }
+                    $("#responseDiv").show();
+                }
 
-                if (data.available_layers) {
-                    $.each(data.available_layers,function(i,row){
-                        $('<tr>').attr('id',i).
-                                append($('<td>').text(row[0])).
-                                append($('<td>').text(row[1])).appendTo('#dataTable');
-                    });
-                    $("#tableDiv").show();
-                }
-                if (data.service_id) {
-                    $('#service_link').attr('href', "/services/" + data.service_id);
-                }
-                else {
-                    $("#responseDiv").html(data.msg);
-                }
-                $("#responseDiv").show();
             },
             error: function(data) {
-                $("#errorDiv").html(data.responseText);
-                $("#errorDiv").show();
+                $(".error").html(data.responseText);
+                $(".error").show();
             }
         });
 
@@ -53,7 +60,7 @@ $( document ).ready(function() {
 
 {% block title %} Register Service - {{ block.super }} {% endblock %}
 
-{% block main %}
+{% block body %}
 <div class="twocol">
 
 <h2>Register New Service</h2>
@@ -66,10 +73,10 @@ $( document ).ready(function() {
     </form>
 
     <div id="responseDiv" style="display:none;">
-        <p><a id="service_link">{%  trans "Service has been created." %}</a></p>
+        <h4>{%  trans "Service has been created:" %}</h4>
     </div>
 
-    <div id="errorDiv" style="display:none;">
+    <div class="error" style="display:none;">
     </div>
 
     <div id="tableDiv" style="display:none;">

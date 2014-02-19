@@ -32,7 +32,7 @@
     Ext.QuickTips.init();
 
 
-    var form_target = "{% url geonode.maps.views.create_pg_layer %}";
+    var form_target = "{% url "geonode.maps.views.create_pg_layer" %}";
     var xml_unsafe = /(^[^a-zA-Z\._]+)|([^a-zA-Z0-9\._])/g;
 
     var layer_name = new Ext.form.TextField({
@@ -182,7 +182,7 @@
     var permissionsEditorCreate = new GeoNode.WorldMapPermissionsEditor({
         id: "create_permissions_editor",
         renderTo: "create_permissions_form",
-        userLookup: "{% url geonode.views.ajax_lookup_email %}",
+        userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
         customGroup: "{{ CUSTOM_GROUP_NAME }}",
         listeners: {
             updated: function(pe) {

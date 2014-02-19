@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load geonode_auth %}
 {% load i18n %}
 {% load dialogos_tags %}
@@ -67,7 +67,11 @@
             listeners: {
                 "ready": function() {
                     var map = app.mapPanel.map;
-                    layerExtent = map.layers.slice(-1)[0].maxExtent;
+                    var layer = map.layers.slice(-1)[0];
+                    var layerExtent = layer.maxExtent;
+                    if (layer.url.indexOf("hgl.harvard.edu") > -1 && layer.restrictedExtent ){
+                        layerExtent = layer.restrictedExtent;
+                    }
                     if (layerExtent.left <= map.maxExtent.left || layerExtent.right >= map.maxExtent.right || layerExtent.top >= map.maxExtent.top || layerExtent.bottom <= map.maxExtent.bottom)
                     {map.zoomTo(1)}
                     else
@@ -100,7 +104,7 @@
     Ext.get(Ext.DomQuery.select("select[@name='default-style']")).on("change", function(evt, elem) {
         Ext.Ajax.request({
             method: "post",
-                    url: "{% url data_style layer.typename %}",
+                    url: "{% url "data_style" "layer.typename" %}",
             params: {"defaultStyle" : elem.value}
         });
     });
@@ -117,8 +121,8 @@
         {% if can_change_permissions %}
             new GeoNode.WorldMapPermissionsEditor({
                 renderTo: "permissions_form",
-                submitTo: "{% url geonode.maps.views.ajax_layer_permissions_by_email layer.typename %}",
-                userLookup: "{% url geonode.views.ajax_lookup_email %}",
+                submitTo: "{% url "geonode.maps.views.ajax_layer_permissions_by_email" "layer.typename" %}",
+                userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
                 customGroup: "{{ customGroup }}",
                 permissions: {{ permissions_json }},
                 levels: {
@@ -129,7 +133,7 @@
                 },
                 listeners: {
                     updated: function(perms) {
-                        var submitTo = "{% url geonode.maps.views.ajax_layer_permissions_by_email layer.typename %}";
+                        var submitTo = "{% url "geonode.maps.views.ajax_layer_permissions_by_email" "layer.typename" %}";
                         Ext.Ajax.request({ url: submitTo, jsonData: perms.writePermissions() });
                     }
                 }
@@ -155,11 +159,7 @@
     function addToMap(selectInput) {
     	var selectedValue = selectInput.options[selectInput.selectedIndex].value;
     	if (selectedValue != '') {
-            {% if layer.local %}
-    		    window.location.href='/maps/' + selectedValue + '/?layer={{layer.typename}}'
-            {% else %}
-                window.location.href='/maps/' + selectedValue + '/?layer={{layer.service.name}}:{{layer.typename}}'
-            {% endif %}
+    	    window.location.href='/maps/' + selectedValue + '/?layer={{layer.uuid}}'
     	}
     }
     {% endautoescape %}
@@ -178,14 +178,15 @@
 {% endblock %}
 
 
-{% block main %}
+{% block body %}
 <div class="twocol">
 	<div id="description">
 		<h3>{{ layer.title|default:layer.typename }}</h3>
 
         {% if not layer.local %}
-            <h4>{% trans "External layer - not hosted by WorldMap - use at your own risk" %}</h4>
+            <h4>{% trans "External layer - not hosted by WorldMap" %}</h4>
             <div><p>{% trans "Source:" %}<a href="/services/{{layer.service.id}}">{{ layer.service.title }}</a></p></div>
+            <div><p>{% trans "Type:" %}{{ layer.service.type }}</p></div>
         {% endif %}
         {% overall_rating layer "layer" as layer_rating %}
         <div class="overall_rating" data-rating="{{ layer_rating }}"></div>
@@ -316,7 +317,7 @@
             <input type="hidden" name="next" value="{{ request.path }}" />
         </form>
     {% else %}
-        <p><a href="{% url auth_login %}">{% trans "Login to add a comment" %}</a></p>
+        <p><a href="{% url "auth_login" %}">{% trans "Login to add a comment" %}</a></p>
     {% endif %}
 </div>
 
@@ -388,7 +389,7 @@
     </ul>
 
 
-    <!-- <p><a href="{% url geonode.maps.views.newmap %}?layer={{layer.typename}}">Create new map</a></p> -->
+    <!-- <p><a href="{% url "geonode.maps.views.newmap" %}?layer={{layer.typename}}">Create new map</a></p> -->
 
     <h3>{% trans "Layer Views" %} </h3>
     <p>{% trans "This layer has been viewed " %} {{ layerstats.visits }} {% trans "time(s) " %}  {% trans "by " %} {{ layerstats.uniques }} {% trans "user(s)" %}  </p>
@@ -483,29 +484,29 @@
         {% if can_change %}
         <li>
             {% if layer.local %}
-            <a href="{% url data_metadata layer.typename %}">
+            <a href="{% url "data_metadata" "layer.service_typename" %}">
             {% else %}
-            <a href="{% url data_metadata layer.typename layer.service %}">
+            <a href="{% url "data_metadata" "layer.service_typename" %}">
             {% endif %}
             {% trans "Update the description of this data" %}
         </a> </li>
         <li>
             {% if layer.local %}
-            <a href="{% url layer_contacts layer.typename%}">
+            <a href="{% url layer_contacts layer.service_typename%}">
             {% else %}
-            <a href="{% url layer_contacts layer.typename layer.service%}">
+            <a href="{% url layer_contacts layer.service_typename%}">
             {% endif %}
 
                 {% trans "Update the contacts for this data" %}
             </a> </li>
         {% if layer.local %}
-        <li> <a href="{% url data_replace layer.typename%}">
+        <li> <a href="{% url data_replace layer.service_typename%}">
             {% trans "Upload a new version of this data" %}
         </a></li>
         {% endif %}
         {% endif %}
         {% if can_delete %}
-            <li><a href="{% url data_remove layer.typename %}">
+            <li><a href="{% url "data_remove" "layer.service_typename" %}">
             {% trans "Remove" %}
         </a></li>
         {% endif %}
@@ -514,10 +515,12 @@
         {% endif %}
     </ul>
     {% endif %}
+    {% if layer.local %}
     {% has_obj_perm user layer "maps.change_layer_permissions" as can_change_permissions %}
     {% if can_change_permissions %}
     <h3>{% trans "Permissions" %}</h3>
     <div id="permissions_form"></div>
+    {% endif %}
     {% endif %}
     {% endif %}
 </div>

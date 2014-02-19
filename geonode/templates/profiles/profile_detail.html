@@ -7,7 +7,7 @@
 {% load i18n avatar_tags %}
 {% load certified %}
   {% block breadcrumb %}
-      					<a id="logo" href="{% url home %}"><img src="{{STATIC_URL}}theme/img/WorldMap-Logo_26px.png" border="0"></a>
+      					<a id="logo" href="{% url "home" %}"><img src="{{STATIC_URL}}theme/img/WorldMap-Logo_26px.png" border="0"></a>
   						<div id="page-breadcrumb"><span>Profile for {{ profile.username }}</span></div>
   {% endblock %}
 {% block content %}
@@ -39,8 +39,8 @@
   {% if user == profile.user %}
   <h3>{% trans "Settings" %}</h3>
   <ul>
-    <li><a href="{% url auth_password_change %}">{% trans "Change password" %}</a></li>
-    <li><a href="{% url profiles_edit_profile %}">{% trans "Edit profile information" %}</a></li>
+    <li><a href="{% url "account_password" %}">{% trans "Change password" %}</a></li>
+    <li><a href="{% url "profiles_edit_profile" %}">{% trans "Edit profile information" %}</a></li>
   </ul>
   {% endif %}
 </div>
@@ -50,7 +50,7 @@
     <h2> {% trans "Maps & Layers owned by " %} {{profile.username}} </h2>
     <!-- Uncomment this to expose map-specific GetCapabilities document
     <p>{% trans "WMS GetCapabilities" %}:
-	<a href="{% url capabilities_user profile.user.username %}">{{ SITE_URL }}{% url capabilities_user profile.user.username %}</a><p>
+	<a href="{% url "capabilities_user" profile.user.username %}">{{ SITE_URL }}{% url "capabilities_user" profile.user.username %}</a><p>
      -->
     <div id="assets"></div>
     <p>&nbsp;</p>
@@ -201,7 +201,7 @@ Ext.onReady(function() {
               handler: function() {
                   var activeList = serialize();
                   var editor = new GeoNode.WorldMapPermissionsEditor({
-                      userLookup: "{% url geonode.views.ajax_lookup_email %}",
+                      userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
                       customGroup: "{{ CUSTOM_GROUP_NAME }}",
                       permissions: { users:[] }
                   });

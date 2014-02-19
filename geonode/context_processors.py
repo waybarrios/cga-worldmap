@@ -1,7 +1,9 @@
 from django.conf import settings
+from django.contrib.sites.models import Site
 from geonode import get_version
 
 def resource_urls(request):
+    site = Site.objects.get_current()
     return dict(
         STATIC_URL = settings.STATIC_URL,
         SITE_URL = settings.SITEURL,
@@ -16,3 +18,4 @@ def resource_urls(request):
         USE_CUSTOM_ORG_AUTHORIZATION = settings.USE_CUSTOM_ORG_AUTHORIZATION,
         USE_GAZETTEER = settings.USE_GAZETTEER
     )
+

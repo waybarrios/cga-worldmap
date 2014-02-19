@@ -2,12 +2,13 @@
 from celery.schedules import crontab
 from celery.task import periodic_task, task
 from django.conf import settings
+from geonode.proxy.views import hglServiceStarter
 from geonode.queue.models import GazetteerUpdateJob, LayerBoundsUpdateJob
 
 __author__ = 'mbertrand'
 
 @periodic_task(run_every=crontab(minute=settings.QUEUE_INTERVAL))
-def updateGazetteer():
+def update_gazetteer():
     print "start updateGazetteer"
     gazetteerJobs = GazetteerUpdateJob.objects.all()
     for job in gazetteerJobs:
@@ -22,7 +23,7 @@ def updateGazetteer():
     #print "end updateGazetteer"
 
 @periodic_task(run_every=crontab(minute=settings.QUEUE_INTERVAL))
-def updateBounds():
+def update_bounds():
     boundsJobs = LayerBoundsUpdateJob.objects.all()
     for job in boundsJobs:
         try:
@@ -34,8 +35,7 @@ def updateBounds():
             job.save()
 
 @task
-def loadHGL(layername):
-    from geonode.proxy.views import hglServiceStarter
+def load_hgl_layer(layername):
     hglServiceStarter(None,layername)
 
 

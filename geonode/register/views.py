@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from account.utils import default_redirect
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.sites.models import Site
@@ -19,28 +20,36 @@ class SignupView(account.views.SignupView):
 
     form_class = UserRegistrationForm
 
+    def get_success_url(self, fallback_url=None, **kwargs):
+        if fallback_url is None:
+            new_user = self.created_user
+            if new_user.get_profile().is_org_member:
+                self.request.session["group_username"] = new_user.username
+                logger.debug("group username set to [%s]", new_user.username)
+                return settings.CUSTOM_ORG_AUTH_URL
+            elif "bra_harvard_redirect" in self.request.session:
+                new_user.active = True
+                new_user.save()
+                new_user.backend = 'django.contrib.auth.backends.ModelBackend'
+                # This login function does not need password.
+                login(self.request, new_user)
+                fallback_url = self.request.session["bra_harvard_redirect"]
+            else:
+                fallback_url = settings.ACCOUNT_SIGNUP_REDIRECT_URL
+        kwargs.setdefault("redirect_field_name", self.get_redirect_field_name())
+        return default_redirect(self.request, fallback_url, **kwargs)
+
     def after_signup(self, form):
         self.create_profile(form)
         super(SignupView, self).after_signup(form)
-        new_user = self.created_user
-        if new_user.get_profile().is_org_member:
-            self.request.session["group_username"] = new_user.username
-            logger.debug("group username set to [%s]", new_user.username)
-            return HttpResponseRedirect(settings.CUSTOM_ORG_AUTH_URL)
-        elif "bra_harvard_redirect" in self.request.session:
-            new_user.active = True
-            new_user.save()
-            new_user.backend = 'django.contrib.auth.backends.ModelBackend'
-            # This login function does not need password.
-            login(self.request, new_user)
-            return HttpResponseRedirect(self.request.session["bra_harvard_redirect"])
-        else:
-            return HttpResponseRedirect(self.success_url or reverse('registration_complete'))
+        #super(SignupView, self).after_signup(form)
 
     def create_profile(self, form):
         profile = self.created_user.get_profile()
         profile.is_org_member = form.cleaned_data["is_org_member"]
+        profile.member_expiration_dt = datetime.today()
         profile.save()
+
 
 
 def confirm(request):

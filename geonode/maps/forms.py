@@ -8,6 +8,7 @@ from django.utils.translation import ugettext as _
 from geonode.maps.models import LayerAttribute, Contact, Layer, ContactRole, Map
 from geonode.flexidates import FlexiDateFormField
 import taggit
+import geonode.maps.autocomplete_light_registry
 
 SRS_CHOICES = (
     ('EPSG:4326', 'EPSG:4326 (WGS 84 Lat/Long)'),

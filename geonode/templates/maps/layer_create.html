@@ -1,4 +1,4 @@
-{% extends "page_layout.html" %}
+{% extends "site_base.html" %}
 {% load i18n %}
 
 {% block title %} {% trans "Upload Layer"  %} - {{ block.super }} {% endblock %}
@@ -14,7 +14,7 @@
 </script>
 {% endblock %}
 
-{% block main %}
+{% block body %}
 <div class="twocol">
     <h2>{% trans "Create new layer" %}</h2>
   {% if errors %}
@@ -34,7 +34,7 @@ Ext.onReady(function(){
     Ext.QuickTips.init();
 
 
-    var form_target = "{% url geonode.maps.views.create_pg_layer %}";
+    var form_target = "{% url "geonode.maps.views.create_pg_layer" %}";
     var xml_unsafe = /(^[^a-zA-Z\._]+)|([^a-zA-Z0-9\._])/g;
 
     var layer_name = new Ext.form.TextField({
@@ -169,7 +169,7 @@ Ext.onReady(function(){
 
     var permissionsEditor = new GeoNode.WorldMapPermissionsEditor({
         renderTo: "permissions_form",
-        userLookup: "{% url geonode.views.ajax_lookup_email %}",
+        userLookup: "{% url "geonode.views.ajax_lookup_email" %}",
         customGroup: "{{ customGroup }}",
         listeners: {
             updated: function(pe) {
