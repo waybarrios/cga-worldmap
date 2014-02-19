@@ -28,7 +28,7 @@ SystemError("WorldMap Build requires python 2.7 or better")
 venv = os.environ.get('VIRTUAL_ENV')
 curdir = os.getcwd()
 
-settings_file = os.environ.get("DJANGO_SETTINGS_MODULE", "geonode.settings.base")
+settings_file = os.environ.get("DJANGO_SETTINGS_MODULE", "geonode.settings.local")
 os.environ["DJANGO_SETTINGS_MODULE"] = settings_file
 
 deploy_req_txt = """
@@ -430,7 +430,7 @@ def stop_django():
     """
     Stop the WorldMap Django application
     """
-    kill('python', 'runserver')
+    kill('python', 'paster')
 
 
 @task
@@ -461,8 +461,9 @@ def start_django():
     """
     Start the WorldMap Django application
     """
-    bind = options.get('bind', '')
-    sh('python manage.py runserver %s &' % bind)
+    #bind = options.get('bind', '')
+    #sh('python manage.py runserver %s &' % bind)
+    sh('paster serve --reload dev/dev-paste.ini &')
     
 
 @task
@@ -505,7 +506,7 @@ def start_geoserver(options):
 @task
 def test(options):
     pip_install("-r requirements/test.txt")
-    sh("python manage.py test --settings=geonode.settings.test")
+    sh("python manage.py test")
 
 
 def zip_extractall(zf, path=None, members=None, pwd=None):
