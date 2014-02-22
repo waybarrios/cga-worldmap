@@ -590,6 +590,19 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         }
     },
 
+    /** private: method[getCRSFToken]
+     * Read the CSRFToken from the cookie.
+     */
+    getCRSFToken: function() {
+        var csrfToken, csrfMatch = document.cookie.match(/csrftoken=(\w+)/);
+        if (csrfMatch && csrfMatch.length > 0) {
+            csrfToken = csrfMatch[1];
+        }
+        return csrfToken;
+    },
+
+
+
     showLoginWindow: function(options) {
 
         this.loginWin = null;
@@ -600,9 +613,9 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                 success: function(form, action) {
                     this.loginWin.close();
                     this.propDlgCache = {};
-                    document.cookie = action.response.getResponseHeader("Set-Cookie");
+                    OpenLayers.Request.DEFAULT_CONFIG.headers['X-CSRFToken'] = this.getCRSFToken();
                     if (options) {
-                        // resend the original request
+                        options.headers['X-CSRFToken'] = this.getCRSFToken();
                         Ext.Ajax.request(options);
                     }
                 },
@@ -617,7 +630,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             });
         }.bind(this);
 
-
+        var csrfToken = this.getCRSFToken();
         this.loginWin = new Ext.Window({
             title: "WorldMap Login",
             modal: true,
@@ -660,7 +673,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                         {
                             xtype: "hidden",
                             name: "csrfmiddlewaretoken",
-                            value: this.csrfToken
+                            value: csrfToken
                         },
                         {
                             xtype: "button",

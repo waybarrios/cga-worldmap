@@ -6,7 +6,7 @@
 {% if password %}
 	{% trans "Activate your new WorldMap account at" %} {{ site.name }}:
 
-	http://{{ site.domain }}{% url registration_activate activation_key %}
+	http://{{ site.domain }}{% url "account_confirm_email" activation_key %}
 
 	{% trans "Username" %} : {{username}}
 	{% trans "Password" %} : {{password}}

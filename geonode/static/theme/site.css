@@ -190,6 +190,7 @@ ul.x-tab-strip {
 
 label {
     font-weight: inherit;
+    display: inline;
 }
 
 /*-----------------------

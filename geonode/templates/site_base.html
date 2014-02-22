@@ -13,6 +13,8 @@
   {% block head_extra_meta %}{% endblock %}
   {% block head %}
 
+      <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
+
 
   	{% if urlsuffix %}
 		<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/boilerplate-min.css" media="screen" />
@@ -27,6 +29,7 @@
     <script type="text/javascript" src="{% url "jscat" %}"></script>
     <script type="text/javascript" src="{% url "django.views.i18n.javascript_catalog" %}"></script>
     <script type="text/javascript" src="{% url "lang" %}"></script>
+
 
   	{% endblock %}
     {% autoescape off %}

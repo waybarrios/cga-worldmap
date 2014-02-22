@@ -6,7 +6,7 @@
 {% block head_title %}{% trans "Log out" %}{% endblock %}
 
 {% block body %}
-    <div class="twocol">
+    <div class="onecol">
             <form method="POST" action="{% url "account_logout" %}" class="form-horizontal">
                 <h2>{% trans "Log out" %}</h2>
                     {% csrf_token %}

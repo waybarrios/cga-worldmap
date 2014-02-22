@@ -25,6 +25,7 @@ DEBUG = TEMPLATE_DEBUG = True
 #EMAIL_HOST_PASSWORD = 'password'
 #EMAIL_PORT = 587
 #EMAIL_USE_TLS = True
+NO_REPLY_EMAIL = "do-not-reply@example.com"
 
 # Defines settings for development
 DATABASES = {
@@ -129,6 +130,7 @@ INSTALLED_APPS = (
     'autocomplete_light',
     'djcelery',
     'kombu.transport.django',
+    'piston',
 
 
     # GeoNode internal apps
@@ -348,7 +350,10 @@ DEFAULT_LAYER_SOURCE = {
 
 
 REGISTRATION_OPEN = True
+
 ACCOUNT_ACTIVATION_DAYS = 30
+ACCOUNT_EMAIL_UNIQUE = True
+ACCOUNT_EMAIL_CONFIRMATION_REQUIRED = True
 # Email for users to contact admins.
 THEME_ACCOUNT_CONTACT_EMAIL = 'admin@example.com'
 

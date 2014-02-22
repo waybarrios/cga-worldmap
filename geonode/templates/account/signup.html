@@ -7,7 +7,8 @@
 {% endblock %}
 
 {% block body %}
-    <div class="twocol">
+    <div class="onecol">
+        <h2>{% trans "WorldMap Registration" %}</h2>
         <form method="post" action=".">
             {% csrf_token %}
             <ul class="form">
