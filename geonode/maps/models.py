@@ -1356,6 +1356,7 @@ class Layer(models.Model, PermissionLevelMixin):
         else:
             gn.update_layer(self)
         gn.logout()
+        self.metadata_csw()
 
     @property
     def resource(self):
@@ -2356,8 +2357,7 @@ class MapLayer(models.Model):
             cfg['url'] = ows_sub.sub('', cfg['url'])
         if self.group: cfg["group"] = self.group
         cfg["visibility"] = self.visibility
-        source = json.loads(self.source_params)
-        if self.name is not None and (source["ptype"] == "gxp_gnsource"):
+        if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
             #Get parameters from GeoNode instead of WMS GetCapabilities if possible
                 try:
                     gnLayer = Layer.objects.get(typename=self.name,service=None)
