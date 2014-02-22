@@ -26,15 +26,19 @@ from django.test.client import Client
 from django.contrib.auth.models import User, AnonymousUser
 from django.core.urlresolvers import reverse
 
-# class ServicesTests(TestCase):
-#     """Tests geonode.contrib.services app/module
-#     """
-#
-#     def setUp(self):
-#         self.user = 'admin'
-#         self.passwd = 'admin'
-#
-#     fixtures = ['map_data.json', 'initial_data.json']
+class ServicesTests(TestCase):
+    """Tests geonode.contrib.services app/module
+    """
+
+    def setUp(self):
+        self.user = 'admin'
+        self.passwd = 'admin'
+
+    fixtures = ['map_data.json', 'initial_data.json']
+
+    def test_placholder(self):
+        self.assertEqual(1,1)
+
 #
 #     def test_register_indexed_wms(self):
 #         """Test registering demo.geonode.org as an indexed WMS

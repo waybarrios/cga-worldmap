@@ -233,7 +233,7 @@ community."
           "source":"capra",
           "buffer":0,
           "wms":"capra",
-          "name":"base:nic_admin"
+          "name":"geonode:nic_admin"
         }],
         "zoom":7
       }
@@ -335,7 +335,7 @@ community."
           "source":"capra",
           "buffer":0,
           "wms":"capra",
-          "name":"base:nic_admin"
+          "name":"geonode:nic_admin"
         }],
         "zoom":7
       }
@@ -397,7 +397,7 @@ community."
         def is_wms_layer(x):
             return cfg['sources'][x['source']]['ptype'] == 'gxp_gnsource'
         layernames = [x['name'] for x in cfg['map']['layers'] if is_wms_layer(x)]
-        self.assertEquals(layernames, ['base:CA',])
+        self.assertEquals(layernames, ['geonode:CA',])
 
     def test_newmap_to_json(self):
         """ Make some assertions about the data structure produced for serialization
@@ -660,17 +660,17 @@ community."
     #        pass
 
     def test_describe_data(self):
-        '''/data/base:CA/metadata -> Test accessing the description of a layer '''
+        '''/data/geonode:CA/metadata -> Test accessing the description of a layer '''
         from django.contrib.auth.models import User
         self.assertEqual(2, User.objects.all().count())
         c = Client()
-        response = c.get('/data/base:CA/metadata')
+        response = c.get('/data/geonode:CA/metadata')
         # Since we are not authenticated, we should not be able to access it
         self.failUnlessEqual(response.status_code, 302)
         # but if we log in ...
         c.login(username='bobby', password='bob')
         # ... all should be good
-        response = c.get('/data/base:CA/metadata')
+        response = c.get('/data/geonode:CA/metadata')
         self.failUnlessEqual(response.status_code, 200)
 
     # Layer Tests
@@ -788,18 +788,18 @@ community."
 
 
     def test_describe_data(self):
-        '''/data/base:CA/metadata -> Test accessing the description of a layer '''
+        '''/data/geonode:CA/metadata -> Test accessing the description of a layer '''
 
         from django.contrib.auth.models import User
         self.assertEqual(2, User.objects.all().count())
         c = Client()
-        response = c.get('/data/base:CA/metadata')
+        response = c.get('/data/geonode:CA/metadata')
         # Since we are not authenticated, we should not be able to access it
         self.failUnlessEqual(response.status_code, 302)
         # but if we log in ...
         c.login(username='bobby', password='bob')
         # ... all should be good
-        response = c.get('/data/base:CA/metadata')
+        response = c.get('/data/geonode:CA/metadata')
         self.failUnlessEqual(response.status_code, 200)
 
     def test_layer_save(self):
