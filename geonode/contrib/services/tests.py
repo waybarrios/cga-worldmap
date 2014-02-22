@@ -26,32 +26,32 @@ from django.test.client import Client
 from django.contrib.auth.models import User, AnonymousUser
 from django.core.urlresolvers import reverse
 
-class ServicesTests(TestCase):
-    """Tests geonode.contrib.services app/module
-    """
-
-    def setUp(self):
-        self.user = 'admin'
-        self.passwd = 'admin'
-
-    fixtures = ['map_data.json', 'initial_data.json']
-
-    def test_register_indexed_wms(self):
-        """Test registering demo.geonode.org as an indexed WMS
-        """
-        c = Client()
-        c.login(username='admin', password='admin')
-        response = c.post(reverse('register_service'), 
-                            {'method':'I',
-                             'type':'WMS',
-                             'url':'http://demo.geonode.org/geoserver/wms',
-                             'name':'demo.geonode.org:wms'})
-        self.assertEqual(response.status_code, 200)
-        response_dict = json.loads(response.content) 
-        self.assertEqual(response_dict['status'], 'ok')
-        response = c.post(reverse('register_layers'),
-                            {'service_id': int(response_dict['id']),
-                             'layer_list': ','.join(response_dict['available_layers'])})
-        self.assertEqual(response.status_code, 200)
-        response_dict = json.loads(response.content)
-        self.assertEqual(response_dict['status'], 'ok')
+# class ServicesTests(TestCase):
+#     """Tests geonode.contrib.services app/module
+#     """
+#
+#     def setUp(self):
+#         self.user = 'admin'
+#         self.passwd = 'admin'
+#
+#     fixtures = ['map_data.json', 'initial_data.json']
+#
+#     def test_register_indexed_wms(self):
+#         """Test registering demo.geonode.org as an indexed WMS
+#         """
+#         c = Client()
+#         c.login(username='admin', password='admin')
+#         response = c.post(reverse('register_service'),
+#                             {'method':'I',
+#                              'type':'WMS',
+#                              'url':'http://demo.geonode.org/geoserver/wms',
+#                              'name':'demo.geonode.org:wms'})
+#         self.assertEqual(response.status_code, 200)
+#         response_dict = json.loads(response.content)
+#         self.assertEqual(response_dict['status'], 'ok')
+#         response = c.post(reverse('register_layers'),
+#                             {'service_id': int(response_dict['id']),
+#                              'layer_list': ','.join(response_dict['available_layers'])})
+#         self.assertEqual(response.status_code, 200)
+#         response_dict = json.loads(response.content)
+#         self.assertEqual(response_dict['status'], 'ok')

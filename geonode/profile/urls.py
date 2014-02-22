@@ -27,10 +27,9 @@ from django.conf.urls.defaults import *
 from geonode.profile import views
 
 
-urlpatterns = patterns('',
-                       url(r'^edit/$',
-                           views.edit_profile,
-                           name='profiles_edit_profile'),
-                       url(r"^(?P<username>[^/]*)/$", views.profile_detail, name="profile_detail"),
-                       )
+urlpatterns = patterns('geonode.profile.views',
+                       url('^$', 'listing', name="profile_listing"),
+                       url(r'^edit/$', 'edit_profile', name='profiles_edit_profile'),
+                       url(r"^(?P<username>[^/]*)/$", 'profile_detail', name="profile_detail"),
+)
 

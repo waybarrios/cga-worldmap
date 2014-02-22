@@ -463,11 +463,11 @@
 	{% if user.is_authenticated and user.get_profile.is_certifier %}
 	<ul>
 	{% if certified %}
-	<li><a href="{% url uncertify 'maps.Layer' layer.id %}">
+	<li><a href="{% url "uncertify"  %} 'maps.Layer' layer.id %}">
             {% trans "Uncertify this layer" %}
         </a></li>	
 	{% else %}
-	<li><a href="{% url certify 'maps.Layer' layer.id %}">
+	<li><a href="{% url "certify"  %} 'maps.Layer' layer.id %}">
             {% trans "Certify this layer" %}
         </a></li>	
 	{% endif %}
@@ -484,7 +484,7 @@
         {% if can_change %}
         <li>
             {% if layer.local %}
-            <a href="{% url "data_metadata" "layer.service_typename" %}">
+            <a href="{% url "data_metadata" layer.service_typename %}">
             {% else %}
             <a href="{% url "data_metadata" layer.service_typename %}">
             {% endif %}

@@ -15,7 +15,7 @@
     	<link rel="stylesheet" type="text/css" href="/site_media/theme/site.css"  media="screen" />
     	  <!--[if lte IE 6]><link rel="stylesheet" href="/site_media/theme/boilerplate-ie-min.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
 
-  <script type="text/javascript" src="{% url django.views.i18n.javascript_catalog %}"></script>
+  <script type="text/javascript" src="{% url "django.views.i"  %}18n.javascript_catalog %}"></script>
   <script type="text/javascript" src="{% url "lang" %}"></script>
   {% endblock %}
     {% autoescape off %}
@@ -28,7 +28,7 @@
         	{% block logos %}
         	    {% block breadcrumb %}
         	    	{% if urlsuffix %}
-						 <div id="page-breadcrumb"><a href="{% url "geonode.maps.views.official_site" "map.officialurl" %}">{{title}}</a></div>
+						 <div id="page-breadcrumb"><a href="{% url "geonode.maps.views.official_site" map.officialurl %}">{{title}}</a></div>
     				{% else %}
       					<a id="logo" href="{% url "home" %}"><img src="/site_media/theme/img/WorldMap-Logo_26px.png" border="0"></a>
   						<div id="page-breadcrumb"><span>{{title}}</span></div>
@@ -44,7 +44,7 @@
       {% endif %}
           | <a class="" id="mapLink" href="/maps/new">{% trans "Create Map" %}</a>
           | <a class="" id="mapLink" href="{% url "maps_search" %}?sort=last_modified&dir=DESC">{% trans "View Map" %}</a>
-          | <a class="" id="dataLink" href="{% url geonode.views.static page='help'%}">Help</a>
+          | <a class="" id="dataLink" href="{% url "geonode.views.static"  %} page='help'%}">Help</a>
       </div>
     </div><!-- /.wrap -->
   </div><!-- /#header -->
@@ -60,7 +60,7 @@
     <div class="wrap selfclear">
       {% block footer %}
       <div class="onecol" style="text-align:center">
-         <a href="{% url geonode.views.static "help" %}">{% trans "Need Help?" %}</a>&nbsp;&nbsp;
+         <a href="{% url "geonode.views.static"  %} "help" %}">{% trans "Need Help?" %}</a>&nbsp;&nbsp;
          <a href="mailto:worldmap@harvard.edu">{%  trans "Contact Us" %}</a>&nbsp;&nbsp;
           <a href="http://projects.iq.harvard.edu/worldmap/blog">{% trans "Blog" %}</a>&nbsp;&nbsp;
          <a href="https://github.com/cga-harvard/cga-worldmap">{% trans "Source Code" %}</a>&nbsp;&nbsp;

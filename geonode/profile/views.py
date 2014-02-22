@@ -8,6 +8,7 @@ from django.contrib.sites.models import Site
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
@@ -28,6 +29,29 @@ def profile_detail(request, username):
         "profile": profile,
         }))
 
+
+def listing(request):
+    contact_list = Contact.objects.all()
+
+    per_page = 25
+    if "count" in request.GET:
+        per_page = int(request.GET["count"])
+
+    paginator = Paginator(contact_list, per_page)
+
+    page = request.GET.get('page')
+    try:
+        contacts = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        contacts = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        contacts = paginator.page(paginator.num_pages)
+
+    return render_to_response('profiles/profile_list.html',  RequestContext(request, {
+        "contacts": contacts,
+        }))
 
 def edit_profile(request, form_class=None, success_url=None,
                  template_name='profiles/edit_profile.html',

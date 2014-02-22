@@ -7,7 +7,7 @@ from geonode.gazetteer.utils import getGazetteerEntry
 
 
 class GazetteerTest(TestCase):
-    fixtures = ['gazetteer_data.json'] if settings.USE_GAZETTEER else []
+    fixtures = ['gazetteer_data.json'] if settings.USE_GAZETTEER else ['empty.json']
 
     def test_get_gazetteer_entry(self):
         if settings.USE_GAZETTEER:

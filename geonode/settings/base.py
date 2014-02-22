@@ -145,11 +145,6 @@ INSTALLED_APPS = (
     'geonode.certification',
     'geonode.hoods',
     'geonode.contrib.services',
-
-    #'geonode.hoods',
-    #'geonode.gazetteer',
-    #'debug_toolbar',
-
 )
 LOGGING = {
     'version': 1,
