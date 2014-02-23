@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import autocomplete_light
 from django import forms
-from django.utils import simplejson as json
+import json
 import os
 import tempfile
 from django.utils.translation import ugettext as _

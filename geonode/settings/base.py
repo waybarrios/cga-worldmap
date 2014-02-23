@@ -131,7 +131,7 @@ INSTALLED_APPS = (
     'djcelery',
     'kombu.transport.django',
     'piston',
-
+    'djgeojson',
 
     # GeoNode internal apps
     'geonode.core',

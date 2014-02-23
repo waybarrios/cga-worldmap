@@ -4,7 +4,7 @@ from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlsplit
 import httplib2
 import urllib
-from django.utils import simplejson as json
+import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.utils.html import escape

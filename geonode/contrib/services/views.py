@@ -31,7 +31,7 @@ from django.shortcuts import render_to_response
 from django.conf import settings
 from django.template import RequestContext, loader
 from django.utils.translation import ugettext as _
-from django.utils import simplejson as json
+import json
 from django.shortcuts import get_object_or_404
 
 

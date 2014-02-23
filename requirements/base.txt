@@ -25,7 +25,6 @@ agon-ratings==0.2
 South==0.7.3
 django-taggit==0.9.3
 ordereddict
-simplejson
 defusedxml
 
 
@@ -47,7 +46,9 @@ python-dateutil==1.5 #For Python < 3.0
 datautil
 jdcal
 #For mapnotes
-vectorformats
+#django-geojson==2.3.0
+#shapely
+-e git+https://github.com/cga-harvard/vectorformats.git#egg=vectorformats
 #For autocomplete
 django-autocomplete-light==1.4.5
 

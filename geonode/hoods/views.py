@@ -11,7 +11,7 @@ from django.template import RequestContext
 import logging
 import psycopg2
 from geonode.maps.models import Map
-from django.utils import simplejson as json
+import json
 from django.core.cache import cache
 
 logger = logging.getLogger("geonode.hoods.views")

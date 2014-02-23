@@ -1,4 +1,4 @@
-
+import json
 from django.conf import settings
 from geonode.maps.models import Map
 from django import forms
@@ -9,7 +9,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext as _
-from django.utils import simplejson as json
+
 
 def index(request):
     return render_to_response('index.html', RequestContext(request, {

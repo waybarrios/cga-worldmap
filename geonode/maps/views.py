@@ -16,7 +16,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.conf import settings
 from django.template import RequestContext, loader
 from django.utils.translation import ugettext as _
-from django.utils import simplejson as json
+import json
 from django.template.defaultfilters import slugify
 from django.views.decorators.csrf import csrf_exempt
 

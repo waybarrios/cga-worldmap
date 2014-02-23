@@ -11,7 +11,7 @@ from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GRO
 from geonode.geonetwork import Catalog as GeoNetwork
 from django.db.models import signals
 from taggit.managers import TaggableManager
-from django.utils import simplejson as json
+import json
 from django.utils.safestring import mark_safe
 
 import httplib2

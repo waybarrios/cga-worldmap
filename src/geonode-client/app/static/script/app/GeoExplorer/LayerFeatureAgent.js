@@ -62,6 +62,7 @@ OpenLayers.LayerFeatureAgent = OpenLayers.Class({
      * evt - {<OpenLayers.Event>}
      */
     onClick: function(evt) {
+
         var features = this.getFeatures(evt.clientX, evt.clientY);
         if (features.length > 1) {
         	this.layer.events.triggerEvent(
@@ -71,14 +72,16 @@ OpenLayers.LayerFeatureAgent = OpenLayers.Class({
         	var feature, more, clicked = {};
         	for (i=0, len=features.length; i<len; ++i) {
         		feature = features[i];
-        		//layer = feature.layer;
-        		clicked[this.layer.id] = true;
-        		more = this.layer.events.triggerEvent(
+                if (!feature.state) {
+        		    //layer = feature.layer;
+        		    clicked[this.layer.id] = true;
+        		    more = this.layer.events.triggerEvent(
         				"featureselected", {feature: feature}
-        		);
-        		if (more === false) {
-        			break;
-        		}
+        		    );
+        		    if (more === false) {
+        			    break;
+        		    }
+                }
         	}
         }
     },
@@ -182,8 +185,8 @@ OpenLayers.LayerFeatureAgent = OpenLayers.Class({
             feature._lastHighlighter = feature._prevHighlighter;
             delete feature._prevHighlighter;
         }
-        this.layer.drawFeature(feature, feature.style || this.layer.style ||
-            "default");
+        var style = feature.style || this.layer.style || "default";
+        this.layer.drawFeature(feature, style);
     },    
     
     

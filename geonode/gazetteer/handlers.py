@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import auth_login
 from django.core.serializers.json import DateTimeAwareJSONEncoder
 from django.http import HttpResponse
-import simplejson
+import json
 from geonode.maps.models import MapLayer
 from geonode.gazetteer.utils import getGazetteerResults, getGazetteerEntry, getExternalServiceResults
 
@@ -57,7 +57,7 @@ class DjangoAuthentication(object):
         some kind of challenge headers and 401 code on it.
         """
         resp = { 'error': _('Authentication needed'), 'msgs': self.errors }
-        return HttpResponse(simplejson.dumps(
+        return HttpResponse(json.dumps(
             resp, cls=DateTimeAwareJSONEncoder,
             ensure_ascii=False, indent=4),
             status=401,mimetype="application/json")
