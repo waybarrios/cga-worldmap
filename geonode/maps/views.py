@@ -1652,7 +1652,7 @@ def _metadata_search(query, start, limit, sortby, sortorder='ASC', **kw):
     if kw.get('bbox'):
         constraints.append(fes.BBox(kw.get('bbox')))
 
-    csw.getrecords2(constraints=constraints, esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
+    csw.getrecords2(constraints=[constraints], esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
 
     # build results
     # XXX this goes directly to the result xml doc to obtain

@@ -77,6 +77,8 @@ def proxy(request):
 def valid_response(responseContent):
     #Proxy should only be used when expecting an XML or JSON response
 
+    return responseContent
+
     #ArcGIS Server GetFeatureInfo xml response
     if re.match("<FeatureInfoResponse", responseContent):
         return responseContent

@@ -42,6 +42,8 @@ urlpatterns = patterns('',
      # Data views
 
     (r'^data/', include(geonode.maps.urls.datapatterns)),
+    url(r'^layers/acls/?$', 'geonode.maps.views.layer_acls', name='data_acls'),
+
     (r'^maps/', include(geonode.maps.urls.urlpatterns)),
     (r'^annotations/', include(geonode.mapnotes.urls.urlpatterns)),
     (r'^comments/', include('dialogos.urls')),

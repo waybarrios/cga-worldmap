@@ -738,7 +738,7 @@ def _create_db_featurestore(name, data, overwrite = False, charset = None):
     cat = Layer.objects.gs_catalog
     try:
         ds = cat.get_store(settings.DB_DATASTORE_NAME)
-    except FailedRequestError:
+    except FailedRequestError, e:
         store_layers = Layer.objects.filter(store=settings.DB_DATASTORE_NAME)
         if store_layers.count() == 0:
             ds = cat.create_datastore(settings.DB_DATASTORE_NAME)

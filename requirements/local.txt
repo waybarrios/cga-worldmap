@@ -1,4 +1,4 @@
--r base.text
+-r base.txt
 
 django_nose
 mock

@@ -7,19 +7,97 @@ from django.db import models
 class Migration(SchemaMigration):
 
     depends_on = (
-        ("services", "0001_initial"),
+        ("maps", "0001_initial"),
     )
 
     def forwards(self, orm):
         
-        # Adding field 'Layer.service'
-        db.add_column('maps_layer', 'service', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='layer_set', null=True, to=orm['services.Service']), keep_default=False)
+        # Adding model 'Service'
+        db.create_table('services_service', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('type', self.gf('django.db.models.fields.CharField')(max_length=4)),
+            ('method', self.gf('django.db.models.fields.CharField')(max_length=1)),
+            ('base_url', self.gf('django.db.models.fields.URLField')(unique=True, max_length=200, db_index=True)),
+            ('version', self.gf('django.db.models.fields.CharField')(max_length=10, null=True, blank=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=255, db_index=True)),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('description', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('abstract', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('online_resource', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+            ('fees', self.gf('django.db.models.fields.CharField')(max_length=1000, null=True, blank=True)),
+            ('access_contraints', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('connection_params', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('username', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('password', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('api_key', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('workspace_ref', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+            ('store_ref', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+            ('resources_ref', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True, blank=True)),
+            ('created', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
+            ('last_updated', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('first_noanswer', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
+            ('noanswer_retries', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
+            ('uuid', self.gf('django.db.models.fields.CharField')(max_length=36, null=True, blank=True)),
+            ('external_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+        ))
+        db.send_create_signal('services', ['Service'])
+
+        # Adding model 'ServiceContactRole'
+        db.create_table('services_servicecontactrole', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('contact', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['maps.Contact'])),
+            ('service', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'])),
+            ('role', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['maps.Role'])),
+        ))
+        db.send_create_signal('services', ['ServiceContactRole'])
+
+        # Adding model 'ServiceLayer'
+        db.create_table('services_servicelayer', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('service', self.gf('django.db.models.fields.related.ForeignKey')(related_name='servicelayer_set', to=orm['services.Service'])),
+            ('typename', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=512)),
+            ('description', self.gf('django.db.models.fields.TextField')(null=True)),
+            ('layer', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['maps.Layer'], null=True)),
+            ('styles', self.gf('django.db.models.fields.TextField')(null=True)),
+        ))
+        db.send_create_signal('services', ['ServiceLayer'])
+
+        # Adding model 'WebServiceHarvestLayersJob'
+        db.create_table('services_webserviceharvestlayersjob', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('service', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['services.Service'], unique=True)),
+            ('status', self.gf('django.db.models.fields.CharField')(default='pending', max_length=10)),
+        ))
+        db.send_create_signal('services', ['WebServiceHarvestLayersJob'])
+
+        # Adding model 'WebServiceRegistrationJob'
+        db.create_table('services_webserviceregistrationjob', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('base_url', self.gf('django.db.models.fields.URLField')(unique=True, max_length=200)),
+            ('type', self.gf('django.db.models.fields.CharField')(max_length=4)),
+            ('status', self.gf('django.db.models.fields.CharField')(default='pending', max_length=10)),
+        ))
+        db.send_create_signal('services', ['WebServiceRegistrationJob'])
 
 
     def backwards(self, orm):
         
-        # Deleting field 'Layer.service'
-        db.delete_column('maps_layer', 'service_id')
+        # Deleting model 'Service'
+        db.delete_table('services_service')
+
+        # Deleting model 'ServiceContactRole'
+        db.delete_table('services_servicecontactrole')
+
+        # Deleting model 'ServiceLayer'
+        db.delete_table('services_servicelayer')
+
+        # Deleting model 'WebServiceHarvestLayersJob'
+        db.delete_table('services_webserviceharvestlayersjob')
+
+        # Deleting model 'WebServiceRegistrationJob'
+        db.delete_table('services_webserviceregistrationjob')
 
 
     models = {
@@ -38,7 +116,7 @@ class Migration(SchemaMigration):
         },
         'auth.user': {
             'Meta': {'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 2, 3, 22, 28, 6, 581169)'}),
+            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 2, 24, 10, 24, 58, 895235)'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -46,7 +124,7 @@ class Migration(SchemaMigration):
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 2, 3, 22, 28, 6, 581107)'}),
+            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 2, 24, 10, 24, 58, 895164)'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -73,7 +151,7 @@ class Migration(SchemaMigration):
             'is_certifier': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_org_member': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'member_expiration_dt': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime(2014, 2, 3, 22, 28, 6, 483762)'}),
+            'member_expiration_dt': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime(2014, 2, 24, 10, 24, 58, 861136)'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'organization': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'position': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
@@ -125,26 +203,9 @@ class Migration(SchemaMigration):
             'temporal_extent_start': ('django.db.models.fields.CharField', [], {'max_length': '24', 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'topic_category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['maps.LayerCategory']", 'null': 'True', 'blank': 'True'}),
-            'typename': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),
-            'uuid': ('django.db.models.fields.CharField', [], {'max_length': '36'}),
+            'typename': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'uuid': ('django.db.models.fields.CharField', [], {'max_length': '36', 'db_index': 'True'}),
             'workspace': ('django.db.models.fields.CharField', [], {'max_length': '128'})
-        },
-        'maps.layerattribute': {
-            'Meta': {'object_name': 'LayerAttribute'},
-            'attribute': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True'}),
-            'attribute_label': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True'}),
-            'attribute_type': ('django.db.models.fields.CharField', [], {'default': "'xsd:string'", 'max_length': '50'}),
-            'created_dttm': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'date_format': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'display_order': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'in_gazetteer': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_gaz_end_date': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_gaz_start_date': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'layer': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'attribute_set'", 'to': "orm['maps.Layer']"}),
-            'searchable': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'visible': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
         },
         'maps.layercategory': {
             'Meta': {'object_name': 'LayerCategory'},
@@ -155,69 +216,6 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255', 'unique': 'True', 'null': 'True', 'blank': 'True'})
         },
-        'maps.layerstats': {
-            'Meta': {'object_name': 'LayerStats'},
-            'downloads': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'layer': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['maps.Layer']", 'unique': 'True'}),
-            'uniques': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'visits': ('django.db.models.fields.IntegerField', [], {'default': '0'})
-        },
-        'maps.map': {
-            'Meta': {'object_name': 'Map'},
-            'abstract': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'center_x': ('django.db.models.fields.FloatField', [], {}),
-            'center_y': ('django.db.models.fields.FloatField', [], {}),
-            'content': ('django.db.models.fields.TextField', [], {'default': 'u\'<h3>The Harvard WorldMap Project</h3>  <p>WorldMap is an open source web mapping system that is currently  under construction. It is built to assist academic research and  teaching as well as the general public and supports discovery,  investigation, analysis, visualization, communication and archiving  of multi-disciplinary, multi-source and multi-format data,  organized spatially and temporally.</p>  <p>The first instance of WorldMap, focused on the continent of  Africa, is called AfricaMap. Since its beta release in November of  2008, the framework has been implemented in several geographic  locations with different research foci, including metro Boston,  East Asia, Vermont, Harvard Forest and the city of Paris. These web  mapping applications are used in courses as well as by individual  researchers.</p>  <h3>Introduction to the WorldMap Project</h3>  <p>WorldMap solves the problem of discovering where things happen.  It draws together an array of public maps and scholarly data to  create a common source where users can:</p>  <ol>  <li>Interact with the best available public data for a  city/region/continent</li>  <li>See the whole of that area yet also zoom in to particular  places</li>  <li>Accumulate both contemporary and historical data supplied by  researchers and make it permanently accessible online</li>  <li>Work collaboratively across disciplines and organizations with  spatial information in an online environment</li>  </ol>  <p>The WorldMap project aims to accomplish these goals in stages,  with public and private support. It draws on the basic insight of  geographic information systems that spatiotemporal data becomes  more meaningful as more "layers" are added, and makes use of tiling  and indexing approaches to facilitate rapid search and  visualization of large volumes of disparate data.</p>  <p>WorldMap aims to augment existing initiatives for globally  sharing spatial data and technology such as <a target="_blank" href="http://www.gsdi.org/">GSDI</a> (Global Spatial Data  Infrastructure).WorldMap makes use of <a target="_blank" href="http://www.opengeospatial.org/">OGC</a> (Open Geospatial  Consortium) compliant web services such as <a target="_blank" href="http://en.wikipedia.org/wiki/Web_Map_Service">WMS</a> (Web  Map Service), emerging open standards such as <a target="_blank" href="http://wiki.osgeo.org/wiki/Tile_Map_Service_Specification">WMS-C</a>  (cached WMS), and standards-based metadata formats, to enable  WorldMap data layers to be inserted into existing data  infrastructures.&nbsp;<br>  <br>  All WorldMap source code will be made available as <a target="_blank" href="http://www.opensource.org/">Open Source</a> for others to use  and improve upon.</p>\'', 'null': 'True', 'blank': 'True'}),
-            'created_dttm': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'group_params': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'officialurl': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'}),
-            'projection': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
-            'template_page': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'title': ('django.db.models.fields.TextField', [], {}),
-            'urlsuffix': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'use_custom_template': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'zoom': ('django.db.models.fields.IntegerField', [], {})
-        },
-        'maps.maplayer': {
-            'Meta': {'ordering': "['stack_order']", 'object_name': 'MapLayer'},
-            'created_dttm': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'fixed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'format': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
-            'group': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'layer_params': ('django.db.models.fields.TextField', [], {}),
-            'map': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'layer_set'", 'to': "orm['maps.Map']"}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
-            'opacity': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'ows_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
-            'source_params': ('django.db.models.fields.TextField', [], {}),
-            'stack_order': ('django.db.models.fields.IntegerField', [], {}),
-            'styles': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
-            'transparent': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'visibility': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
-        },
-        'maps.mapsnapshot': {
-            'Meta': {'object_name': 'MapSnapshot'},
-            'config': ('django.db.models.fields.TextField', [], {}),
-            'created_dttm': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'map': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'snapshot_set'", 'to': "orm['maps.Map']"}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'})
-        },
-        'maps.mapstats': {
-            'Meta': {'object_name': 'MapStats'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
-            'map': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['maps.Map']", 'unique': 'True'}),
-            'uniques': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'visits': ('django.db.models.fields.IntegerField', [], {'default': '0'})
-        },
         'maps.role': {
             'Meta': {'object_name': 'Role'},
             'created_dttm': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
@@ -226,19 +224,12 @@ class Migration(SchemaMigration):
             'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
             'value': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'})
         },
-        'maps.socialexplorerlocation': {
-            'Meta': {'object_name': 'SocialExplorerLocation'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'map': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'jump_set'", 'to': "orm['maps.Map']"}),
-            'title': ('django.db.models.fields.TextField', [], {}),
-            'url': ('django.db.models.fields.URLField', [], {'default': "'http://www.socialexplorer.com/pub/maps/map3.aspx?g=0&mapi=SE0012&themei=B23A1CEE3D8D405BA2B079DDF5DE9402'", 'max_length': '200'})
-        },
         'services.service': {
             'Meta': {'object_name': 'Service'},
             'abstract': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'access_contraints': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'api_key': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'base_url': ('django.db.models.fields.URLField', [], {'unique': 'True', 'max_length': '200'}),
+            'base_url': ('django.db.models.fields.URLField', [], {'unique': 'True', 'max_length': '200', 'db_index': 'True'}),
             'connection_params': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'contacts': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['maps.Contact']", 'through': "orm['services.ServiceContactRole']", 'symmetrical': 'False'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
@@ -247,10 +238,9 @@ class Migration(SchemaMigration):
             'fees': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'null': 'True', 'blank': 'True'}),
             'first_noanswer': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'keywords': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'last_updated': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'method': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255', 'db_index': 'True'}),
             'noanswer_retries': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'online_resource': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'}),
@@ -271,6 +261,29 @@ class Migration(SchemaMigration):
             'role': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['maps.Role']"}),
             'service': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.Service']"})
         },
+        'services.servicelayer': {
+            'Meta': {'object_name': 'ServiceLayer'},
+            'description': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'layer': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['maps.Layer']", 'null': 'True'}),
+            'service': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'servicelayer_set'", 'to': "orm['services.Service']"}),
+            'styles': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '512'}),
+            'typename': ('django.db.models.fields.CharField', [], {'max_length': '255'})
+        },
+        'services.webserviceharvestlayersjob': {
+            'Meta': {'object_name': 'WebServiceHarvestLayersJob'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'service': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['services.Service']", 'unique': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'default': "'pending'", 'max_length': '10'})
+        },
+        'services.webserviceregistrationjob': {
+            'Meta': {'object_name': 'WebServiceRegistrationJob'},
+            'base_url': ('django.db.models.fields.URLField', [], {'unique': 'True', 'max_length': '200'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'default': "'pending'", 'max_length': '10'}),
+            'type': ('django.db.models.fields.CharField', [], {'max_length': '4'})
+        },
         'taggit.tag': {
             'Meta': {'object_name': 'Tag'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -286,4 +299,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['maps']
+    complete_apps = ['services']

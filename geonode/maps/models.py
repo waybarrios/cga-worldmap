@@ -841,6 +841,9 @@ class LayerManager(models.Manager):
                 else:
                     status = 'updated'
 
+
+                layer.save_to_geonetwork()
+
                 #Create layer attributes if they don't already exist
                 try:
                     if layer.attribute_names is not None:
