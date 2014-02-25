@@ -877,6 +877,38 @@ class LayerManager(models.Manager):
         return output
 
 
+    def save_layer_from_geoserver(self, workspace, store, resource):
+        layer, created = Layer.objects.get_or_create(name=resource.name, defaults = {
+            "workspace": workspace.name,
+            "store": store.name,
+            "storeType": store.resource_type,
+            "typename": "%s:%s" % (workspace.name, resource.name),
+            "title": resource.title or 'No title provided',
+            "abstract": resource.abstract or 'No abstract provided',
+            "owner": None,
+            "uuid": str(uuid.uuid4())
+        })
+        if layer is not None and layer.bbox is None:
+            layer._populate_from_gs()
+        layer.save()
+        if created:
+            layer.set_default_permissions()
+            layer.save_to_geonetwork()
+        try:
+            if layer.attribute_names is not None:
+                for field, ftype in layer.attribute_names.iteritems():
+                    if field is not None:
+                        la, created = LayerAttribute.objects.get_or_create(layer=layer, attribute=field, attribute_type=ftype)
+                        if created:
+                            la.attribute_label = field
+                            la.searchable = (ftype == "xsd:string")
+                            la.display_order = iter
+                            la.save()
+        except Exception, e:
+            logger.error("Could not create attributes for [%s] : [%s]", layer.name, str(e))
+        finally:
+            return layer
+
     def update_bboxes(self):
         for layer in Layer.objects.all():
             logger.debug('Process %s', layer.name)

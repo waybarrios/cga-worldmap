@@ -488,6 +488,7 @@ CUSTOM_GROUP_EMAIL_SUFFIX = ''
 CUSTOM_AUTH_URL = ''
 
 DEFAULT_WORKSPACE = 'geonode'
+CASCADE_WORKSPACE = 'cascade'
 
 HGL_VALIDATION_KEY='Contact Harvard Geospatial Library to request the validation key'
 CACHE_BACKEND = 'dummy://'
