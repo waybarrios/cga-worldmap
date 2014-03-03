@@ -3,16 +3,17 @@
     :target: http://travis-ci.org/GeoNode/geonode
 
 =========
- GeoNode
+ Worldmap - based on GeoNode
 =========
 
-If you just want to try GeoNode, it is recommended to use Ubuntu 12.04 and install the latest stable release::
+WorldMap is a forked version of GeoNode that has been heavily customized for use at Harvard's Center for Geographic
+Analysis. If you just want to try GeoNode, it is recommended to use Ubuntu 12.04 and install the latest stable release::
 
     sudo add-apt-repository ppa:geonode/release
     sudo apt-get update
     sudo apt-get install geonode
 
-If instead, you are interested in doing development on the source code, here are the instructions for Ubuntu 12.04::
+If instead, you are interested in doing development on the WorldMap source code, here are the instructions for Ubuntu 12.04::
 
     # retrieve latest apt-get list
     sudo apt-get update
@@ -49,13 +50,14 @@ If instead, you are interested in doing development on the source code, here are
     mkvirtualenv geonode
     workon geonode
 
-    # Clone GeoNode
-    git clone https://github.com/GeoNode/geonode.git
+    # Clone WorldMap
+    git clone https://github.com/cga-harvard/cga-worldmap.git
 
     # Install GeoNode in the local virtualenv
     # In pip 1.5 pyproj needs to be whitelisted
-    pip install -e geonode --use-mirrors --allow-external pyproj --allow-unverified pyproj
-    cd geonode
+    pip install -e cga-worldmap --use-mirrors --allow-external pyproj --allow-unverified pyproj
+    pip install -r cga-worldmap/requirements.txt
+    cd cga-worldmap
 
     # Compile GeoServer
     paver setup
@@ -67,117 +69,19 @@ If instead, you are interested in doing development on the source code, here are
     http://localhost:8000
 
 
-openSUSE Development Build Instructions::
-
-    # Add Application:Geo and Python repositories
-    zypper -ar http://download.opensuse.org/repositories/Application:/Geo/openSUSE_12.2/ GEO
-    zypper -ar http://download.opensuse.org/repositories/devel:/languages:/python/openSUSE_12.1/ python
-    zypper refresh
-
-    # Basic build packages
-    zypper install gcc gcc-c++ python-devel libgeos-devel libproj-devel
-
-    # Python native dependencies
-    zypper install python-pip python-virtualenv python-imaging python-lxml
-
-    # Java dependencies
-    zypper install java-1_7_0_openjdk-devel ant maven
-
-    # Supporting tools
-    zypper install git gettext-runtime
-
-    # Create virtualenv and activate it
-    virtualenv venv --system-site-packages
-    source venv/bin/activate
-    cd venv
-
-    # Clone GeoNode
-    git clone https://github.com/GeoNode/geonode.git
-
-    # Install GeoNode in the local virtualenv
-    pip install -e geonode --use-mirrors
-
-    cd geonode
-
-    # Compile GeoServer
-    paver setup
-    
-    # Start the servers
-    paver start
-
-Windows Development Build Instructions::
+WorldMap is only known to run on Ubuntu Linux. While it may be possible to run WorldMap on other flavors of Linux,
+Mac OSX, or Windows, no technical support can be provided for those operating systems.  Try using GeoNode instead if
+you need to use another OS besides Linux.
 
 
-    Prerequisites:
-    # Java JDK
-    # Python 2.6+
-    # ant (bin directory must be on system PATH)
-    # maven2 (bin directory must be on system PATH)
-    # Python distutils (easy_install)
-    # git
-
-    # Install and configure from the windows command prompt
-    If you don't already have python virtualenv installed, then do it now:
-         easy_install virtualenv
-
-    # Create virtualenv and activate it
-    cd <Directory to install the virtualenv & geonode into>
-    virtualenv venv
-    venv\scripts\activate
-
-    # Install Python native dependencies
-    easy_install PIL lxml==2.3
-    # this command will look for and install binary distributions (pip install will attempt to build and fail)
-
-    # Clone GeoNode
-    git clone https://github.com/GeoNode/geonode.git
-    
-    # Install GeoNode in the local virtualenv
-    pip install -e geonode --use-mirrors
-
-    cd geonode
-
-    # Compile GeoServer
-    paver setup
-    
-    # Start the servers
-    # This WON'T work on windows without changes to pavement.py 
-    # and a windows batch script for starting jetty    
-    paver start
-
-Mac OSX Development Build Instructions::
-    
-    # you may need brew install various dependencies 
-
-    mkdir -p ~/pyenv
-    virtualenv ~/pyenv/geonode    
-    source ~/pyenv/geonode/bin/activate
-    git clone https://github.com/GeoNode/geonode
-    cd geonode
-    pip install lxml
-    pip install pyproj
-    pip install nose
-    pip install httplib2
-    pip install shapely
-    pip install PIL
-    pip install paver
-
-    # Node and tools required for static development
-    brew install node
-    npm install -g bower
-    npm install -g grunt-cli
-
-    paver setup
-    paver start
-
-Once fully started, you should see a message indicating the address of your geonode.
+Once fully started, you should see a message indicating the address of your worldmap instance.
 The default username and password are ``admin`` and ``admin``::
   
   Development GeoNode is running at http://localhost:8000/
   The GeoNode is an unstoppable machine
   Press CTRL-C to shut down
 
-Before starting GeoNode (paver start), you could test your installation by running tests::
+Before starting WorldMap (paver start), you could test your installation by running tests::
 
     paver test
     paver test_integration
@@ -205,20 +109,34 @@ You can eventually generate a pdf containing the whole documentation set. For th
   this option out.
 
 
+WorldMap Javascript Client for Map Composer
+===========================================
+WorldMap uses a custom map composer.  If you wish to modify and/or debug the Composer, you will need the
+(OpenGeoSuite 4.0 SDK)[http://suite.opengeo.org/opengeo-docs/webapps/webappsdk.html] and the (Worldmap client
+source code)[https://github.com/mbertrand/geonode-suite-sdk.git].  Place both in the directory immediately above
+your worldmap git repository.  Then run one of the following commands to debug or build the client:
+
+  ant -f ../opengeosuite-4.0-sdk/build.xml -Dapp.path=../geonode-suite-sdk -Dsdk.build=../gn20upgrade/geonode/static -Dapp.name=sdk debug
+  ant -f ../opengeosuite-4.0-sdk/build.xml -Dapp.path=../geonode-suite-sdk -Dsdk.build=../gn20upgrade/geonode/static -Dapp.name=sdk build
+
+
+
+
 GPL License
 ===========
 
 GeoNode is Copyright 2010 OpenPlans.
+WorldMap is Copyright 2010 Harvard University.
 
-GeoNode is free software: you can redistribute it and/or modify
+WorldMap is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-GeoNode is distributed in the hope that it will be useful,
+WorldMap is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GeoNode.  If not, see <http://www.gnu.org/licenses/>.
+along with WorldMap.  If not, see <http://www.gnu.org/licenses/>.
