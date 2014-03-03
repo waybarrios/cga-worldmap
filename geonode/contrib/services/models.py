@@ -1,6 +1,8 @@
+import logging
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from geoserver.catalog import FailedRequestError
 from taggit.managers import TaggableManager
 from geonode.core.models import PermissionLevelMixin, ANONYMOUS_USERS, AUTHENTICATED_USERS, CUSTOM_GROUP_USERS
 from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS, GXP_PTYPES
@@ -8,6 +10,9 @@ from geonode.maps.models import Contact, Role, Layer
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import signals
 from geonode.queue.models import STATUS_VALUES
+
+
+logger = logging.getLogger("geonode.contrib.services")
 
 """
 geonode.contrib.services
@@ -120,10 +125,21 @@ def post_save_service(instance, sender, created, **kwargs):
         instance.set_default_permissions()
 
 def pre_delete_service(instance, sender, **kwargs):
+    for layer in instance.layer_set.all():
+        layer.delete()
     if instance.method == 'H':
         gn = Layer.objects.gn_catalog
         gn.control_harvesting_task('stop', [instance.external_id])
         gn.control_harvesting_task('remove', [instance.external_id])
+    if instance.method == 'C':
+        try:
+            gs = Layer.objects.gs_catalog
+            cascade_store = gs.get_store(instance.name, settings.CASCADE_WORKSPACE)
+            gs.delete(cascade_store, recurse=True)
+        except FailedRequestError:
+            logger.error("Could not delete cascading WMS Store for %s - maybe already gone" % instance.name)
+
+
 
 signals.pre_delete.connect(pre_delete_service, sender=Service)
 signals.post_save.connect(post_save_service, sender=Service)

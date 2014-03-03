@@ -583,7 +583,8 @@ DEFAULT_CONTENT=_(
 def _get_service_and_typename(layername):
     service_typename = layername.split(":")
     service = service_typename[0]
-    if service != settings.DEFAULT_WORKSPACE:
+
+    if service not in [settings.DEFAULT_WORKSPACE, settings.CASCADE_WORKSPACE]:
         return [service, ':'.join(service_typename[1:])]
     else:
         return [None,layername]
@@ -877,7 +878,7 @@ class LayerManager(models.Manager):
         return output
 
 
-    def save_layer_from_geoserver(self, workspace, store, resource):
+    def save_layer_from_geoserver(self, workspace, store, resource, service=None):
         layer, created = Layer.objects.get_or_create(name=resource.name, defaults = {
             "workspace": workspace.name,
             "store": store.name,
@@ -886,11 +887,13 @@ class LayerManager(models.Manager):
             "title": resource.title or 'No title provided',
             "abstract": resource.abstract or 'No abstract provided',
             "owner": None,
-            "uuid": str(uuid.uuid4())
+            "uuid": str(uuid.uuid4()),
+            "service": service
         })
+        layer.save()
         if layer is not None and layer.bbox is None:
             layer._populate_from_gs()
-        layer.save()
+
         if created:
             layer.set_default_permissions()
             layer.save_to_geonetwork()
@@ -1056,7 +1059,7 @@ class Layer(models.Model, PermissionLevelMixin):
         """Returns a list of (mimetype, URL) tuples for downloads of this data
         in various formats."""
 
-        if not self.downloadable or self.storeType == "remoteStore":
+        if not self.downloadable or not self.local:
             return None
 
         bbox = self.llbbox_coords()
@@ -1406,7 +1409,7 @@ class Layer(models.Model, PermissionLevelMixin):
                                 (settings.GEOSERVER_BASE_URL))
                 try:
                     store = cat.get_store(self.store, ws)
-                    self._resource_cache = cat.get_resource(self.name, store)
+                    self._resource_cache = cat.get_resource(self.name, store, ws)
                 except:
                     logger.error("Store for %s does not exist", self.name)
                     return None
@@ -1491,7 +1494,7 @@ class Layer(models.Model, PermissionLevelMixin):
 
     @property
     def ows_url(self):
-        if self.service:
+        if self.storeType == "remoteStore":
             return self.service.base_url
         else:
             return settings.GEOSERVER_BASE_URL + "wms"
@@ -1505,17 +1508,18 @@ class Layer(models.Model, PermissionLevelMixin):
 
     @property
     def ptype(self):
-        if self.service and not self.local:
+        if self.service and self.storeType != "wmsStore":
             return self.service.ptype()
         else:
             return "gxp_gnsource"
 
-
+    @property
     def service_typename(self):
         if self.local:
             return self.typename
         else:
             return "%s:%s" % (self.service.name, self.typename)
+
 
     def _set_poc(self, poc):
         # reset any poc asignation to this layer
@@ -1566,9 +1570,10 @@ class Layer(models.Model, PermissionLevelMixin):
             self.publishing.attribution_link = settings.SITEURL[:-1] + profile.get_absolute_url()
             Layer.objects.gs_catalog.save(self.publishing)
 
-    def  _populate_from_gs(self):
-        gs_store = Layer.objects.gs_catalog.get_store(self.store)
-        gs_resource = Layer.objects.gs_catalog.get_resource(self.name, gs_store)
+    def  _populate_from_gs(self, gs_resource=None):
+        if gs_resource is None:
+            gs_store = Layer.objects.gs_catalog.get_store(self.store)
+            gs_resource = Layer.objects.gs_catalog.get_resource(self.name, gs_store)
         if gs_resource is None:
             return
         self.srs = gs_resource.projection
@@ -1634,6 +1639,7 @@ class Layer(models.Model, PermissionLevelMixin):
         else:
             return "/data/%s:%s" % (self.service.name, self.typename)
 
+
     def __str__(self):
         return "%s Layer" % self.typename
 
@@ -1682,11 +1688,11 @@ class Layer(models.Model, PermissionLevelMixin):
             cfg['group'] = self.topic_category.title
         else:
             cfg['group'] = 'General'
-        if self.local:
-            cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
-        else:
-            cfg['url'] = self.service.base_url
+        if not self.local:
             cfg['ptype'] = self.service.ptype()
+
+        cfg['url'] = self.ows_url
+
         cfg['srs'] = self.srs
         cfg['bbox'] = json.loads(self.bbox)
         cfg['llbbox'] = json.loads(self.llbbox)
@@ -2395,7 +2401,10 @@ class MapLayer(models.Model):
         if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
             #Get parameters from GeoNode instead of WMS GetCapabilities if possible
                 try:
-                    gnLayer = Layer.objects.get(typename=self.name,service=None)
+                    if (self.name.startswith(settings.CASCADE_WORKSPACE)):
+                        gnLayer = Layer.objects.get(typename=self.name,storeType="wmsStore")
+                    else:
+                        gnLayer = Layer.objects.get(typename=self.name, service=None)
                     if gnLayer.srs: cfg['srs'] = gnLayer.srs
                     if gnLayer.bbox: cfg['bbox'] = json.loads(gnLayer.bbox)
                     if gnLayer.llbbox: cfg['llbbox'] = json.loads(gnLayer.llbbox)

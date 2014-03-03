@@ -1104,8 +1104,10 @@ def layer_detail(request, layername, service=None):
 
     service, typename = _get_service_and_typename(layername)
 
-
-    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+    if service is None:
+        layer = get_object_or_404(Layer, typename=typename)
+    else:
+        layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
     if not layer.local and layer.service.type == "HGL":
         from geonode.queue.tasks import load_hgl_layer
@@ -1119,12 +1121,14 @@ def layer_detail(request, layername, service=None):
 
     metadata = layer.metadata_csw()
 
-    attributes = (json.dumps(layer.attribute_config()) + ",") if layer.local else ''
+    attributes = (json.dumps(layer.attribute_config()) + ",") if layer.attribute_set.count() > 0 else ''
 
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
-        source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
-                        +  ('null' if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
+        source_params = json.dumps({"ptype": layer.ptype ,
+                                    "remote": layer.storeType == "remoteStore",
+                                    "name": (None if layer.service is None else layer.service.name)}),
+        ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
         attributes + '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
@@ -1654,18 +1658,27 @@ def _metadata_search(query, start, limit, sortby, sortorder='ASC', **kw):
             cql += " and csw:AnyText like '%%%s%%'" % keyword
 
     constraints = []
+    num_constraints = 0
+
     if category:
         constraints.append(fes.PropertyIsEqualTo(propertyname='gmd:topicCategory', literal=category))
+        num_constraints+=1
 
     if profile:
         constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal='%%profiles/%s/' % profile))
+        num_constraints+=1
 
     for keyword in keywords:
         constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal=('%%%s%%' % keyword)))
+        num_constraints+=1
     if kw.get('bbox'):
         constraints.append(fes.BBox(kw.get('bbox')))
+        num_constraints+=1
 
-    csw.getrecords2(constraints=[constraints], esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
+    if num_constraints > 1:
+        constraints = [constraints]
+
+    csw.getrecords2(constraints=constraints, esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
 
     # build results
     # XXX this goes directly to the result xml doc to obtain
@@ -2312,7 +2325,8 @@ def addLayerJSON(request):
             if uuid:
                 layer = Layer.objects.get(uuid=uuid)
             else:
-                layer = _get_service_and_typename(service_name)
+                service, typename = _get_service_and_typename(service_name)
+                #
             if not request.user.has_perm("maps.view_layer", obj=layer):
                 return HttpResponse(status=401)
             sfJSON = {'layer': layer.layer_config(request.user)}

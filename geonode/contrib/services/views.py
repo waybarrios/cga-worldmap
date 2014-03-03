@@ -36,7 +36,7 @@ from django.shortcuts import get_object_or_404
 
 
 #from geonode.core.layers.views import layer_set_permissions
-from geoserver.catalog import Catalog
+from geoserver.catalog import Catalog, FailedRequestError
 from owslib.wms import WebMapService
 from owslib.wfs import WebFeatureService
 from owslib.tms import TileMapService
@@ -247,9 +247,12 @@ def _process_wms_service(url, type, username, password, owner=None):
 
     try:
         service = Service.objects.get(base_url=url)
-        return_dict = {}
-        return_dict['service_id'] = service.pk
-        return_dict['msg'] = "This is an existing Service"
+        return_dict = [{'status': 'ok',
+                    'msg': _("This is an existing service"),
+                    'service_id': service.pk,
+                    'service_name': service.name,
+                    'service_title': service.title
+                   }]
         return HttpResponse(json.dumps(return_dict),
                             mimetype='application/json',
                             status=200)
@@ -268,19 +271,37 @@ def _process_wms_service(url, type, username, password, owner=None):
     if re.search('EPSG:900913|EPSG:3857', supported_crs):
         return _register_indexed_service(type, url, name, username, password, wms=server, owner=owner)
     else:
-        return _register_cascaded_service(url, type, name, username, password, owner=owner)
+        return _register_cascaded_service(url, type, name, username, password, wms=server, owner=owner)
 
-def _register_cascaded_service(url, type, name, username, password, owner=None):
+def _register_cascaded_service(url, type, name, username, password, wms=None, owner=None):
     """
     Register a service as cascading WMS
     """
-    if type == 'WMS':
+    if wms is None:
+        wms = WebMapService(url)
+    # TODO: Make sure we are parsing all service level metadata
+    # TODO: Handle for setting ServiceContactRole
+    service, created = Service.objects.get_or_create(base_url = url)
+    if created:
+        service.type = type
+        service.method='C'
+        service.name = name
+        service.version = wms.identification.version
+        service.title = wms.identification.title
+        service.abstract = wms.identification.abstract
+        service.keywords = ','.join(wms.identification.keywords)
+        service.online_resource = wms.provider.url
+        service.owner=owner
+        service.save()
+
+    if type in ['WMS', 'OWS']:
         # Register the Service with GeoServer to be cascaded
         cat = Catalog(settings.GEOSERVER_BASE_URL + "rest", 
                         _user , _password)
         # Can we always assume that it is geonode?
-        cascade_ws = cat.get_workspace(settings.CASCADE_WORKSPACE)
-        if cascade_ws is None:
+        try:
+            cascade_ws = cat.get_workspace(settings.CASCADE_WORKSPACE)
+        except FailedRequestError:
             cascade_ws = cat.create_workspace(settings.CASCADE_WORKSPACE, "http://geonode.org/cascade")
 
         #TODO: Make sure there isn't an existing store with that name, and deal with it if there is
@@ -293,14 +314,6 @@ def _register_cascaded_service(url, type, name, username, password, owner=None):
             ws.type = "WMS"
             cat.save(ws)
         available_resources = ws.get_resources(available=True)
-        
-        # Save the Service record
-        service, created = Service.objects.get_or_create(type = type,
-                            method='C',
-                            base_url = url,
-                            name = name,
-                            owner = owner)
-        service.save()
 
 
     elif type == 'WFS':
@@ -363,9 +376,9 @@ def _register_cascaded_service(url, type, name, username, password, owner=None):
 
     if settings.USE_QUEUE:
         #Create a layer import job
-        WebServiceHarvestLayersJob.objects.get_or_create(service=service, owner=owner)
+        WebServiceHarvestLayersJob.objects.get_or_create(service=service)
     else:
-        _register_cascaded_layers(service, owner=owner)
+        _register_cascaded_layers(service)
     return HttpResponse(json.dumps(return_dict),
                         mimetype='application/json',
                         status=200)
@@ -388,18 +401,34 @@ def _register_cascaded_layers(service, owner=None):
 
         count = 0
         for layer in layers:
-            try:
-                lyr = cat.get_resource(layer, store)
-                if(lyr == None):
-                    if service.type == "WMS":
-                        resource = cat.create_wmslayer(cascade_ws, store, layer)
-                    elif service.type == "WFS":
-                        resource = cat.create_wfslayer(cascade_ws, store, layer)
-                    if resource:
-                        cascaded_layer = Layer.objects.save_layer_from_geoserver(cascade_ws,
-                                                        store, resource)
-                        cascaded_layer.service = service
+            lyr = cat.get_resource(layer, store, cascade_ws)
+            if lyr is None:
+                if service.type in ["WMS","OWS"]:
+                    resource = cat.create_wmslayer(cascade_ws, store, layer)
+                elif service.type == "WFS":
+                    resource = cat.create_wfslayer(cascade_ws, store, layer)
+
+                if resource:
+                    cascaded_layer, created = Layer.objects.get_or_create(name=resource.name, service=service,
+                        defaults = {
+                            "workspace": cascade_ws.name,
+                            "store": store.name,
+                            "storeType": store.resource_type,
+                            "typename": "%s:%s" % (cascade_ws.name, resource.name),
+                            "title": resource.title or 'No title provided',
+                            "abstract": resource.abstract or 'No abstract provided',
+                            "owner": None,
+                            "uuid": str(uuid.uuid4()),
+                            "service": service
+                        })
+
+
+                    if created:
                         cascaded_layer.save()
+                        if cascaded_layer is not None and cascaded_layer.bbox is None:
+                            cascaded_layer._populate_from_gs(gs_resource=resource)
+                        cascaded_layer.set_default_permissions()
+                        cascaded_layer.save_to_geonetwork()
 
                         service_layer, created = ServiceLayer.objects.get_or_create(
                             service=service,
@@ -412,8 +441,8 @@ def _register_cascaded_layers(service, owner=None):
                         service_layer.save()
 
                         count += 1
-            except Exception, e:
-                logger.error("Resource %s from store %s could not be saved as layer" % (layer.name, store.name))
+                    else:
+                        logger.error("Resource %s from store %s could not be saved as layer" % (layer, store.name))
         message = "%d Layers Registered" % count
         return_dict = {'status': 'ok', 'msg': message }
         return HttpResponse(json.dumps(return_dict),
@@ -455,7 +484,7 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
             #Create a layer import job
             WebServiceHarvestLayersJob.objects.get_or_create(service=service)
         else:
-            _register_indexed_layers(service, wms=wms, owner=owner)
+            _register_indexed_layers(service, wms=wms)
 
         message = "Service %s registered" % service.name
         return_dict = [{'status': 'ok',
@@ -503,12 +532,13 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
                 abstract = wms_layer.abstract
 
             srs = None
-            if 'EPSG:900913' in wms_layer.crsOptions:
+            ###Some ArcGIS WMSServers indicate they support 900913 but really don't
+            if 'EPSG:900913' in wms_layer.crsOptions and "MapServer/WmsServer" not in service.base_url:
                 srs = 'EPSG:900913'
             elif len(wms_layer.crsOptions) > 0:
                 matches = re.findall('EPSG\:(3857|102100|102113)', ' '.join(wms_layer.crsOptions))
                 if matches:
-                    srs = matches[0]
+                    srs = 'EPSG:%s' % matches[0]
             if srs is None:
                 message = "%d Incompatible projection - try setting the service as cascaded" % count
                 return_dict = {'status': 'ok', 'msg': message }
@@ -883,11 +913,11 @@ def update_layers(service):
     Import/update layers for an existing service
     """
     if service.method == "C":
-        _register_cascaded_layers(service, owner=service.owner)
+        _register_cascaded_layers(service)
     elif service.type in ["WMS","OWS"]:
-        _register_indexed_layers(service, owner=service.owner)
+        _register_indexed_layers(service)
     elif service.type in ["REST"]:
-        _register_arcgis_layers(service, owner=service.owner)
+        _register_arcgis_layers(service)
 
 @login_required
 def remove_service(request, service_id):
@@ -906,13 +936,13 @@ def remove_service(request, service_id):
             "service": service_obj
         }))
     elif request.method == 'POST':
-        servicelayers = service_obj.servicelayer_set.all()
-        for servicelayer in servicelayers:
-            servicelayer.delete()
-
-        layers = service_obj.layer_set.all()
-        for layer in layers:
-            layer.delete()
+        # servicelayers = service_obj.servicelayer_set.all()
+        # for servicelayer in servicelayers:
+        #     servicelayer.delete()
+        #
+        # layers = service_obj.layer_set.all()
+        # for layer in layers:
+        #     layer.delete()
         service_obj.delete()
 
         return HttpResponseRedirect(reverse("services"))
