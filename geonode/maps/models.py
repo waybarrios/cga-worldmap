@@ -31,6 +31,7 @@ import re
 from geonode.maps.encode import despam, XssCleaner
 
 
+
 logger = logging.getLogger("geonode.maps.models")
 
 
@@ -1688,8 +1689,8 @@ class Layer(models.Model, PermissionLevelMixin):
             cfg['group'] = self.topic_category.title
         else:
             cfg['group'] = 'General'
-        if not self.local:
-            cfg['ptype'] = self.service.ptype()
+
+        cfg['ptype'] = self.ptype
 
         cfg['url'] = self.ows_url
 
@@ -1703,7 +1704,11 @@ class Layer(models.Model, PermissionLevelMixin):
         cfg['abstract'] = self.abstract
         cfg['styles'] = ''
         if not self.local:
-            cfg['source_params'] = {"ptype":self.ptype, "remote": True, "url": cfg["url"], "name": self.service.name}
+            cfg['source_params'] = {"ptype":cfg["ptype"], "remote": True, "url": cfg["url"], "name": self.service.name}
+
+        if self.ptype == "gxp_hglsource":
+            _prepare_hgl_layer(self.typename)
+
         return cfg
 
     def queue_gazetteer_update(self):
@@ -1711,8 +1716,6 @@ class Layer(models.Model, PermissionLevelMixin):
         if GazetteerUpdateJob.objects.filter(layer=self.id).exists() == 0:
             newJob = GazetteerUpdateJob(layer=self)
             newJob.save()
-
-
 
     def update_gazetteer(self):
         from geonode.gazetteer.utils import add_to_gazetteer, delete_from_gazetteer
@@ -2398,6 +2401,10 @@ class MapLayer(models.Model):
             cfg['url'] = ows_sub.sub('', cfg['url'])
         if self.group: cfg["group"] = self.group
         cfg["visibility"] = self.visibility
+
+        if self.source_params.find( "gxp_hglsource") > -1:
+            _prepare_hgl_layer(self.name)
+
         if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
             #Get parameters from GeoNode instead of WMS GetCapabilities if possible
                 try:
@@ -2456,6 +2463,13 @@ class MapLayer(models.Model):
     def __unicode__(self):
         return '%s?layers=%s' % (self.ows_url, self.name)
 
+def _prepare_hgl_layer(typename):
+    if settings.USE_QUEUE:
+        from geonode.queue.tasks import load_hgl_layer
+        load_hgl_layer.delay(typename)
+    else:
+        from geonode.proxy.views import hglServiceStarter
+        hglServiceStarter(None, typename)
 
 def delete_layer(instance, sender, **kwargs):
     """

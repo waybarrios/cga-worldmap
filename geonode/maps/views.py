@@ -1,6 +1,7 @@
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 from geonode.maps.models import Map, Layer, MapLayer, Contact, ContactRole, \
-     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, CHARSETS
+     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, \
+     CHARSETS, _prepare_hgl_layer, _get_service_and_typename
 from geonode.profile.forms import ContactProfileForm
 from geoserver.resource import FeatureType, Coverage
 import base64
@@ -49,7 +50,8 @@ from geonode.maps.encode import num_encode, num_decode
 from django.db import transaction
 from geonode.maps.encode import despam, XssCleaner
 import geonode.maps.autocomplete_light_registry
-from geonode.maps.models import _get_service_and_typename
+
+
 
 logger = logging.getLogger("geonode.maps.views")
 
@@ -1110,8 +1112,8 @@ def layer_detail(request, layername, service=None):
         layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
     if not layer.local and layer.service.type == "HGL":
-        from geonode.queue.tasks import load_hgl_layer
-        load_hgl_layer(layer.typename)
+        _prepare_hgl_layer(layer.typename)
+
 
 
     if not request.user.has_perm('maps.view_layer', obj=layer):
