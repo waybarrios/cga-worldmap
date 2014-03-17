@@ -31,7 +31,6 @@ SERVICE_TYPES = (
     ('TMS', _('Tile Map Service')),
     ('OSG', _('OpenSearch Geo Service')),
     ('REST', _('ArcGIS REST Service')),
-    ('OGP', _('OpenGeoPortal')),
     ('HGL', _('Harvard Geospatial Library')),
 )
 
@@ -41,6 +40,7 @@ SERVICE_METHODS = (
     ('H', _('Harvested')),
     ('I', _('Indexed')),
     ('X', _('Live')),
+    ('O', _('OpenGeoPortal'))
 )
 
 
@@ -51,11 +51,6 @@ GXP_PTYPES = {
     'WCS': 'gxp_wmscsource',
     'REST': 'gxp_arcrestsource',
     'HGL': 'gxp_hglsource',
-    'WPS': None,
-    'CSW': None,
-    'WMTS': None,
-    'TMS': None,
-    'OSG': None,
-    'OGP': None
 }
+
 

@@ -49,7 +49,7 @@ def proxy(request):
     url = urlsplit(request.GET['url'])
 
     # Don't allow localhost connections unless in DEBUG mode
-    if not settings.DEBUG and re.search('localhost|127.0.0.1', url.hostname):
+    if not settings.DEBUG and not re.search('localhost|127.0.0.1', url.hostname):
         return HttpResponse(status=403)
 
     locator = url.path
@@ -77,7 +77,7 @@ def proxy(request):
 def valid_response(responseContent):
     #Proxy should only be used when expecting an XML or JSON response
 
-    #return responseContent
+    return responseContent
 
     #ArcGIS Server GetFeatureInfo xml response
     if re.match("<FeatureInfoResponse", responseContent):

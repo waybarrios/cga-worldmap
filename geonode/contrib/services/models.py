@@ -49,6 +49,7 @@ class Service(models.Model, PermissionLevelMixin):
     noanswer_retries = models.PositiveIntegerField(null=True, blank=True)
     uuid = models.CharField(max_length=36, null=True, blank=True)
     external_id = models.IntegerField(null=True, blank=True)
+    parent = models.ForeignKey('services.Service', null=True, blank=True, related_name='service_set')
 
     # Supported Capabilities
 
