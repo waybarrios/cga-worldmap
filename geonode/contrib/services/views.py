@@ -132,8 +132,10 @@ def register_service(request):
                     return _process_wms_service(url, type, user, password, wms=server, owner=request.user)
                 elif type == "REST":
                     return _register_arcgis_url(url, user, password, owner=request.user)
-                elif type in ["OGP","CSW"]:
-                    return _register_harvested_service(type, url, user, password, owner=request.user)
+                elif type == "CSW":
+                    return _register_harvested_service(url, user, password, owner=request.user)
+                elif type == "OGP":
+                    return _register_ogp_service(url, owner=request.user)
                 else:
                     return HttpResponse('Not Implemented (Yet)', status=501)
             except Exception, e:
@@ -245,7 +247,7 @@ def _verify_service_type(base_url, type=None):
 
 def _process_wms_service(url, type, username, password, wms=None, owner=None, parent=None):
     """
-    Create a new WMS/OWS service, cascade it if necessary
+    Create a new WMS/OWS service, cascade it if necessary (i.e. if Web Mercator not available)
     """
     if wms is None:
         wms = WebMapService(url)
@@ -282,7 +284,7 @@ def _process_wms_service(url, type, username, password, wms=None, owner=None, pa
         supported_crs  = ','.join(wms.contents.itervalues().next().crsOptions)
     except:
         supported_crs = None
-    if supported_crs and re.search('EPSG:900913|EPSG:3857', supported_crs):
+    if supported_crs and re.search('EPSG:900913|EPSG:3857|EPSG:102100', supported_crs):
         return _register_indexed_service(type, url, name, username, password, wms=wms, owner=owner, parent=parent)
     else:
         return _register_cascaded_service(url, type, name, username, password, wms=wms, owner=owner, parent=parent)
@@ -555,7 +557,7 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
 
 def _register_indexed_layers(service, wms=None, verbosity=False):
     """
-    Register layers for an indexed service (only WMS/OWS currently supported
+    Register layers for an indexed service (only WMS/OWS currently supported)
     """
     logger.info("Registering layers for %s" % service.base_url)
     if re.match("WMS|OWS", service.type):
@@ -646,17 +648,19 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
     else:
         return HttpResponse('Invalid Service Type', status=400)
 
-
-def _register_harvested_service(type, url, username, password, csw=None, owner=None):
+def _register_harvested_service(url, username, password, csw=None, owner=None):
     """
-    Register a CSW or OGP service  - stub only.  Needs to iterate through all layers and register
-    the layers and the services they originate from.
+    Register a CSW service, then step through results (or queue for asynchronous harvesting)
     """
     try:
         service = Service.objects.get(base_url=url)
-        return_dict = {}
-        return_dict['service_id'] = service.pk
-        return_dict['msg'] = "This is an existing Service"
+        return_dict = [{
+            'status' : 'ok',
+            'service_id' : service.pk,
+            'service_name': service.name,
+            'service_title': service.title,
+            'msg' : 'This is an existing Service'
+        }]
         return HttpResponse(json.dumps(return_dict),
                             mimetype='application/json',
                             status=200)
@@ -697,6 +701,9 @@ def _register_harvested_service(type, url, username, password, csw=None, owner=N
                         status=200)
 
 def _harvest_csw(csw, maxrecords=10):
+    """
+    Step through CSW results, and if one seems to be a WMS or Arc REST service then register it
+    """
     stop = 0
     flag = 0
 
@@ -753,8 +760,6 @@ def _harvest_csw(csw, maxrecords=10):
 
         flag = 1
         stop = 0
-
-
 
 def _register_arcgis_url(url,username, password, owner=None, parent=None):
     """
@@ -835,10 +840,16 @@ def _process_arcgis_service(arcserver, owner=None, parent=None):
     arc_url = _clean_url(arcserver.url)
     try:
         service = Service.objects.get(base_url=arc_url)
-        return_dict = {}
-        return_dict['service_id'] = service.pk
-        return_dict['msg'] = "This is an existing Service"
-        return service.base_url
+        return_dict = [{
+            'status' : 'ok',
+            'service_id' : service.pk,
+            'service_name': service.name,
+            'service_title': service.title,
+            'msg' : 'This is an existing Service'
+        }]
+        return HttpResponse(json.dumps(return_dict),
+                            mimetype='application/json',
+                            status=200)
     except:
         pass
 
@@ -889,39 +900,76 @@ def _process_arcgis_folder(folder, services=[], owner=None, parent=None):
         _process_arcgis_folder(subfolder, services, owner)
     return services
 
-def _harvest_ogp_service(url, num_rows=100, start=0,owner=None):
-    base_query_str =  "?q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0)," +  \
-        "map(MaxX,-180.0,180.0,1,0),map(MinY,-90.0,90.0,1,0),map(MaxY,-90.0,90.0,1,0)),4,4,1,0))),0,0)%22" + \
-        "&debugQuery=false&&fq={!frange+l%3D1+u%3D10}product(2.0,map(sum(map(sub(abs(sub(0,CenterX))," + \
-        "sum(171.03515625,HalfWidth)),0,400000,1,0),map(sub(abs(sub(0,CenterY)),sum(75.84516854027,HalfHeight))," + \
-        "0,400000,1,0)),0,0,1,0))&wt=json&fl=Name,CollectionId,Institution,Access,DataType,Availability," + \
-        "LayerDisplayName,Publisher,GeoReferenced,Originator,Location,MinX,MaxX,MinY,MaxY,ContentDate,LayerId," + \
-        "score,WorkspaceName,SrsProjectionCode&sort=score+desc&fq=DataType%3APoint+OR+DataType%3ALine+OR+" + \
-        "DataType%3APolygon+OR+DataType%3ARaster+OR+DataType%3APaper+Map&fq=Access:Public"
+def _register_ogp_service(url, owner=None):
+    """
+
+    """
+    try:
+        service = Service.objects.get(base_url=url)
+        return_dict = [{
+            'status' : 'ok',
+            'service_id' : service.pk,
+            'service_name': service.name,
+            'service_title': service.title,
+            'msg' : 'This is an existing Service'
+        }]
+        return HttpResponse(json.dumps(return_dict),
+                            mimetype='application/json',
+                            status=200)
+    except:
+        pass
 
     #base_query_str += "&fq=Institution%3AHarvard"
 
-    service, created = Service.objects.get_or_create(base_url = url)
-    if created:
-        service.type = type
-        service.method='O'
-        service.name = "OpenGeoPortal"
-        service.abstract = OGP_ABSTRACT
-        service.owner=owner
-        service.save()
+    service = Service.objects.create(base_url = url,
+        type = "OGP",
+        method='H',
+        name = "OpenGeoPortal",
+        title = "OpenGeoPortal",
+        abstract = OGP_ABSTRACT,
+        owner=owner)
 
 
-    fullurl = service.url + base_query_str + ("&rows=%d&start=%d" % (num_rows, start))
+    if settings.USE_QUEUE:
+        #Create a layer import job
+        WebServiceHarvestLayersJob.objects.get_or_create(service=service)
+    else:
+        _harvest_ogp_layers(service, owner=owner)
+
+    message = "Service %s registered" % service.name
+    return_dict = [{'status': 'ok',
+                   'msg': message,
+                   'service_id': service.pk,
+                   'service_name': service.name,
+                   'service_title': service.title
+    }]
+    return HttpResponse(json.dumps(return_dict),
+                        mimetype='application/json',
+                        status=200)
+
+
+
+def _harvest_ogp_layers(service, num_rows=10, start=0, owner=None):
+    base_query_str =  "?q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0)," + \
+                      "map(MaxX,-180.0,180.0,1,0),map(MinY,-90.0,90.0,1,0),map(MaxY,-90.0,90.0,1,0)),4,4,1,0))),0,0)%22" + \
+                      "&debugQuery=false&&fq={!frange+l%3D1+u%3D10}product(2.0,map(sum(map(sub(abs(sub(0,CenterX))," + \
+                      "sum(171.03515625,HalfWidth)),0,400000,1,0),map(sub(abs(sub(0,CenterY)),sum(75.84516854027,HalfHeight))," + \
+                      "0,400000,1,0)),0,0,1,0))&wt=json&fl=Name,CollectionId,Institution,Access,DataType,Availability," + \
+                      "LayerDisplayName,Publisher,GeoReferenced,Originator,Location,MinX,MaxX,MinY,MaxY,ContentDate,LayerId," + \
+                      "score,WorkspaceName,SrsProjectionCode&sort=score+desc&fq=DataType%3APoint+OR+DataType%3ALine+OR+" + \
+                      "DataType%3APolygon+OR+DataType%3ARaster+OR+DataType%3APaper+Map&fq=Access:Public"
+
+    fullurl = service.base_url + base_query_str + ("&rows=%d&start=%d" % (num_rows, start))
     response = urllib.urlopen(fullurl).read()
     json_response = json.loads(response)
     result_count =  json_response["response"]["numFound"]
-    process_ogp_results(service,json_response)
+    process_ogp_results(service, json_response)
 
     while start < result_count:
         start = start + num_rows
-        _harvest_ogp_service(service, num_rows, start)
+        _harvest_ogp_layers(service, num_rows, start, owner=owner)
 
-def process_ogp_results(service,result_json, owner=None):
+def process_ogp_results(ogp, result_json, owner=None):
     for doc in result_json["response"]["docs"]:
         try:
             locations = json.loads(doc["Location"])
@@ -949,7 +997,7 @@ def process_ogp_results(service,result_json, owner=None):
         except Service.DoesNotExist:
             if service_type in ["WMS","OWS", "HGL"]:
                 try:
-                    response = _process_wms_service(service_url, service_type, None, None, parent=service)
+                    response = _process_wms_service(service_url, service_type, None, None, parent=ogp)
                     r_json = json.loads(response.content)
                     service = Service.objects.get(id=r_json[0]["service_id"])
                 except Exception, e:
@@ -1048,8 +1096,12 @@ def update_layers(service):
         _register_cascaded_layers(service)
     elif service.type in ["WMS","OWS"]:
         _register_indexed_layers(service)
-    elif service.type in ["REST"]:
+    elif service.type == "REST":
         _register_arcgis_layers(service)
+    elif service.type  == "CSW":
+        _harvest_csw(service)
+    elif service.type == "OGP":
+        _harvest_ogp_layers(service, 25)
 
 @login_required
 def remove_service(request, service_id):
