@@ -128,10 +128,10 @@ def post_save_service(instance, sender, created, **kwargs):
 def pre_delete_service(instance, sender, **kwargs):
     for layer in instance.layer_set.all():
         layer.delete()
-    if instance.method == 'H':
-        gn = Layer.objects.gn_catalog
-        gn.control_harvesting_task('stop', [instance.external_id])
-        gn.control_harvesting_task('remove', [instance.external_id])
+    # if instance.method == 'H':
+    #     gn = Layer.objects.gn_catalog
+    #     gn.control_harvesting_task('stop', [instance.external_id])
+    #     gn.control_harvesting_task('remove', [instance.external_id])
     if instance.method == 'C':
         try:
             gs = Layer.objects.gs_catalog

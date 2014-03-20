@@ -1178,52 +1178,19 @@ class Layer(models.Model, PermissionLevelMixin):
         """Makes sure the state of the layer is consistent in GeoServer and GeoNetwork.
         """
 
-        # Check the layer is in the wms get capabilities record
-        # FIXME: Implement caching of capabilities record site wide
-        #        if (_wms is None) or (self.typename not in _wms.contents):
-        #            get_wms()
-        #        try:
-        #            _wms[self.typename]
-        #        except:
-        #            msg = "WMS Record missing for layer [%s]" % self.typename
-        #            raise GeoNodeException(msg)
-
-        # Check the layer is in GeoServer's REST API
-        # It would be nice if we could ask for the definition of a layer by name
-        # rather than searching for it
-        #api_url = "%sdata/search/api/?q=%s" % (settings.SITEURL, self.name.replace('_', '%20'))
-        #response, body = http.request(api_url)
-        #api_json = json.loads(body)
-        #api_layer = None
-        #for row in api_json['rows']:
-        #    if(row['name'] == self.typename):
-        #        api_layer = row
-        #if(api_layer == None):
-        #    msg = "API Record missing for layer [%s]" % self.typename
-        #    raise GeoNodeException(msg)
-
         # Check the layer is in the GeoNetwork catalog and points back to get_absolute_url
         if(_csw is None): # Might need to re-cache, nothing equivalent to _wms.contents?
             get_csw()
-        try:
-            _csw.getrecordbyid([self.uuid])
-            csw_layer = _csw.records.get(self.uuid)
-        except:
-            msg = "CSW Record Missing for layer [%s]" % self.typename
-            raise GeoNodeException(msg)
+        if _csw is not None:
+            try:
+                _csw.getrecordbyid([self.uuid])
+                csw_layer = _csw.records.get(self.uuid)
+            except:
+                msg = "CSW Record Missing for layer [%s]" % self.typename
+                raise GeoNodeException(msg)
 
-        if(csw_layer.uris and csw_layer.uris[0]['url'] != self.get_absolute_url()):
-            msg = "CSW Layer URL does not match layer URL for layer [%s]" % self.typename
 
-            # Visit get_absolute_url and make sure it does not give a 404
-            #logger.info(self.get_absolute_url())
-            #response, body = http.request(self.get_absolute_url())
-            #if(int(response['status']) != 200):
-            #    msg = "Layer Info page for layer [%s] is %d" % (self.typename, int(response['status']))
-            #    raise GeoNodeException(msg)
 
-            #FIXME: Add more checks, for example making sure the title, keywords and description
-            # are the same in every database.
 
     def layer_attributes(self):
         attribute_fields = cache.get('layer_searchfields_' + self.typename)
@@ -1429,9 +1396,9 @@ class Layer(models.Model, PermissionLevelMixin):
                 self._resource_cache = remote_resource
         return self._resource_cache
 
-
     def _get_metadata_links(self):
         return self.resource.metadata_links
+
     def _set_metadata_links(self, md_links):
         try:
             self.resource.metadata_links = md_links
@@ -2394,6 +2361,8 @@ class MapLayer(models.Model):
         if self.styles: cfg['styles'] = self.styles
         if self.transparent: cfg['transparent'] = True
 
+
+
         cfg["fixed"] = self.fixed
         if 'url' not in cfg:
             cfg['url'] = self.ows_url
@@ -2405,7 +2374,7 @@ class MapLayer(models.Model):
         if self.source_params.find( "gxp_hglsource") > -1:
             _prepare_hgl_layer(self.name)
 
-        if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
+        if self.name is not None and (self.source_params.find( "gxp_gnsource") > -1):
             #Get parameters from GeoNode instead of WMS GetCapabilities if possible
                 try:
                     if (self.name.startswith(settings.CASCADE_WORKSPACE)):

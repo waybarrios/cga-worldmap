@@ -1128,11 +1128,11 @@ def layer_detail(request, layername, service=None):
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
         source_params = json.dumps({"ptype": layer.ptype ,
-                                    "remote": layer.storeType == "remoteStore",
+                                    "remote": layer.storeType == "remoteStore",  "srs": layer.srs,
                                     "name": (None if layer.service is None else layer.service.name)}),
         ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
-        attributes + '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
+        '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     #unless its HGL

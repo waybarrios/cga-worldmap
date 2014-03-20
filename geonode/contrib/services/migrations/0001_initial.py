@@ -10,6 +10,7 @@ class Migration(SchemaMigration):
         ("maps", "0001_initial"),
     )
 
+
     def forwards(self, orm):
         
         # Adding model 'Service'
@@ -40,6 +41,7 @@ class Migration(SchemaMigration):
             ('noanswer_retries', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
             ('uuid', self.gf('django.db.models.fields.CharField')(max_length=36, null=True, blank=True)),
             ('external_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('parent', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='service_set', null=True, to=orm['services.Service'])),
         ))
         db.send_create_signal('services', ['Service'])
 
@@ -116,7 +118,7 @@ class Migration(SchemaMigration):
         },
         'auth.user': {
             'Meta': {'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 2, 24, 10, 24, 58, 895235)'}),
+            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 3, 17, 14, 29, 57, 397808)'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -124,7 +126,7 @@ class Migration(SchemaMigration):
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 2, 24, 10, 24, 58, 895164)'}),
+            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 3, 17, 14, 29, 57, 397744)'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
@@ -151,7 +153,7 @@ class Migration(SchemaMigration):
             'is_certifier': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_org_member': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'member_expiration_dt': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime(2014, 2, 24, 10, 24, 58, 861136)'}),
+            'member_expiration_dt': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime(2014, 3, 17, 14, 29, 57, 357995)'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'organization': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'position': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
@@ -244,6 +246,7 @@ class Migration(SchemaMigration):
             'noanswer_retries': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'online_resource': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'}),
+            'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'service_set'", 'null': 'True', 'to': "orm['services.Service']"}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
             'resources_ref': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
             'store_ref': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),

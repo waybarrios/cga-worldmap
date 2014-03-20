@@ -1420,7 +1420,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
                         },
                         scope: app
                     });
-            },
+                },
                 scope: app
             }
         };

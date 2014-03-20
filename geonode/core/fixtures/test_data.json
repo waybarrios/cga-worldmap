@@ -1,6 +1,6 @@
 [
     {
-        "pk": 1, 
+        "pk": 1,
         "model": "auth.user", 
         "fields": {
             "username": "bobby", 
