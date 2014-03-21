@@ -77,6 +77,7 @@ technology, The Open Geoportal provides organizations the opportunity to share t
 maps, metadata, and development resources through a single common interface.
 """)
 
+
 @login_required
 def services(request):
     """
@@ -671,8 +672,8 @@ def _register_harvested_service(url, username, password, csw=None, owner=None):
         csw = CatalogueServiceWeb(url)
 
     service = Service.objects.create(base_url = url,
-                                     type = type,
-                                     method='H' if type == 'CSW' else 'O',
+                                     type = 'CSW',
+                                     method='H',
                                      name = _get_valid_name(csw.identification.title or url),
                                      title = csw.identification.title,
                                      version = csw.identification.version,
@@ -700,12 +701,13 @@ def _register_harvested_service(url, username, password, csw=None, owner=None):
                         mimetype='application/json',
                         status=200)
 
-def _harvest_csw(csw, maxrecords=10):
+def _harvest_csw(csw, maxrecords=10, totalrecords=float('inf')):
     """
     Step through CSW results, and if one seems to be a WMS or Arc REST service then register it
     """
     stop = 0
     flag = 0
+
 
     src = CatalogueServiceWeb(csw.base_url)
 
@@ -717,12 +719,12 @@ def _harvest_csw(csw, maxrecords=10):
 
         src.getrecords2(esn='summary', startposition=startposition, maxrecords=maxrecords)
 
-        print src.results
+        max = min(src.results['matches'],totalrecords)
 
 
         if src.results['nextrecord'] == 0 \
         or src.results['returned'] == 0 \
-        or src.results['nextrecord'] > src.results['matches']:  # end the loop, exhausted all records
+        or src.results['nextrecord'] > max:  # end the loop, exhausted all records or max records to process
             stop = 1
             break
 
@@ -733,10 +735,12 @@ def _harvest_csw(csw, maxrecords=10):
             known_types = {}
             print record
             for ref in record.references:
-                if ref["scheme"] == "OGC:WMS" or "service=wms&request=getcapabilities" in ref["url"].lower():
+                if ref["scheme"] == "OGC:WMS" or \
+                                "service=wms&request=getcapabilities" in urllib.unquote(ref["url"]).lower():
                     print "WMS:%s" % ref["url"]
                     known_types["WMS"] = ref["url"]
-                if ref["scheme"] == "OGC:WFS" or "service=wfs&request=getcapabilities" in ref["url"].lower():
+                if ref["scheme"] == "OGC:WFS" or \
+                                "service=wfs&request=getcapabilities" in urllib.unquote(ref["url"]).lower():
                     print "WFS:%s" % ref["url"]
                     known_types["WFS"] = ref["url"]
                 if ref["scheme"] == "ESRI":
@@ -902,7 +906,7 @@ def _process_arcgis_folder(folder, services=[], owner=None, parent=None):
 
 def _register_ogp_service(url, owner=None):
     """
-
+    Register OpenGeoPortal as a service
     """
     try:
         service = Service.objects.get(base_url=url)
@@ -919,7 +923,7 @@ def _register_ogp_service(url, owner=None):
     except:
         pass
 
-    #base_query_str += "&fq=Institution%3AHarvard"
+
 
     service = Service.objects.create(base_url = url,
         type = "OGP",
@@ -948,8 +952,10 @@ def _register_ogp_service(url, owner=None):
                         status=200)
 
 
-
-def _harvest_ogp_layers(service, num_rows=10, start=0, owner=None):
+def _harvest_ogp_layers(service, maxrecords=10, start=0, totalrecords=float('inf'),owner=None,  institution=None):
+    """
+    Query OpenGeoPortal's solr instance for layers.
+    """
     base_query_str =  "?q=_val_:%22sum(sum(product(9.0,map(sum(map(MinX,-180.0,180,1,0)," + \
                       "map(MaxX,-180.0,180.0,1,0),map(MinY,-90.0,90.0,1,0),map(MaxY,-90.0,90.0,1,0)),4,4,1,0))),0,0)%22" + \
                       "&debugQuery=false&&fq={!frange+l%3D1+u%3D10}product(2.0,map(sum(map(sub(abs(sub(0,CenterX))," + \
@@ -958,18 +964,23 @@ def _harvest_ogp_layers(service, num_rows=10, start=0, owner=None):
                       "LayerDisplayName,Publisher,GeoReferenced,Originator,Location,MinX,MaxX,MinY,MaxY,ContentDate,LayerId," + \
                       "score,WorkspaceName,SrsProjectionCode&sort=score+desc&fq=DataType%3APoint+OR+DataType%3ALine+OR+" + \
                       "DataType%3APolygon+OR+DataType%3ARaster+OR+DataType%3APaper+Map&fq=Access:Public"
-
-    fullurl = service.base_url + base_query_str + ("&rows=%d&start=%d" % (num_rows, start))
+    if institution:
+        base_query_str += "&fq=%s" % urllib.urlencode(institution)
+    fullurl = service.base_url + base_query_str + ("&rows=%d&start=%d" % (maxrecords, start))
     response = urllib.urlopen(fullurl).read()
     json_response = json.loads(response)
-    result_count =  json_response["response"]["numFound"]
     process_ogp_results(service, json_response)
 
-    while start < result_count:
-        start = start + num_rows
-        _harvest_ogp_layers(service, num_rows, start, owner=owner)
+    max =  min(json_response["response"]["numFound"],totalrecords)
+
+    while start < max:
+        start = start + maxrecords
+        _harvest_ogp_layers(service, maxrecords, start, totalrecords=totalrecords, owner=owner, institution=institution)
 
 def process_ogp_results(ogp, result_json, owner=None):
+    """
+    Create WMS services and layers from OGP results
+    """
     for doc in result_json["response"]["docs"]:
         try:
             locations = json.loads(doc["Location"])
@@ -987,7 +998,11 @@ def process_ogp_results(ogp, result_json, owner=None):
         else:
             pass
 
-        #Harvard is a special case
+        """
+        Harvard Geospatial Library is a special case, requires an activation request
+        to prepare the layer before WMS requests can be successful.
+
+        """
         if doc["Institution"] == "Harvard":
             service_type = "HGL"
 
@@ -1069,7 +1084,6 @@ def edit_service(request, service_id):
     """
     service_obj = get_object_or_404(Service,pk=service_id)
 
-
     if request.method == "POST":
         service_form = ServiceForm(request.POST, instance=service_obj, prefix="service")
         if service_form.is_valid():
@@ -1105,9 +1119,9 @@ def update_layers(service):
 
 @login_required
 def remove_service(request, service_id):
-    '''
+    """
     Delete a service, and its constituent layers. 
-    '''
+    """
     service_obj = get_object_or_404(Service,pk=service_id)
 
     if not request.user.has_perm('maps.delete_service', obj=service_obj):
@@ -1120,15 +1134,7 @@ def remove_service(request, service_id):
             "service": service_obj
         }))
     elif request.method == 'POST':
-        # servicelayers = service_obj.servicelayer_set.all()
-        # for servicelayer in servicelayers:
-        #     servicelayer.delete()
-        #
-        # layers = service_obj.layer_set.all()
-        # for layer in layers:
-        #     layer.delete()
         service_obj.delete()
-
         return HttpResponseRedirect(reverse("services"))
 
 def set_service_permissions(service, perm_spec):

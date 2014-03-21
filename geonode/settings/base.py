@@ -272,11 +272,11 @@ REGISTRATION_OPEN = False
 
 # Arguments for the test runner
 NOSE_ARGS = [
-      '--verbosity=2',
+      '--verbosity=1',
       '--cover-erase',
       '--nocapture',
       '--with-coverage',
-      '--cover-package=worldmap',
+      '--cover-package=geonode',
       '--cover-inclusive',
       '--cover-tests',
       '--detailed-errors',

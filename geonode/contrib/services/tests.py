@@ -20,12 +20,13 @@
 
 import json
 
-from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
-from django.contrib.auth.models import User, AnonymousUser
 from django.core.urlresolvers import reverse
 from .models import Service
+
+
+
 
 class ServicesTests(TestCase):
     """Tests geonode.contrib.services app/module
@@ -48,7 +49,7 @@ class ServicesTests(TestCase):
         response = c.post(reverse('register_service'),
                             {
                              'type':'WMS',
-                             'url':'http://demo.geonode.org/geoserver/wms',
+                             'url':'http://metaspatial.net/cgi-bin/ogc-wms.xml',
                             })
         self.assertEqual(response.status_code, 200)
         service_dict = json.loads(response.content)[0]
@@ -56,10 +57,12 @@ class ServicesTests(TestCase):
 
         try:
             service = Service.objects.get(id=service_dict['service_id'])
-            self.assertTrue(service.layer_set.all().count() > 0)
+            self.assertTrue(service.layer_set.all().count() > 0) #Harvested some layers
             self.assertEqual(service.method, "I")
             self.assertEqual(service.type, "WMS")
             self.assertEqual(service.ptype(), 'gxp_wmscsource')
+
+
         except Exception, e:
             self.fail("Service not created: %s" % str(e))
 
@@ -79,9 +82,32 @@ class ServicesTests(TestCase):
 
         try:
             service = Service.objects.get(id=service_dict['service_id'])
-            self.assertTrue(service.layer_set.all().count() > 0)
+            self.assertTrue(service.layer_set.all().count() > 0) #Harvested some layers
             self.assertEqual(service.method, "I")
             self.assertEqual(service.type, "REST")
             self.assertEqual(service.ptype(), 'gxp_arcrestsource')
         except Exception, e:
             self.fail("Service not created: %s" % str(e))
+
+
+    def test_register_csw(self):
+        c = Client()
+        c.login(username='admin', password='admin')
+        response = c.post(reverse('register_service'),
+                      {
+                          'type':'CSW',
+                          'url':'http://demo.pycsw.org/cite/csw',
+
+        })
+        self.assertEqual(response.status_code, 200)
+        service_dict = json.loads(response.content)[0]
+        try:
+            service = Service.objects.get(id=service_dict['service_id'])
+        except Exception, e:
+            self.fail("Service not created: %s" % str(e))
+        self.assertEqual(service.method, "H")
+        self.assertEqual(service.type, "CSW")
+        self.assertEqual(service.base_url, 'http://demo.pycsw.org/cite/csw')
+        #TODO: Use CSW or make mock CSW containing just a few small WMS & ESRI service records
+        self.assertEquals(service.service_set.all().count(), 0) #No WMS/REST services
+        self.assertEquals(service.layer_set.all().count(),0)   # No Layers for this one
