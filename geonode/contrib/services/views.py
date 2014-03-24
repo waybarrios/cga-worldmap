@@ -24,6 +24,7 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.urlresolvers import reverse
 from django.forms.models import modelformset_factory
 from django.http import HttpResponse, HttpResponseRedirect
@@ -238,13 +239,13 @@ def _verify_service_type(base_url, type=None):
         try:
             service = CatalogueServiceWeb(base_url)
             return ["CSW", service]
-        except:
+        except Exception, e:
             pass
     if type in ["OGP", None]:
         #Just use a specific OGP URL for now
         if base_url == settings.OGP_URL:
             return ["OGP", None]
-        return None
+    return [None, None]
 
 def _process_wms_service(url, type, username, password, wms=None, owner=None, parent=None):
     """
@@ -1068,8 +1069,31 @@ def service_detail(request, service_id):
     This view shows the details of a service 
     '''
     service = get_object_or_404(Service,pk=service_id)
-    layers = Layer.objects.filter(service=service)
-    services = service.service_set.all()
+    layer_list = service.layer_set.all()
+    service_list = service.service_set.all()
+    service_paginator = Paginator(service_list, 25) # Show 25 services per page
+    layer_paginator = Paginator(layer_list, 25) # Show 25 services per page
+
+    page = request.GET.get('page')
+    try:
+        layers = layer_paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        layers = layer_paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        layers = layer_paginator.page(layer_paginator.num_pages)
+
+
+    try:
+        services = service_paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        services = service_paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        services = service_paginator.page(service_paginator.num_pages)
+
     return render_to_response("services/service_detail.html", RequestContext(request, {
         'service': service,
         'layers': layers,

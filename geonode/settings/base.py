@@ -17,8 +17,10 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir
 # present pretty error pages.
 DEBUG = TEMPLATE_DEBUG = True
 
+ADMINS = (('Admin name', 'admin_email@email.com'),)
+
 #Email settings (example gmail account) for registration, passwords, etc
-#DEFAULT_FROM_EMAIL = 'your_email@gmail.com'
+DEFAULT_FROM_EMAIL = 'your_email@gmail.com'
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #EMAIL_HOST = 'smtp.gmail.com'
 #EMAIL_HOST_USER = 'your_email@gmail.com'

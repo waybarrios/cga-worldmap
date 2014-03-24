@@ -1047,7 +1047,9 @@ def layer_metadata(request, layername, service=None):
         return HttpResponse("Not allowed", status=403)
 
 def layer_remove(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+    service, typename = _get_service_and_typename(layername)
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.delete_layer', obj=layer):
             return HttpResponse(loader.render_to_string('401.html',
