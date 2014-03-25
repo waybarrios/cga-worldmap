@@ -36,11 +36,13 @@ $( document ).ready(function() {
                             attr('href', "/services/" + data[item].service_id).
                             text(data[item].service_title||data[item].service_name)).
                             appendTo("#responseDiv");
+                            $("#responseDiv").show();
                     }
                     else {
-                       $('<h4>').attr("class", "result").text(data[item].msg).appendTo("#responseDiv");
+                        $(".error").html(data[item].msg);
+                        $(".error").show();
                     }
-                    $("#responseDiv").show();
+
                 }
 
             },

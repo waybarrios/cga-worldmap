@@ -10,6 +10,7 @@ from django.db import transaction
 from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.contrib.auth.models import User
+import pyproj
 from geonode.maps.models import Map, Layer, MapLayer, Contact, ContactRole, Role, get_csw
 from geonode.maps.gs_helpers import fixup_style, cascading_delete, get_sld_for, delete_from_postgis, get_postgis_bbox
 import uuid
@@ -784,6 +785,13 @@ def llbbox_to_mercator(llbbox):
 def mercator_to_llbbox(bbox):
     minlonlat = inverse_mercator([bbox[0],bbox[1]])
     maxlonlat = inverse_mercator([bbox[2],bbox[3]])
+    return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
+
+def project_to_wgs84(proj,bbox):
+    wgs84=pyproj.Proj("+init=EPSG:4326")
+    other=pyproj.Proj("+init=%s" % proj)
+    minlonlat = pyproj.transform(other, wgs84, bbox[0],bbox[1])
+    maxlonlat = pyproj.transform(other, wgs84, bbox[2],bbox[3])
     return [minlonlat[0],minlonlat[1],maxlonlat[0],maxlonlat[1]]
 
 def forward_mercator(lonlat):

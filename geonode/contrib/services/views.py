@@ -53,7 +53,7 @@ from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSet, ServiceForm
 from geonode.utils import slugify
 import re
-from geonode.maps.utils import llbbox_to_mercator, mercator_to_llbbox
+from geonode.maps.utils import llbbox_to_mercator, mercator_to_llbbox, project_to_wgs84
 from django.db import transaction
 
 logger = logging.getLogger("geonode.core.layers.views")
@@ -776,7 +776,10 @@ def _register_arcgis_url(url,username, password, owner=None, parent=None):
     if re.search("\/MapServer\/*(f=json)*", baseurl):
         #This is a MapService
         arcserver = ArcMapService(baseurl)
-        return_json = [_process_arcgis_service(arcserver, owner=owner, parent=parent)]
+        if  isinstance(arcserver,ArcMapService) and arcserver.spatialReference.wkid in [102100,3857,900913]:
+            return_json = [_process_arcgis_service(arcserver, owner=owner, parent=parent)]
+        else:
+            return_json = [{'msg':  _("Could not find any layers in a compatible projection:<br />") + arcserver.url}]
 
     else:
         #This is a Folder
@@ -796,7 +799,8 @@ def _register_arcgis_layers(service, arc=None):
         count = 0
         layer_uuid = str(uuid.uuid1())
         layer_bbox = [layer.extent.xmin, layer.extent.ymin, layer.extent.xmax, layer.extent.ymax]
-        llbbox =  mercator_to_llbbox(layer_bbox)
+        layer_srs = "EPSG:%s" % layer.extent.spatialReference.wkid
+        llbbox =  project_to_wgs84(layer_srs, layer_bbox)
         # Need to check if layer already exists??
         saved_layer, created = Layer.objects.get_or_create(
             service=service,
@@ -810,11 +814,11 @@ def _register_arcgis_layers(service, arc=None):
                 abstract=layer._json_struct['description'],
                 uuid=layer_uuid,
                 owner=None,
-                srs="EPSG:%s" % layer.extent.spatialReference.wkid,
+                srs=layer_srs,
                 bbox = layer_bbox,
                 llbbox = llbbox,
-                geographic_bounding_box=bbox_to_wkt(str(llbbox[0]), str(llbbox[1]),
-                                                    str(llbbox[2]), str(llbbox[3]), srid="EPSG:4326" )
+                geographic_bounding_box=bbox_to_wkt(str(llbbox[0]), str(llbbox[2]),
+                                                    str(llbbox[1]), str(llbbox[3]), srid="EPSG:4326" )
             )
         )
         if created:
@@ -852,9 +856,7 @@ def _process_arcgis_service(arcserver, owner=None, parent=None):
             'service_title': service.title,
             'msg' : 'This is an existing Service'
         }]
-        return HttpResponse(json.dumps(return_dict),
-                            mimetype='application/json',
-                            status=200)
+        return return_dict
     except:
         pass
 

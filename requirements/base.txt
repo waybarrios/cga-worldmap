@@ -51,4 +51,4 @@ unidecode
 
 #ArcGIS REST services
 -e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest
-
+pyproj
