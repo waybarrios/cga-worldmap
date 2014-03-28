@@ -119,6 +119,8 @@ class WebServiceHarvestLayersJob(models.Model):
 class WebServiceRegistrationJob(models.Model):
     base_url = models.URLField(unique=True)
     type = models.CharField(max_length=4, choices=SERVICE_TYPES)
+    owner = models.ForeignKey(User, null=True)
+    parent = models.ForeignKey(Service, null=True)
     status = models.CharField(choices= [(x, x) for x in STATUS_VALUES], max_length=10, blank=False, null=False, default='pending')
 
 def post_save_service(instance, sender, created, **kwargs):

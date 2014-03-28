@@ -2,7 +2,7 @@ from celery.schedules import crontab
 from celery.task import task, periodic_task
 from django.conf import settings
 from geonode.contrib.services.models import WebServiceHarvestLayersJob, WebServiceRegistrationJob
-from geonode.contrib.services.views import update_layers, register_service_by_type, _register_indexed_layers
+from geonode.contrib.services.views import update_layers, register_service_by_type, _register_indexed_layers, _process_wms_service, _register_arcgis_url, _register_harvested_service, _register_ogp_service
 from geonode.maps import autocomplete_light_registry
 from django.core.mail import send_mail
 
@@ -29,10 +29,23 @@ def import_service():
         try:
             job.status = "process"
             job.save()
-            register_service_by_type(job.base_url, job.type, username=None, password=None, owner=None)
+
+            if job.type in ["WMS","OWS"]:
+                _process_wms_service(job.base_url,job.type, None, None)
+            elif job.type == "REST":
+                _register_arcgis_url(job.base_url, None, None)
+            elif job.type == "CSW":
+                _register_harvested_service(job.base_url, None, None)
+            elif job.type == "OGP":
+                _register_ogp_service(job.base_url)
+            else:
+                raise Exception("Type %s not implemented" % job.type)
+
             job.delete()
         except Exception, e:
             job.status = 'failed'
             job.save()
+            print(str(e))
             send_mail('Service import failed', 'Service %s failed, error is %s' % (job.base_url, str(e)),
                       settings.DEFAULT_FROM_EMAIL, [email for admin,email in settings.ADMINS], fail_silently=True)
+            raise e

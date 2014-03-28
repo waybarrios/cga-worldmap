@@ -22,7 +22,7 @@ $( document ).ready(function() {
             data: $("#service_register_form").serialize(), // serializes the form's elements.
             success: function(data)
             {
-                for (var item in data) {
+                for (var item = 0; item < data.length; item++) {
                     if (data[item].available_layers) {
                         $.each(data[item].available_layers,function(i,row){
                             $('<tr>').attr('id',i).
