@@ -780,13 +780,13 @@ def _register_arcgis_url(url,username, password, owner=None, parent=None):
             return_json = [_process_arcgis_service(arcserver, owner=owner, parent=parent)]
         else:
             return_json = [{'msg':  _("Could not find any layers in a compatible projection:<br />") + arcserver.url}]
-        base_folder = re.match('(.*rest\/services\/).*', baseurl)
+        base_folder = re.match('(.*rest\/services\/?).+', baseurl)
         if base_folder:
             if settings.USE_QUEUE:
                 WebServiceRegistrationJob.objects.get_or_create(base_url=base_folder.group(1), type = "REST",
                                                                 owner=owner, parent=parent)
             else:
-                _process_arcgis_folder(base_url=base_folder.group(1), type="REST", owner=owner, parent=parent)
+                _register_arcgis_url(base_folder.group(1), username, password, owner=owner, parent=parent)
 
 
     else:
