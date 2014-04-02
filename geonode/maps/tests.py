@@ -808,9 +808,11 @@ community."
         lyr.keywords.add(*["saving", "keywords"])
         lyr.topic_category = LayerCategory.objects.get(pk=1)
         lyr.save()
-        self.assertEqual(lyr.keyword_list(), ["keywords", "saving"])
-        self.assertEqual(lyr.resource.keywords, ["keywords", "saving"])
-        self.assertEqual(_gs_resource.keywords, ["keywords", "saving"])
+        self.assertEqual(lyr.keyword_list(), ["saving", "keywords"])
+
+        self.assertEqual(lyr.resource.keywords, ["saving", "keywords"])
+
+        self.assertEqual(_gs_resource.keywords, ["saving", "keywords"])
 
 
 

@@ -1,7 +1,8 @@
 from account.models import SignupCode, EmailAddress
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
 from geonode.maps.models import Map, Layer, MapLayer, Contact, ContactRole, \
-     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, CHARSETS
+     get_csw, LayerCategory, LayerAttribute, MapSnapshot, MapStats, LayerStats, \
+     CHARSETS, _prepare_hgl_layer, _get_service_and_typename
 from geonode.profile.forms import ContactProfileForm
 from geoserver.resource import FeatureType, Coverage
 import base64
@@ -50,7 +51,8 @@ from geonode.maps.encode import num_encode, num_decode
 from django.db import transaction
 from geonode.maps.encode import despam, XssCleaner
 import geonode.maps.autocomplete_light_registry
-from geonode.maps.models import _get_service_and_typename
+
+
 
 logger = logging.getLogger("geonode.maps.views")
 
@@ -418,11 +420,16 @@ def set_layer_permissions(layer, perm_spec, use_email = False):
     if use_email:
         layer.get_user_levels().exclude(user__email__in = users + [layer.owner]).delete()
         for useremail, level in perm_spec['users']:
+            user_obj = None
             try:
-                user = User.objects.get(email=useremail)
+                user_obj = User.objects.get(email=useremail)
             except User.DoesNotExist:
-                user = _create_new_user(useremail, layer.title, reverse('geonode.maps.views.layer_detail', args=(layer.typename,)), layer.owner_id)
-            layer.set_user_level(user, level)
+                try:
+                    user_obj = _create_new_user(useremail, layer.title, reverse('geonode.maps.views.layer_detail', args=(layer.typename,)), layer.owner_id)
+                except:
+                    logger.error("Could not create new user with email address of %s" % useremail)
+            if user_obj:
+                layer.set_user_level(user_obj, level)
     else:
         layer.get_user_levels().exclude(user__username__in = users + [layer.owner]).delete()
         for username, level in perm_spec['users']:
@@ -443,11 +450,16 @@ def set_map_permissions(m, perm_spec, use_email = False):
     if use_email:
         m.get_user_levels().exclude(user__email__in = users + [m.owner]).delete()
         for useremail, level in perm_spec['users']:
+            user_obj = None
             try:
-                user = User.objects.get(email=useremail)
+                user_obj = User.objects.get(email=useremail)
             except User.DoesNotExist:
-                user = _create_new_user(useremail, m.title, reverse('geonode.maps.views.view', args=[m.id]), m.owner_id)
-            m.set_user_level(user, level)
+                try:
+                    user_obj = _create_new_user(useremail, m.title, reverse('geonode.maps.views.view', args=[m.id]), m.owner_id)
+                except:
+                    logger.error("Could not create new user with email address of %s" % useremail)
+            if user_obj:
+                m.set_user_level(user_obj, level)
     else:
         m.get_user_levels().exclude(user__username__in = users + [m.owner]).delete()
         for username, level in perm_spec['users']:
@@ -592,6 +604,7 @@ def describemap(request, mapid):
         if map_form.is_valid():
             map_obj = map_form.save(commit=False)
             if map_form.cleaned_data["keywords"]:
+                map_obj.keywords.clear()
                 map_obj.keywords.add(*map_form.cleaned_data["keywords"])
             else:
                 map_obj.keywords.clear()
@@ -946,7 +959,9 @@ def layer_metadata(request, layername, service=None):
                 x = XssCleaner()
                 the_layer.abstract = despam(x.strip(layer_form.cleaned_data["abstract"]))
                 the_layer.topic_category = new_category
+                the_layer.keywords.clear()
                 the_layer.keywords.add(*new_keywords)
+
                 if request.user.is_superuser and gazetteer_form.is_valid():
                     the_layer.in_gazetteer = "gazetteer_include" in request.POST
                     if the_layer.in_gazetteer:
@@ -984,7 +999,7 @@ def layer_metadata(request, layername, service=None):
                     if str(mapid) == "new":
                         return HttpResponseRedirect("/maps/new?layer" + layer.typename)
                     else:
-                        return HttpResponseRedirect("/data/" + layer.service_typename())
+                        return HttpResponseRedirect("/data/" + layer.service_typename)
 
         #Deal with a form submission via ajax
         if request.method == 'POST' and (not layer_form.is_valid() or not category_form.is_valid()) and request.is_ajax():
@@ -1033,7 +1048,9 @@ def layer_metadata(request, layername, service=None):
         return HttpResponse("Not allowed", status=403)
 
 def layer_remove(request, layername):
-    layer = get_object_or_404(Layer, typename=layername)
+    service, typename = _get_service_and_typename(layername)
+    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+
     if request.user.is_authenticated():
         if not request.user.has_perm('maps.delete_layer', obj=layer):
             return HttpResponse(loader.render_to_string('401.html',
@@ -1092,12 +1109,14 @@ def layer_detail(request, layername, service=None):
 
     service, typename = _get_service_and_typename(layername)
 
-
-    layer = get_object_or_404(Layer, typename=typename, service__name=service)
+    if service is None:
+        layer = get_object_or_404(Layer, typename=typename)
+    else:
+        layer = get_object_or_404(Layer, typename=typename, service__name=service)
 
     if not layer.local and layer.service.type == "HGL":
-        from geonode.queue.tasks import load_hgl_layer
-        load_hgl_layer(layer.typename)
+        _prepare_hgl_layer(layer.typename)
+
 
 
     if not request.user.has_perm('maps.view_layer', obj=layer):
@@ -1107,14 +1126,16 @@ def layer_detail(request, layername, service=None):
 
     metadata = layer.metadata_csw()
 
-    attributes = (json.dumps(layer.attribute_config()) + ",") if layer.local else ''
+    attributes = (json.dumps(layer.attribute_config()) + ",") if layer.attribute_set.count() > 0 else ''
 
 
     maplayer = MapLayer(name = layer.typename, styles = [layer.default_stylename],
-        source_params = '{"ptype": "' + layer.ptype + '", "remote":true, "name":'
-                        +  ('null' if service is None else '"' + service + '"') + '}', ows_url = layer.ows_url,
+        source_params = json.dumps({"ptype": layer.ptype ,
+                                    "remote": layer.storeType == "remoteStore",  "srs": layer.srs,
+                                    "name": (None if layer.service is None else layer.service.name)}),
+        ows_url = layer.ows_url,
         layer_params= '{"srs": "' + layer.srs + '", "tiled":true, "title":" '+ layer.title + '", ' +
-        attributes + '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
+        '"bbox": ' + layer.bbox + ', "llbbox": ' + layer.llbbox + ', "queryable":' + str(layer.storeType != 'coverageStore').lower() + '}')
 
     # center/zoom don't matter; the viewer will center on the layer bounds
     #unless its HGL
@@ -1174,6 +1195,7 @@ def upload_layer(request):
 
                 name = slugify(name_base.replace(".","_"))
 
+
                 saved_layer = save(name, base_file, request.user,
                         overwrite = False,
                         abstract = form.cleaned_data["layer_abstract"],
@@ -1183,7 +1205,6 @@ def upload_layer(request):
                         charset = request.POST.get('charset'),
                         sldfile = sld_file
                         )
-
                 redirect_to  = reverse('data_metadata', args=[saved_layer.typename])
                 if 'mapid' in request.POST and request.POST['mapid'] == 'tab':
                     redirect_to+= "?tab=worldmap_update_panel"
@@ -1642,16 +1663,25 @@ def _metadata_search(query, start, limit, sortby, sortorder='ASC', **kw):
             cql += " and csw:AnyText like '%%%s%%'" % keyword
 
     constraints = []
+    num_constraints = 0
+
     if category:
         constraints.append(fes.PropertyIsEqualTo(propertyname='gmd:topicCategory', literal=category))
+        num_constraints+=1
 
     if profile:
         constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal='%%profiles/%s/' % profile))
+        num_constraints+=1
 
     for keyword in keywords:
         constraints.append(fes.PropertyIsLike(propertyname='csw:anyText', literal=('%%%s%%' % keyword)))
+        num_constraints+=1
     if kw.get('bbox'):
         constraints.append(fes.BBox(kw.get('bbox')))
+        num_constraints+=1
+
+    if num_constraints > 1:
+        constraints = [constraints]
 
     csw.getrecords2(constraints=constraints, esn="full", startposition=start+1, maxrecords=limit,  sortby=sortproperty)
 
@@ -2073,13 +2103,18 @@ def batch_permissions(request, use_email=False):
                 logger.info("User [%s]", user)
 
                 if use_email:
+                    user_obj = None
                     try:
-                        userObject = User.objects.get(email=user)
+                        user_obj = User.objects.get(email=user)
                     except User.DoesNotExist:
-                        userObject = _create_new_user(user, lyr.title, reverse('geonode.maps.views.layer_detail', args=(lyr.typename,)), lyr.owner_id)
+                        try:
+                            user_obj = _create_new_user(user, lyr.title, reverse('geonode.maps.views.layer_detail', args=(lyr.typename,)), lyr.owner_id)
+                        except:
+                            logger.error("Could not create new user with email of %s" % user)
                     if user_level not in valid_perms:
                         user_level = "_none"
-                    lyr.set_user_level(userObject, user_level)
+                    if user_obj:
+                        lyr.set_user_level(user_obj, user_level)
                 else:
                     if user_level not in valid_perms:
                         user_level = "_none"
@@ -2125,11 +2160,16 @@ def batch_permissions(request, use_email=False):
                     if user_level not in valid_perms:
                         user_level = "_none"
                     if use_email:
+                        user_obj = None
                         try:
-                            userObject = User.objects.get(email=user)
+                            user_obj = User.objects.get(email=user)
                         except User.DoesNotExist:
-                            userObject = _create_new_user(user, m.title, reverse('geonode.maps.views.view', args=[m.id]), m.owner_id)
-                        m.set_user_level(userObject, user_level)
+                            try:
+                                user_obj = _create_new_user(user, m.title, reverse('geonode.maps.views.view', args=[m.id]), m.owner_id)
+                            except:
+                                logger.error("Could not create new user with email of %s" % user)
+                        if user_obj:
+                            m.set_user_level(userObject, user_level)
                     else:
                         m.set_user_level(user, user_level)
 
@@ -2290,7 +2330,8 @@ def addLayerJSON(request):
             if uuid:
                 layer = Layer.objects.get(uuid=uuid)
             else:
-                layer = _get_service_and_typename(service_name)
+                service, typename = _get_service_and_typename(service_name)
+                #
             if not request.user.has_perm("maps.view_layer", obj=layer):
                 return HttpResponse(status=401)
             sfJSON = {'layer': layer.layer_config(request.user)}

@@ -17,8 +17,10 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir
 # present pretty error pages.
 DEBUG = TEMPLATE_DEBUG = True
 
+ADMINS = (('Admin name', 'admin_email@email.com'),)
+
 #Email settings (example gmail account) for registration, passwords, etc
-#DEFAULT_FROM_EMAIL = 'your_email@gmail.com'
+DEFAULT_FROM_EMAIL = 'your_email@gmail.com'
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #EMAIL_HOST = 'smtp.gmail.com'
 #EMAIL_HOST_USER = 'your_email@gmail.com'
@@ -132,6 +134,7 @@ INSTALLED_APPS = (
     'kombu.transport.django',
     'piston',
     'djgeojson',
+    'haystack',
 
     # GeoNode internal apps
     'geonode.core',
@@ -145,6 +148,7 @@ INSTALLED_APPS = (
     'geonode.certification',
     'geonode.hoods',
     'geonode.contrib.services',
+    'geonode.search',
 )
 LOGGING = {
     'version': 1,
@@ -281,11 +285,11 @@ REGISTRATION_OPEN = False
 
 # Arguments for the test runner
 NOSE_ARGS = [
-      '--verbosity=2',
+      '--verbosity=1',
       '--cover-erase',
       '--nocapture',
       '--with-coverage',
-      '--cover-package=worldmap',
+      '--cover-package=geonode',
       '--cover-inclusive',
       '--cover-tests',
       '--detailed-errors',
@@ -503,6 +507,7 @@ CUSTOM_GROUP_EMAIL_SUFFIX = ''
 CUSTOM_AUTH_URL = ''
 
 DEFAULT_WORKSPACE = 'geonode'
+CASCADE_WORKSPACE = 'cascade'
 
 HGL_VALIDATION_KEY='Contact Harvard Geospatial Library to request the validation key'
 CACHE_BACKEND = 'dummy://'
@@ -529,3 +534,13 @@ CSRF_COOKIE_HTTPONLY = True
 
 OGP_URL = ""
 
+# Haystack Search Backend Configuration
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'haystack',
+        },
+    }
+
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'

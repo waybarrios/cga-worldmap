@@ -21,15 +21,10 @@
 from django.utils.translation import ugettext_lazy as _
 
 SERVICE_TYPES = (
+    ('AUTO', _('Auto-detect')),
     ('OWS', _('Paired WMS/WFS/WCS')),
     ('WMS', _('Web Map Service')),
-    ('WFS', _('Web Feature Service')),
-    ('WCS', _('Web Coverage Service')),
-    ('WPS', _('Web Processing Service')),
     ('CSW', _('Catalogue Service')),
-    ('WMTS', _('Web Map Tile Service')),
-    ('TMS', _('Tile Map Service')),
-    ('OSG', _('OpenSearch Geo Service')),
     ('REST', _('ArcGIS REST Service')),
     ('OGP', _('OpenGeoPortal')),
     ('HGL', _('Harvard Geospatial Library')),
@@ -41,6 +36,7 @@ SERVICE_METHODS = (
     ('H', _('Harvested')),
     ('I', _('Indexed')),
     ('X', _('Live')),
+    ('O', _('OpenGeoPortal'))
 )
 
 
@@ -51,11 +47,6 @@ GXP_PTYPES = {
     'WCS': 'gxp_wmscsource',
     'REST': 'gxp_arcrestsource',
     'HGL': 'gxp_hglsource',
-    'WPS': None,
-    'CSW': None,
-    'WMTS': None,
-    'TMS': None,
-    'OSG': None,
-    'OGP': None
 }
+
 

@@ -46,7 +46,8 @@ class SignupView(account.views.SignupView):
 
     def create_profile(self, form):
         profile = self.created_user.get_profile()
-        profile.is_org_member = form.cleaned_data["is_org_member"]
+        if settings.USE_CUSTOM_ORG_AUTHORIZATION:
+            profile.is_org_member = form.cleaned_data["is_org_member"]
         profile.member_expiration_dt = datetime.today()
         profile.save()
 

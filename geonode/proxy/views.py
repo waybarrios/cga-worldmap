@@ -49,7 +49,7 @@ def proxy(request):
     url = urlsplit(request.GET['url'])
 
     # Don't allow localhost connections unless in DEBUG mode
-    if not settings.DEBUG and re.search('localhost|127.0.0.1', url.hostname):
+    if not settings.DEBUG and not re.search('localhost|127.0.0.1', url.hostname):
         return HttpResponse(status=403)
 
     locator = url.path
@@ -76,6 +76,8 @@ def proxy(request):
 
 def valid_response(responseContent):
     #Proxy should only be used when expecting an XML or JSON response
+
+    return responseContent
 
     #ArcGIS Server GetFeatureInfo xml response
     if re.match("<FeatureInfoResponse", responseContent):
@@ -218,7 +220,7 @@ def tweetServerProxy(request,geopsip):
     identifyQuery = re.search("QUERY_LAYERS", tweet_url)
 
     if identifyQuery is not None:
-        if re.search("%20limit%2010", tweet_url)is None:
+        if re.search("%20limit%2010&", tweet_url)is None:
             return HttpResponse(status=403)
 
     step1 = urllib.urlopen(tweet_url)

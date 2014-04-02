@@ -28,13 +28,13 @@
 
 {% block body %}
 
-<h3>{% trans "Are you sure you want to remove"  %} <strong>{{layer.typename}}</strong>?</h3>
-<form action="{% url "data_remove" layer.typename %}" method="POST" class="inline">
+<h3>{% trans "Are you sure you want to remove"  %} <strong>{{layer.title}}</strong>?</h3>
+<form action="{% url "data_remove" layer.service_typename %}" method="POST" class="inline">
     {% csrf_token %}
-    <input type="hidden" value="{{layer.typename}}" />
+    <input type="hidden" value="{{layer.service_typename}}" />
     <input type="submit" value="{% trans "Yes, delete"  %}" class="submit_btn"/>
 </form>
-<form action="/data/{{layer.typename}}" method="GET" class="inline">
+<form action="/data/{{layer.service_typename}}" method="GET" class="inline">
     <button type="submit" class="cancel_btn" onclick="javascript: history.go(-1);return false;">{% trans "No, cancel" %}</button>
 </form>
 {% endblock %}

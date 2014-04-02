@@ -39,6 +39,10 @@ urlpatterns = patterns('',
 
      # Data views
 
+     #For compatibility with newer version of geoserver-geonode-ext & GeoNode 2.0
+     url(r'^layers/acls/?$', 'geonode.maps.views.layer_acls', name='data_acls'),
+     url(r'^layers/resolve_user/?$', 'geonode.maps.views.resolve_user', name='layer_resolve_user'),
+
     (r'^data/', include(geonode.maps.urls.datapatterns)),
     (r'^maps/', include(geonode.maps.urls.urlpatterns)),
     (r'^annotations/', include(geonode.mapnotes.urls.urlpatterns)),
@@ -74,6 +78,7 @@ urlpatterns = patterns('',
     (r'^bostonhoods/?', include('geonode.hoods.urls')),
     (r'^certification/', include('geonode.certification.urls')),    
     url(r'^autocomplete/', include('autocomplete_light.urls')),
+    (r'^search/?', include('geonode.search.urls')),
     )
 
 urlpatterns += geonode.proxy.urls.urlpatterns

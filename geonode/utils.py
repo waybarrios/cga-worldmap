@@ -148,7 +148,7 @@ class WorldmapDatabaseRouter(object):
 
 def slugify(text, delim=u'-'):
     """Generates an ASCII-only slug."""
-    punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
+    punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
     result = []
     for word in punct_re.split(text.lower()):
         result.extend(unidecode(word).split())

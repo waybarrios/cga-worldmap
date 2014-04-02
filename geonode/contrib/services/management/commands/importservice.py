@@ -60,7 +60,7 @@ class Command(BaseCommand):
             elif method == 'I':
                 response = _register_indexed_service(type, url, name, username, password, owner=owner, verbosity=True)
             elif method == 'H':
-                response = _register_harvested_service(type, url, name, username, password, owner=owner, verbosity=True)
+                response = _register_harvested_service(url, name, username, password, owner=owner, verbosity=True)
             elif method == 'X':
                 print 'Not Implemented (Yet)'
             elif method == 'L':

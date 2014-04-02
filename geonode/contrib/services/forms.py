@@ -10,8 +10,8 @@ class CreateServiceForm(forms.Form):
     #         attrs={'size':'50', 'class':'inputText'}))
     url = forms.CharField(label=_("Service URL"), max_length=512,
                                widget=forms.TextInput(
-                                   attrs={'size':'75', 'class':'inputText'}))
-    # type = forms.ChoiceField(label=_("Service Type"),choices=SERVICE_TYPES,initial='WMS',required=True)
+                                   attrs={'size':'65', 'class':'inputText'}))
+    type = forms.ChoiceField(label=_("Service Type"),choices=SERVICE_TYPES,initial='AUTO',required=True)
     # method = forms.ChoiceField(label=_("Service Type"),choices=SERVICE_METHODS,initial='I',required=True)
 
 

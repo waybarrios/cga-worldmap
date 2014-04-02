@@ -1,0 +1,11 @@
+{{ object.title }}
+{{ object.abstract }}
+{{ object.purpose }}
+{{ object.typename }}
+{{ object.supplemental_information }}
+{{ object.owner.get_full_name }}
+{{ object.distribution_description }}
+{{ object.topic_category.name }}
+{{ object.topic_category.title }}
+{{ object.service.title }}
+{{ object.comment_text }}

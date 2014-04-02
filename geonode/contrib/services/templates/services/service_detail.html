@@ -49,6 +49,20 @@ Ext.onReady(function() {
   <p><strong>{% trans "Contact:" %}</strong> <a href="{{ service.owner.get_profile.get_absolute_url }}">{{ service.owner }}</a></p>
 
     {% autoescape off %}
+    {%  if services %}
+        <h3>{% trans "Services" %}</h3>
+        <p>{% trans "This CSW server contains the following services" %} </p>
+        <table>
+            <tr><th style="width:50%">Title</th><th>Description</th></tr>
+            {% for service in services %}
+                    <tr>
+                        <td><a href='{%  url service_detail service.id %}'>{{service.title}}</a></td>
+                        <td>{{service.abstract}}</td>
+                    </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+    {% if layers %}
     <h3>{% trans "Layers" %}</h3>
     <p>{% trans "This Service contains the following layers" %} </p>
     <table>
@@ -61,7 +75,29 @@ Ext.onReady(function() {
             </tr>
             {% endif %}
         {% endfor %}
+        <tr>
+            <td colspan="2">
+                <div class="pagination">
+                    <span class="step-links">
+                    {% if layers.has_previous %}
+                        <a href="?page={{ layers.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                            Page {{ layers.number }} of {{ layers.paginator.num_pages }}.
+                    </span>
+
+                    {% if layers.has_next %}
+                        <a href="?page={{ layers.next_page_number }}">next</a>
+                    {% endif %}
+                    </span>
+                </div>
+            </td>
+
+        </tr>
     </table>
+    {%  endif %}
+
     {% endautoescape %}
 
 </div>

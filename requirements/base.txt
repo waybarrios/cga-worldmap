@@ -12,11 +12,13 @@ Django==1.5.5
 django-extensions==0.8
 httplib2==0.7.4
 psycopg2==2.4.1
--e git+https://github.com/cga-harvard/gsconfig.py.git#egg=gsconfig.py
+
 pinax-theme-bootstrap==3.0a11,
 pinax-theme-bootstrap-account==1.0b2,
 django-forms-bootstrap==2.0.3.post1,
 django-user-accounts==1.0b14,
+
+-e git+https://github.com/cga-harvard/gsconfig.py.git@origin/cascade#egg=gsconfig.py
 
 #-e git+https://github.com/mbertrand/django-avatar.git#egg=avatar
 geonode-avatar==2.1.1
@@ -51,9 +53,10 @@ jdcal
 -e git+https://github.com/cga-harvard/vectorformats.git#egg=vectorformats
 #For autocomplete
 django-autocomplete-light==1.4.5
-
 unidecode
 
 #ArcGIS REST services
 -e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest
-
+pyproj
+django-haystack
+pyelasticsearch

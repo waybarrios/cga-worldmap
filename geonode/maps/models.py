@@ -1,6 +1,9 @@
 # -*- coding: UTF-8 -*-
 import threading
+from agon_ratings.models import Rating, OverallRating
+from dialogos.models import Comment
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
 from geoserver.resource import FeatureType
@@ -30,6 +33,7 @@ from django.core.cache import cache
 import sys
 import re
 from geonode.maps.encode import despam, XssCleaner
+from haystack import connections
 
 
 logger = logging.getLogger("geonode.maps.models")
@@ -584,7 +588,8 @@ DEFAULT_CONTENT=_(
 def _get_service_and_typename(layername):
     service_typename = layername.split(":")
     service = service_typename[0]
-    if service != settings.DEFAULT_WORKSPACE:
+
+    if service not in [settings.DEFAULT_WORKSPACE, settings.CASCADE_WORKSPACE]:
         return [service, ':'.join(service_typename[1:])]
     else:
         return [None,layername]
@@ -842,6 +847,9 @@ class LayerManager(models.Manager):
                 else:
                     status = 'updated'
 
+
+                layer.save_to_geonetwork()
+
                 #Create layer attributes if they don't already exist
                 try:
                     if layer.attribute_names is not None:
@@ -874,6 +882,40 @@ class LayerManager(models.Manager):
                 print >> console, msg
         return output
 
+
+    def save_layer_from_geoserver(self, workspace, store, resource, service=None):
+        layer, created = Layer.objects.get_or_create(name=resource.name, defaults = {
+            "workspace": workspace.name,
+            "store": store.name,
+            "storeType": store.resource_type,
+            "typename": "%s:%s" % (workspace.name, resource.name),
+            "title": resource.title or 'No title provided',
+            "abstract": resource.abstract or 'No abstract provided',
+            "owner": None,
+            "uuid": str(uuid.uuid4()),
+            "service": service
+        })
+        layer.save()
+        if layer is not None and layer.bbox is None:
+            layer._populate_from_gs()
+
+        if created:
+            layer.set_default_permissions()
+            layer.save_to_geonetwork()
+        try:
+            if layer.attribute_names is not None:
+                for field, ftype in layer.attribute_names.iteritems():
+                    if field is not None:
+                        la, created = LayerAttribute.objects.get_or_create(layer=layer, attribute=field, attribute_type=ftype)
+                        if created:
+                            la.attribute_label = field
+                            la.searchable = (ftype == "xsd:string")
+                            la.display_order = iter
+                            la.save()
+        except Exception, e:
+            logger.error("Could not create attributes for [%s] : [%s]", layer.name, str(e))
+        finally:
+            return layer
 
     def update_bboxes(self):
         for layer in Layer.objects.all():
@@ -1022,7 +1064,7 @@ class Layer(models.Model, PermissionLevelMixin):
         """Returns a list of (mimetype, URL) tuples for downloads of this data
         in various formats."""
 
-        if not self.downloadable or self.storeType == "remoteStore":
+        if not self.downloadable or not self.local:
             return None
 
         bbox = self.llbbox_coords()
@@ -1140,52 +1182,19 @@ class Layer(models.Model, PermissionLevelMixin):
         """Makes sure the state of the layer is consistent in GeoServer and GeoNetwork.
         """
 
-        # Check the layer is in the wms get capabilities record
-        # FIXME: Implement caching of capabilities record site wide
-        #        if (_wms is None) or (self.typename not in _wms.contents):
-        #            get_wms()
-        #        try:
-        #            _wms[self.typename]
-        #        except:
-        #            msg = "WMS Record missing for layer [%s]" % self.typename
-        #            raise GeoNodeException(msg)
-
-        # Check the layer is in GeoServer's REST API
-        # It would be nice if we could ask for the definition of a layer by name
-        # rather than searching for it
-        #api_url = "%sdata/search/api/?q=%s" % (settings.SITEURL, self.name.replace('_', '%20'))
-        #response, body = http.request(api_url)
-        #api_json = json.loads(body)
-        #api_layer = None
-        #for row in api_json['rows']:
-        #    if(row['name'] == self.typename):
-        #        api_layer = row
-        #if(api_layer == None):
-        #    msg = "API Record missing for layer [%s]" % self.typename
-        #    raise GeoNodeException(msg)
-
         # Check the layer is in the GeoNetwork catalog and points back to get_absolute_url
         if(_csw is None): # Might need to re-cache, nothing equivalent to _wms.contents?
             get_csw()
-        try:
-            _csw.getrecordbyid([self.uuid])
-            csw_layer = _csw.records.get(self.uuid)
-        except:
-            msg = "CSW Record Missing for layer [%s]" % self.typename
-            raise GeoNodeException(msg)
+        if _csw is not None:
+            try:
+                _csw.getrecordbyid([self.uuid])
+                csw_layer = _csw.records.get(self.uuid)
+            except:
+                msg = "CSW Record Missing for layer [%s]" % self.typename
+                raise GeoNodeException(msg)
 
-        if(csw_layer.uris and csw_layer.uris[0]['url'] != self.get_absolute_url()):
-            msg = "CSW Layer URL does not match layer URL for layer [%s]" % self.typename
 
-            # Visit get_absolute_url and make sure it does not give a 404
-            #logger.info(self.get_absolute_url())
-            #response, body = http.request(self.get_absolute_url())
-            #if(int(response['status']) != 200):
-            #    msg = "Layer Info page for layer [%s] is %d" % (self.typename, int(response['status']))
-            #    raise GeoNodeException(msg)
 
-            #FIXME: Add more checks, for example making sure the title, keywords and description
-            # are the same in every database.
 
     def layer_attributes(self):
         attribute_fields = cache.get('layer_searchfields_' + self.typename)
@@ -1372,7 +1381,7 @@ class Layer(models.Model, PermissionLevelMixin):
                                 (settings.GEOSERVER_BASE_URL))
                 try:
                     store = cat.get_store(self.store, ws)
-                    self._resource_cache = cat.get_resource(self.name, store)
+                    self._resource_cache = cat.get_resource(self.name, store, ws)
                 except:
                     logger.error("Store for %s does not exist", self.name)
                     return None
@@ -1391,9 +1400,9 @@ class Layer(models.Model, PermissionLevelMixin):
                 self._resource_cache = remote_resource
         return self._resource_cache
 
-
     def _get_metadata_links(self):
         return self.resource.metadata_links
+
     def _set_metadata_links(self, md_links):
         try:
             self.resource.metadata_links = md_links
@@ -1457,7 +1466,7 @@ class Layer(models.Model, PermissionLevelMixin):
 
     @property
     def ows_url(self):
-        if self.service:
+        if self.storeType == "remoteStore":
             return self.service.base_url
         else:
             return settings.GEOSERVER_BASE_URL + "wms"
@@ -1471,17 +1480,27 @@ class Layer(models.Model, PermissionLevelMixin):
 
     @property
     def ptype(self):
-        if self.service and not self.local:
+        if self.service and self.storeType != "wmsStore":
             return self.service.ptype()
         else:
             return "gxp_gnsource"
 
-
+    @property
     def service_typename(self):
         if self.local:
             return self.typename
         else:
             return "%s:%s" % (self.service.name, self.typename)
+
+
+    @property
+    def comment_text(self):
+        comments = Comment.objects.filter(
+            object_id=self.pk,
+            content_type=ContentType.objects.get_for_model(self)
+        )
+        return [comment.comment for comment in comments]
+
 
     def _set_poc(self, poc):
         # reset any poc asignation to this layer
@@ -1532,9 +1551,10 @@ class Layer(models.Model, PermissionLevelMixin):
             self.publishing.attribution_link = settings.SITEURL[:-1] + profile.get_absolute_url()
             Layer.objects.gs_catalog.save(self.publishing)
 
-    def  _populate_from_gs(self):
-        gs_store = Layer.objects.gs_catalog.get_store(self.store)
-        gs_resource = Layer.objects.gs_catalog.get_resource(self.name, gs_store)
+    def  _populate_from_gs(self, gs_resource=None):
+        if gs_resource is None:
+            gs_store = Layer.objects.gs_catalog.get_store(self.store)
+            gs_resource = Layer.objects.gs_catalog.get_resource(self.name, gs_store)
         if gs_resource is None:
             return
         self.srs = gs_resource.projection
@@ -1600,6 +1620,7 @@ class Layer(models.Model, PermissionLevelMixin):
         else:
             return "/data/%s:%s" % (self.service.name, self.typename)
 
+
     def __str__(self):
         return "%s Layer" % self.typename
 
@@ -1648,11 +1669,11 @@ class Layer(models.Model, PermissionLevelMixin):
             cfg['group'] = self.topic_category.title
         else:
             cfg['group'] = 'General'
-        if self.local:
-            cfg['url'] = settings.GEOSERVER_BASE_URL + "wms"
-        else:
-            cfg['url'] = self.service.base_url
-            cfg['ptype'] = self.service.ptype()
+
+        cfg['ptype'] = self.ptype
+
+        cfg['url'] = self.ows_url
+
         cfg['srs'] = self.srs
         cfg['bbox'] = json.loads(self.bbox)
         cfg['llbbox'] = json.loads(self.llbbox)
@@ -1663,7 +1684,11 @@ class Layer(models.Model, PermissionLevelMixin):
         cfg['abstract'] = self.abstract
         cfg['styles'] = ''
         if not self.local:
-            cfg['source_params'] = {"ptype":self.ptype, "remote": True, "url": cfg["url"], "name": self.service.name}
+            cfg['source_params'] = {"ptype":cfg["ptype"], "remote": True, "url": cfg["url"], "name": self.service.name}
+
+        if self.ptype == "gxp_hglsource":
+            _prepare_hgl_layer(self.typename)
+
         return cfg
 
     def queue_gazetteer_update(self):
@@ -1671,8 +1696,6 @@ class Layer(models.Model, PermissionLevelMixin):
         if GazetteerUpdateJob.objects.filter(layer=self.id).exists() == 0:
             newJob = GazetteerUpdateJob(layer=self)
             newJob.save()
-
-
 
     def update_gazetteer(self):
         from geonode.gazetteer.utils import add_to_gazetteer, delete_from_gazetteer
@@ -2351,6 +2374,8 @@ class MapLayer(models.Model):
         if self.styles: cfg['styles'] = self.styles
         if self.transparent: cfg['transparent'] = True
 
+
+
         cfg["fixed"] = self.fixed
         if 'url' not in cfg:
             cfg['url'] = self.ows_url
@@ -2358,10 +2383,17 @@ class MapLayer(models.Model):
             cfg['url'] = ows_sub.sub('', cfg['url'])
         if self.group: cfg["group"] = self.group
         cfg["visibility"] = self.visibility
-        if self.name is not None and self.source_params.find( "gxp_gnsource") > -1:
+
+        if self.source_params.find( "gxp_hglsource") > -1:
+            _prepare_hgl_layer(self.name)
+
+        if self.name is not None and (self.source_params.find( "gxp_gnsource") > -1):
             #Get parameters from GeoNode instead of WMS GetCapabilities if possible
                 try:
-                    gnLayer = Layer.objects.get(typename=self.name,service=None)
+                    if (self.name.startswith(settings.CASCADE_WORKSPACE)):
+                        gnLayer = Layer.objects.get(typename=self.name,storeType="wmsStore")
+                    else:
+                        gnLayer = Layer.objects.get(typename=self.name, service=None)
                     if gnLayer.srs: cfg['srs'] = gnLayer.srs
                     if gnLayer.bbox: cfg['bbox'] = json.loads(gnLayer.bbox)
                     if gnLayer.llbbox: cfg['llbbox'] = json.loads(gnLayer.llbbox)
@@ -2413,6 +2445,13 @@ class MapLayer(models.Model):
     def __unicode__(self):
         return '%s?layers=%s' % (self.ows_url, self.name)
 
+def _prepare_hgl_layer(typename):
+    if settings.USE_QUEUE:
+        from geonode.queue.tasks import load_hgl_layer
+        load_hgl_layer.delay(typename)
+    else:
+        from geonode.proxy.views import hglServiceStarter
+        hglServiceStarter(None, typename)
 
 def delete_layer(instance, sender, **kwargs):
     """
@@ -2430,8 +2469,23 @@ def post_save_layer(instance, sender, **kwargs):
         if kwargs['created']:
             instance._populate_from_gs()
 
+def post_update_index(instance, sender, **kwargs):
+    ct = ContentType.objects.get_for_id(instance.content_type.id)
+    obj = ct.get_object_for_this_type(pk=instance.object_id)
+    connections['default'].get_unified_index().get_index(ct.model_class()).update_object(obj)
+
+def post_save_stats(instance, sender, **kwargs):
+    if type(instance) == LayerStats:
+        obj = instance.layer
+    else:
+        obj = instance.map
+    connections['default'].get_unified_index().get_index(type(obj)).update_object(obj)
+
+
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)
+signals.post_save.connect(post_update_index, sender=Comment)
+signals.post_save.connect(post_update_index, sender=OverallRating)
 
 
 
@@ -2452,3 +2506,6 @@ class LayerStats(models.Model):
     uniques = models.IntegerField(_("Unique Visitors"), default = 0)
     downloads = models.IntegerField(_("Downloads"), default = 0)
     last_modified = models.DateTimeField(auto_now=True, null=True)
+
+signals.post_save.connect(post_save_stats, sender=LayerStats)
+signals.post_save.connect(post_save_stats, sender=MapStats)

@@ -1,0 +1,5 @@
+{{ object.title }}
+{{ object.abstract }}
+{{ object.content }}
+{{ object.owner.get_full_name }}
+{{ object.comment_text }}
