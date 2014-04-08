@@ -205,7 +205,7 @@ def _create_time_form(import_session, form_data):
 def save_step_view(req, session):
     if req.method == 'GET':
         if 'tab' in req.path:
-            return render_to_response('upload/layer_upload_tab.html',
+            return render_to_response('upload/layer_upload_tabbed.html',
                                       RequestContext(req, {
                                           'async_upload' : _ASYNC_UPLOAD,
                                           'incomplete' : Upload.objects.get_incomplete_uploads(req.user),

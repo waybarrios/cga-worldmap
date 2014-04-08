@@ -367,6 +367,7 @@ def formatExternalGeocode(geocoder, geocodeResult):
 
 
 def update_gazetteer(layer_obj):
+    return
     if not layer_obj.in_gazetteer:
         delete_from_gazetteer(layer_obj.name)
     else:

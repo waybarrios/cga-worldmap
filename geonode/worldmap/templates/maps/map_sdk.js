@@ -1,9 +1,7 @@
-
 <style type="text/css">
 #aboutbutton {
     display: none;
 }
-
 button.logout {
     display: none;
 }
@@ -13,10 +11,9 @@ button.login {
 .map-title-header {
     margin-right: 10px;
 }
-
 {% if not urlsuffix %}
 #paneltbar {
-    margin-top: 90px;
+    margin-top: 81px;
 }
 {% endif %}
 </style>

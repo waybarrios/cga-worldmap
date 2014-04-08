@@ -1,7 +1,10 @@
 
 # -*- coding: utf-8 -*-
+import autocomplete_light
 from django import forms
+from django.forms import ChoiceField, RadioSelect
 from django.utils import simplejson as json
+from geonode.people.models import Profile
 from geonode.upload.forms import LayerUploadForm
 from geonode.layers.models import Layer, Attribute
 from geonode.base.models import TopicCategory
@@ -42,7 +45,6 @@ CONSTRAINT_OPTIONS = [
 class LayerCategoryChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return '<a href="#" onmouseover=\'javascript:showModal("' + escape(obj.description) + '")\' onmouseout=\'javascript:hideModal()\';return false;\'>' + obj.gn_description + '</a>'
-
 
 
 class LayerCategoryForm(forms.Form):
@@ -93,17 +95,28 @@ class WorldMapLayerForm(forms.ModelForm):
     date = forms.DateTimeField(label='*' + (_('Date')), widget=forms.SplitDateTimeWidget)
     date.widget.widgets[0].attrs = {"class":"datepicker", 'data-date-format': "yyyy-mm-dd"}
     date.widget.widgets[1].attrs = {"class":"time"}
-    temporal_extent_start = forms.DateField(label= _('Temporal Extent Start Date'),required=False,widget=forms.DateInput(attrs={"class":"datepicker", 'data-date-format': "yyyy-mm-dd"}))
-    temporal_extent_end = forms.DateField(label= _('Temporal Extent End Date'),required=False,widget=forms.DateInput(attrs={"class":"datepicker", 'data-date-format': "yyyy-mm-dd"}))
+    temporal_extent_start = forms.CharField(label= _('Temporal Extent Start Date'),required=False)
+    temporal_extent_end = forms.CharField(label= _('Temporal Extent End Date'),required=False)
     title = forms.CharField(label = '*' + _('Title'), max_length=255)
-    abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea(attrs={'cols': 60}))
+    abstract = forms.CharField(label = '*' + _('Abstract'), widget=forms.Textarea(attrs={'cols': 120}))
+    keywords = taggit.forms.TagField(required=False, help_text=_("A space or comma-separated list of keywords"))
 
-    keywords = taggit.forms.TagField(required=False,
-                                     help_text=_("A space or comma-separated list of keywords"))
+    poc = forms.ModelChoiceField(empty_label = _("Person outside WorldMap (fill form)"),
+                                    label = "*" + _("Point Of Contact"), required=False,
+                                    queryset = Profile.objects.exclude(user=None),
+                                    widget=autocomplete_light.ChoiceWidget('ProfileAutocomplete'))
+
+    metadata_author = forms.ModelChoiceField(empty_label = _("Person outside WorldMap (fill form)"),
+                                    label = _("Metadata Author"), required=False,
+                                    queryset = Profile.objects.exclude(user=None),
+                                    widget=autocomplete_light.ChoiceWidget('ProfileAutocomplete'))
+
+
+
     class Meta:
         model = Layer
         exclude = ('contacts','workspace', 'store', 'name', 'uuid', 'storeType', 'typename',
-                   'bbox_x0', 'bbox_x1', 'bbox_y0', 'bbox_y1', 'srid','topic_category', 'category',
+                   'bbox_x0', 'bbox_x1', 'bbox_y0', 'bbox_y1', 'srs', 'category',
                    'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type',
                    'csw_wkt_geometry', 'metadata_uploaded', 'metadata_xml', 'csw_anytext',
                    'popular_count', 'share_count', 'thumbnail', 'default_style', 'styles',
@@ -122,6 +135,5 @@ class GazetteerAttributeForm(forms.ModelForm):
 
     class Meta:
         model = Attribute
-        exclude = ('attribute_type','count','min','max','average','median','stddev',
-                   'sum','unique_values','last_stats_updated','objects')
+        fields = ('id', 'attribute', 'attribute_label','visible', 'display_order', 'description', 'searchable', 'in_gazetteer')
     

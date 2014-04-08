@@ -66,6 +66,8 @@ class Migration(SchemaMigration):
         db.alter_column('layers_layer', 'bbox_y0', models.DecimalField(null=True, max_digits=19, decimal_places=10, blank=True))
         db.alter_column('layers_layer', 'bbox_y1', models.DecimalField(null=True, max_digits=19, decimal_places=10, blank=True))
 
+        db.rename_column('layers_layer', 'topic_category_id', 'topic_category')
+
         # Adding field 'Layer.srid'
         db.add_column('layers_layer', 'srid', self.gf('django.db.models.fields.CharField')(max_length=255, default='EPSG:4326'), keep_default=False)
         
@@ -148,7 +150,8 @@ class Migration(SchemaMigration):
             'display_order': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'layer': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'attribute_set'", 'to': "orm['layers.Layer']"}),
-            'visible': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
+            'visible': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'searchable': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
         },
         'layers.contactrole': {
             'Meta': {'unique_together': "(('contact', 'layer', 'role'),)", 'object_name': 'ContactRole'},
@@ -188,8 +191,8 @@ class Migration(SchemaMigration):
             'storeType': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'styles': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'layer_styles'", 'symmetrical': 'False', 'to': "orm['layers.Style']"}),
             'supplemental_information': ('django.db.models.fields.TextField', [], {'default': "u'No information provided'"}),
-            'temporal_extent_end': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'temporal_extent_start': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'temporal_extent_end': ('django.db.models.fields.CharField', [], {'max_length': '24','blank': 'True'}),
+            'temporal_extent_start': ('django.db.models.fields.CharField', [], {'max_length': '24','blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'topic_category': ('django.db.models.fields.CharField', [], {'default': "'location'", 'max_length': '255'}),
             'typename': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'}),

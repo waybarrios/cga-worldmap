@@ -39,9 +39,19 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              checked: true
          },{
              actions: ["addlayersbutton"],  actionTarget: "paneltbar"
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              actions: ["mapmenu"],  actionTarget: "paneltbar"
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_printpage",
              iconCls: null,
              text: '<span class="x-btn-text">{% trans "Print" %}</span>',
@@ -49,7 +59,12 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              printService: config.printService,
              actionTarget: "paneltbar",
              showButtonText: true
-         },{
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
             ptype: "gxp_linkembedmaptool",
             text: '<span class="x-btn-text">{% trans "Link" %}</span>',
             actionTarget: "paneltbar"
@@ -64,7 +79,12 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              actionTarget:  "paneltbar",
              iconCls: null,
              text: '<span class="x-btn-text">{% trans "Notes" %}</span>'
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_geonodequerytool",
              id: "worldmap_query_tool",
              actionTarget:    "paneltbar",
@@ -74,7 +94,12 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              featurePanel: 'queryPanel',
              attributePanel: 'gridWinPanel',
              toggleGroup: 'interaction'
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_featuremanager",
              id: "querymanager",
              selectStyle: {cursor: ''},
@@ -82,7 +107,8 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              maxFeatures: 50,
              paging: true,
              pagingType: gxp.plugins.FeatureManager.WFS_PAGING
-         }, {
+         },
+         {
              ptype: "gxp_queryform",
              iconCls: null,
              text: '<span class="x-btn-text">{% trans "Query" %}</span>',
@@ -90,7 +116,12 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              autoExpand: "query",
              actionTarget: "paneltbar",
              outputTarget: "query"
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_featuregrid",
              featureManager: "querymanager",
              showTotalResults: true,
@@ -115,7 +146,12 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              controlOptions: {immediate: true},
              showButtonText: true,
              actionTarget: "paneltbar"
-         },{
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_featuremanager",
              id: "featuremanager",
              maxFeatures: 20,
@@ -130,12 +166,22 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              showButtonText: true,
              toggleGroup: "interaction",
              actionTarget: "paneltbar"
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_googleearth",
              iconCls: null,
              text: '<span class="x-btn-text">{% trans "Google Earth" %}</span>',
              actionTarget: ["paneltbar"]
-         }, {
+         },
+         {
+             actions: ["-"],
+             actionTarget: "paneltbar"
+         },
+         {
              ptype: "gxp_streetviewtool",
              iconCls: null,
              text: '<span class="x-btn-text">{% trans "Street View" %}</span>',

@@ -264,20 +264,20 @@ class Attribute(models.Model):
 
     # statistical derivations
     count = models.IntegerField(_('count'), help_text=_('count value for this field'), default=1)
-    min = models.CharField(_('min'), help_text=_('minimum value for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
-    max = models.CharField(_('max'), help_text=_('maximum value for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
-    average = models.CharField(_('average'), help_text=_('average value for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
-    median = models.CharField(_('median'), help_text=_('median value for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
-    stddev = models.CharField(_('standard deviation'), help_text=_('standard deviation for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
-    sum = models.CharField(_('sum'), help_text=_('sum value for this field'), max_length=255, blank=False, null=True, unique=False, default='NA')
-    unique_values = models.TextField(_('unique values for this field'), null=True, blank=True, default='NA')
-    last_stats_updated = models.DateTimeField(_('last modified'), default=datetime.now, help_text=_('date when attribute statistics were last updated')) # passing the method itself, not
+    min = models.CharField(_('min'), help_text=_('minimum value for this field'), max_length=255,  null=True, unique=False, default='NA')
+    max = models.CharField(_('max'), help_text=_('maximum value for this field'), max_length=255,  null=True, unique=False, default='NA')
+    average = models.CharField(_('average'), help_text=_('average value for this field'), max_length=255,  null=True, unique=False, default='NA')
+    median = models.CharField(_('median'), help_text=_('median value for this field'), max_length=255,  null=True, unique=False, default='NA')
+    stddev = models.CharField(_('standard deviation'), help_text=_('standard deviation for this field'), max_length=255, null=True, unique=False, default='NA')
+    sum = models.CharField(_('sum'), help_text=_('sum value for this field'), max_length=255, null=True, unique=False, default='NA')
+    unique_values = models.TextField(_('unique values for this field'),  blank=True, default='NA')
+    last_stats_updated = models.DateTimeField(_('last modified'), null=True, default=datetime.now, help_text=_('date when attribute statistics were last updated')) # passing the method itself, not
 
-    searchable = models.BooleanField(_('Searchable?'), default=False)
-    in_gazetteer = models.BooleanField(_('In Gazetteer?'), default=False)
-    is_gaz_start_date = models.BooleanField(_('Gazetteer Start Date'), default=False)
-    is_gaz_end_date = models.BooleanField(_('Gazetteer End Date'), default=False)
-    date_format = models.CharField(_('Date Format'), max_length=255, blank=True, null=True)
+    searchable = models.BooleanField(_('Searchable?'), default=False, blank=True)
+    in_gazetteer = models.BooleanField(_('In Gazetteer?'), default=False, blank=True)
+    is_gaz_start_date = models.BooleanField(_('Gazetteer Start Date'), default=False, blank=True)
+    is_gaz_end_date = models.BooleanField(_('Gazetteer End Date'), default=False, blank=True)
+    date_format = models.CharField(_('Date Format'), max_length=255, blank=True)
 
     objects = AttributeManager()
 

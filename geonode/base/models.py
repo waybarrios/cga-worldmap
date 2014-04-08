@@ -261,9 +261,8 @@ class ResourceBase(models.Model, PermissionLevelMixin, ThumbnailMixin):
     spatial_representation_type = models.ForeignKey(SpatialRepresentationType, help_text=_('method used to represent geographic information in the dataset.'), null=True, blank=True, limit_choices_to=Q(is_choice=True))
 
     # Section 5
-    temporal_extent_start = models.DateField(_('temporal extent start'), blank=True, null=True, help_text=_('time period covered by the content of the dataset (start)'))
-    temporal_extent_end = models.DateField(_('temporal extent end'), blank=True, null=True, help_text=_('time period covered by the content of the dataset (end)'))
-
+    temporal_extent_start = models.CharField(_('temporal extent start'), max_length=24, blank=True, null=True)
+    temporal_extent_end = models.CharField(_('temporal extent end'), max_length=24, blank=True, null=True)
     supplemental_information = models.TextField(_('supplemental information'), default=DEFAULT_SUPPLEMENTAL_INFORMATION, help_text=_('any other descriptive information about the dataset'))
 
     # Section 6

@@ -45,6 +45,11 @@
         width: 50px;
     }
 
+    textarea {
+            width: auto;
+            max-width: 500px;
+    }
+
     </style>
 
     <script type="text/javascript">
@@ -72,7 +77,7 @@
                 Some of your original metadata may have been lost.{% endblocktrans %}</div>
         {% endif %}
 
-        {% if layer_form.errors or attribute_form.errors or category_form.errors %}
+        {% if layer_form.errors or attribute_errors or category_form.errors %}
             <div style="background-color: pink">{% blocktrans %}Error updating metadata.  Please check the following
                 fields: {% endblocktrans %}
                 <ul>
@@ -82,8 +87,7 @@
                         {% endif %}
                     {% endfor %}
 
-
-                    {% if attribute_form.errors %}
+                    {% if attribute_errors %}
                         <li>{% trans "Attributes" %}</li>
                         {% for field in attribute_form %}
                             {% if field.errors %}
@@ -109,6 +113,7 @@
             <label class="control-label required-field">{% trans "Category" %}</label><br/>
             {% autoescape off %}
                 <div style="clear:both;padding-left:175px;">
+                    <p>Value of category form is {{ category_form.initial }}</p>
                     {% for choice in category_form.category_choice_field.field.choices %}
                         <div style="width:50%;float:left;padding-bottom:5px;">
                             <input type="radio" name="category_choice_field" value="{{ choice.0 }}"
@@ -164,6 +169,7 @@
                 <tr>
                     <th class="tdpadr">{% trans "Attribute" %}</th>
                     <th class="tdpadr">{% trans "Label" %}</th>
+                    <th class="tdpadr">{% trans "Description" %}</th>
                     <th class="tdpadr narrow">{% trans "Display Order" %}</th>
                     <th class="tdpadr narrow">{% trans "Visible?" %}</th>
                     <th class="tdpadr narrow">{% trans "Searchable?" %}</th>
@@ -173,8 +179,9 @@
                             <tr>
                                 <td class="tdpadr">{{ form.attribute }}</td>
                                 <td class="tdpadr">
-                                    <div style="display:none">{{ form.id }}</div>
+                                    {{ form.id }}
                                     {{ form.attribute_label }}</td>
+                                <td class="tdpadr">{{ form.description }}</td>
                                 <td class="tdpadr narrow"> {{ form.display_order }}</td>
                                 <td class="tdpadr narrow"> {{ form.visible }}</td>
                                 <td class="tdpadr narrow"> {{ form.searchable }}</td>
@@ -250,7 +257,7 @@
         });
 
         var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
-        var myNicEditor = new nicEditor({fullPanel: true, maxHeight: 190, iconsPath: nicEditIconsPath}).panelInstance("id_layer-abstract");
+        var myNicEditor = new nicEditor({fullPanel: true, maxHeight: 190, iconsPath: nicEditIconsPath}).panelInstance("id_resource-abstract");
 
     </script>
 {% endblock %}

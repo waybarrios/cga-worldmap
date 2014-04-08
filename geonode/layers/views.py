@@ -143,10 +143,10 @@ def layer_upload(request, template='upload/layer_upload.html'):
                 tempdir, base_file = form.write_files()
                 saved_layer = save(name, base_file, request.user,
                         overwrite = False,
+                        charset = form.cleaned_data["charset"],
                         abstract = form.cleaned_data["abstract"],
                         title = form.cleaned_data["layer_title"],
                         permissions = form.cleaned_data["permissions"],
-                        charset = form.cleaned_data["charset"]
                         )
             except Exception, e:
                 logger.exception(e)

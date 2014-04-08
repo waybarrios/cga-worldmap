@@ -1,21 +1,20 @@
-{% load i18n avatar_tags %}
+{% load i18n avatar_tags announcements_tags %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
     {% block head %}
-        {% block extra_head %}{% endblock %}
-      <link href="{{ STATIC_URL }}lib/css/bootstrap.css" rel="stylesheet"/>
-      {% block css-src %}
+
       <link href="{{ STATIC_URL }}geonode/css/base.css" rel="stylesheet" />
       <link href="{{ STATIC_URL }}worldmap/css/base.css" rel="stylesheet" />
       <link href="{{ STATIC_URL }}worldmap/css/site.css" rel="stylesheet" />
+
       {% if urlsuffix %}
           <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/site.css" media="screen" />
           <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/dropdown.css" media="screen" />
       {% endif %}
-      {% endblock %}
+
       <link href='{{ STATIC_URL }}geonode/font/lato_font.css' rel='stylesheet' type='text/css' />
       <link href="{{ STATIC_URL }}geonode/css/ext-compatibility.css" rel="stylesheet" />
       {% if DEBUG_STATIC %}
@@ -24,11 +23,13 @@
       {% else %}
       <link href="{{ STATIC_URL }}lib/css/assets.min.css" rel="stylesheet"/>
       {% endif %}
-    {% endblock %}
+      {% block extra_head %}
+      {% endblock extra_head %}
+    {% endblock head %}
     <!--[if lt IE 9]>
       <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-        {% autoescape off %}
+    {% autoescape off %}
         {{ GOOGLE_ANALYTICS_CODE }}
     {% endautoescape %}
 
@@ -114,15 +115,11 @@
               </div><!-- /#header -->
           </div>
       {%  else %}
-
+      <section>
         <div class="container">
           <div class="row">
             <div class="span3">
-              <a href="{% url "home" %}">
-                <span class="nav-logo">
-                  <a class="brand">{{ SITE_NAME }}</a>
-                </span>
-              </a>
+              <a href="{% url "home" %}"><span class="nav-logo"></span></a>
             </div>
             <div class="span9">
               <div class="nav-collapse pull-right">
@@ -139,16 +136,21 @@
                         </a>
                         <ul class="dropdown-menu">
                           <li><a href="{{ user.get_profile.get_absolute_url }}"><i class="icon-user"></i> {% trans "Profile" %}</a></li>
+                          <li><a href="{% url "messages_inbox" %}"><i class="icon-inbox"></i> {% trans "Inbox" %}</a></li>
                           {% if user.is_staff %}
                             <li><a href="{% url "admin:index" %}"><i class="icon-cog"></i> {% trans "Admin" %}</a></li>
+                          {% endif %}
+                          {% if perms.announcements.can_manage %}
+                            <li><a href="{% url "announcements_list" %}"><i class="icon-bullhorn"></i> {% trans "Announcements" %}</a></li>
                           {% endif %}
                           {% if user.is_superuser %}
                             <li><a href="{{ GEOSERVER_BASE_URL }}"><i class="icon-globe"></i> {% trans "GeoServer" %}</a></li>
                           {% endif %}
+                          <li><a href="{% url "recent-activity" %}"><i class="icon-fire"></i> {% trans "Recent Activity" %}</a></li>
                           <li class="divider"></li>
                           <li><a href="{% url "account_logout" %}"><i class="icon-off"></i> {% trans "Log out" %}</a></li>
                         </ul>
-                      </li>
+                      </li> <!-- ./dropdown user -->
                       <li class="divider-v">|</li>
                       <li class="actions">
                         <!--a href="#" rel="tooltip" title="{% trans 'Notifications' %}"><i class="icon-bullhorn"></i></a>
@@ -222,29 +224,34 @@
                   {% block extra-nav %}{% endblock %}
                 </ul>
               </nav>
-            </div>
+            </div> <!-- ./span10 -->
+            {% if SOCIAL_BUTTONS %}
             <div class="span2">
               <ul class="social">
                   <li><a href="http://www.facebook.com/sharer.php?u=http://{{ request.get_host }}{{ request.get_full_path }}" class="fb">facebook</a></li>
                   <li><a href="https://twitter.com/share?url=http://{{   request.get_host }}{{ request.get_full_path }}" class="tw">twitter</a></li>
                   <li><a href="https://plusone.google.com/_/ 1/confirm?hl=en&url=http://{{ request.get_host }}{{ request.get_full_path }}" class="gp">google+</a></li>
               </ul>
-            </div>
-          </div>
+            </div> <!-- /.span2 -->
             {%  endif %}
-        </div>
-       </section>
-      </div>
-    </div>
+          </div> <!-- /.row nav-box -->
+        </div> <!-- /.container -->
+        </section>
+      {%  endif %}
+      </div> <!-- /.navbar-inner -->
+    </div> <!-- /.navbar navbar-fixed-top -->
     {% endblock header %}
+
     {% block middle %}
+    {% announcements as site_wide_announcements %}
     <div class="content-wrap">
         {% if site_wide_announcements %}
             <div id="site_wide_announcements">
                 {% for announcement in site_wide_announcements %}
-                <div class="alert alert-block">
-                    <a type="button" class="close" data-dismiss="alert" href="{% url "announcement_hide" announcement.pk %}?next={{ request.path }}">×</button>
-                    <h4><a href="{{ announcement.get_absolute_url }}">{{ announcement }}</a> -</h4>
+        <div class="alert alert-block announcement">
+          <a type="button" class="close" data-dismiss="alert" data-dismiss-url="{% url "announcements_dismiss" announcement.pk %}" href="#">×</a>
+          <h4><a href="{{ announcement.get_absolute_url }}">{{ announcement }}</a></h4>
+          <p><small><em>{{ announcement.creation_date }}</em></small></p>
                     <div>{{ announcement.content }}</div>
                     </div>
                 {% endfor %}
@@ -261,9 +268,10 @@
               </div>
             {% endblock %}
           </div>
+         </div> <!-- /.container -->
         </div>
-    </div>
     {% endblock middle %}
+
     {% block footer %}
     <footer class="footer">
       <div class="container">
@@ -287,10 +295,11 @@
                 </select>
               </form>
             {% endif %}
-          </div>
-      </div>
+        </div> <!-- /.pull-right -->
+      </div> <!-- /.container -->
     </footer>
     {% endblock footer %}
+
     {% if DEBUG_STATIC %}
     <script src="{{ STATIC_URL }}lib/js/jquery.js"></script>
     <script src="{{ STATIC_URL }}lib/js/jquery.dataTables.js"></script>
@@ -302,11 +311,13 @@
     <script src="{{ STATIC_URL }}lib/js/bootstrap.js"></script>
     <script src="{{ STATIC_URL }}lib/js/json2.js"></script>
     <script src="{{ STATIC_URL }}lib/js/select2.js"></script>
+    <script src="{{ STATIC_URL }}lib/js/waypoints.js"></script>
     {% else %}
     <script src="{{ STATIC_URL }}lib/js/assets.min.js"></script>
     {% endif %}
     <script src="{{ STATIC_URL }}geonode/js/utils/utils.js"></script>
-    <script src="{{ STATIC_URL }}lib/js/waypoints.js"></script>
+    <script src="{{ STATIC_URL }}geonode/js/base/base.js"></script>
+    {% include 'autocomplete_light/static.html' %}
     <script>
       $("#search").select2({
         minimumInputLength: 1,
@@ -328,17 +339,25 @@
             var more = (page * 10) < data.total;
             return {
               results: $.map(data.results,function(object){
-                return {id: object.id, text: object.title};
+                return {id: object.id, text: object.title, url: object.detail };
               }),
               more: more
             }
           }          
         },
-        createSearchChoice:function(term, data) { if ($(data).filter(function() { return this.text.localeCompare(term)===0; }).length===0) {return {id:term, text:term};} 
+        createSearchChoice:function(term, data) {
+            if ($(data).filter(function() {
+                return this.text.localeCompare(term)===0; }).length===0) {
+                    return {id:term, text:term};
+                    }
         },
         formatSelection: function(item){
-          $('#search').val(item.text);
-          $('#search').parent().submit();
+          if(item.url != undefined) {
+            window.location.href = item.url;
+          } else {
+            $('#search').val(item.text);
+            $('#search').parent().submit();
+          };
         }
       });
     </script>
