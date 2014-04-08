@@ -20,14 +20,6 @@ from geonode.security.models import PermissionLevelMixin
 
 from taggit.managers import TaggableManager
 
-def get_default_category():
-    if settings.DEFAULT_TOPICCATEGORY:
-        try:
-            return TopicCategory.objects.get(identifier=settings.DEFAULT_TOPICCATEGORY)
-        except TopicCategory.DoesNotExist:
-            raise TopicCategory.DoesNotExist('The default TopicCategory indicated in settings is not found.')
-    else:
-        return TopicCategory.objects.all()[0]
 
 class ContactRole(models.Model):
     """
@@ -153,6 +145,9 @@ class Thumbnail(models.Model):
         self._delete_thumb()
         super(Thumbnail,self).delete()
 
+    def __unicode__(self):
+        return self.thumb_file.name
+
 
 class ThumbnailMixin(object):
     """
@@ -169,6 +164,10 @@ class ThumbnailMixin(object):
         if render is None:
             raise Exception('Must have _render_thumbnail(spec) function')
         image = render(spec)
+
+        if not image:
+            return
+
         #Clean any orphan Thumbnail before
         Thumbnail.objects.filter(resourcebase__id=None).delete()
         
@@ -387,6 +386,8 @@ class ResourceBase(models.Model, PermissionLevelMixin, ThumbnailMixin):
                 continue
             if url.link_type == 'html':
                 links.append((self.title, 'Web address (URL)', 'WWW:LINK-1.0-http--link', url.url))
+            elif url.link_type in ('OGC:WMS', 'OGC:WFS', 'OGC:WCS'):
+                links.append((self.title, description, url.link_type, url.url))
             else:
                 description = '%s (%s Format)' % (self.title, url.name)
                 links.append((self.title, description, 'WWW:DOWNLOAD-1.0-http--download', url.url))
@@ -467,7 +468,7 @@ class Link(models.Model):
     link_type = models.CharField(max_length=255, choices = [(x, x) for x in LINK_TYPES])
     name = models.CharField(max_length=255, help_text=_('For example "View in Google Earth"'))
     mime = models.CharField(max_length=255, help_text=_('For example "text/xml"'))
-    url = models.TextField(unique=True, max_length=1000)
+    url = models.TextField(max_length=1000)
 
     objects = LinkManager()
 

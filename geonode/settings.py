@@ -63,7 +63,7 @@ os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS'] = 'localhost:8000'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'wm_db',
+        'NAME': 'wm_db_gnupgrade',
         'USER': 'wm_user',
         'PASSWORD': 'wm_password',
         'HOST': 'localhost', 'PORT': '5432'
@@ -102,7 +102,7 @@ LANGUAGES = (
     ('el', 'Ελληνικά'),
     ('id', 'Bahasa Indonesia'),
     ('zh-cn', '中文'),
-    ('ja', '日本人'),
+    ('ja', '日本語'),
     ('fa', 'Persian'),
     ('pt', 'Portuguese'),
     ('ru', 'Russian'),
@@ -175,8 +175,7 @@ SITE_ID = 1
 LOGIN_URL = '/account/login/'
 LOGOUT_URL = '/account/logout/'
 
-# Activate the Documents application
-DOCUMENTS_APP = True
+# Documents application
 ALLOWED_DOCUMENT_TYPES = [
     'doc', 'docx','gif', 'jpg', 'jpeg', 'ods', 'odt', 'pdf', 'png', 'ppt', 
     'rar', 'tif', 'tiff', 'txt', 'xls', 'xlsx', 'xml', 'zip', 
@@ -441,9 +440,6 @@ NOSE_ARGS = [
 
 SITEURL = "http://localhost:8000/"
 
-# Default TopicCategory to be used for resources. Use the slug field here
-DEFAULT_TOPICCATEGORY = 'location'
-
 # Topic Categories list should not be modified (they are ISO). In case you 
 # absolutely need it set to True this variable
 MODIFY_TOPICCATEGORY = False
@@ -673,10 +669,6 @@ DB_DATASTORE_ENGINE = 'django.contrib.gis.db.backends.postgis'
 #The name of the store in Geoserver
 DB_DATASTORE_NAME = ''
 
-
-LEAFLET_CONFIG = {
-    'TILES_URL': 'http://{s}.tile2.opencyclemap.org/transport/{z}/{x}/{y}.png'
-}
 
 SOCIAL_BUTTONS = True
 

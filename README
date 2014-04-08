@@ -74,7 +74,10 @@ Mac OSX, or Windows, no technical support can be provided for those operating sy
 you need to use another OS besides Linux.
 
 
+
 Once fully started, you should see a message indicating the address of your worldmap instance.
+
+
 The default username and password are ``admin`` and ``admin``::
   
   Development GeoNode is running at http://localhost:8000/
