@@ -124,7 +124,25 @@ def haystack_search_api(request):
 
     # Filter by Query Params
     if query:
-        sqs = sqs.filter(content=Raw(query))
+        if query.startswith("\"") and query.endswith("\""):
+            sqs = sqs.filter(content_exact=Raw(query.replace("\"","")))
+        else:
+            words = query.split()
+            for word in range(0,len(words)-1):
+                if word == 0:
+                    sqs = sqs.filter(content=Raw(words[word]))
+                elif words[word] in ["AND","OR"]:
+                    pass
+                elif words[word-1] == "OR":
+                    sqs = sqs.filter_or(content=Raw(words[word]))
+                else:
+                    sqs = sqs.filter(content=Raw(words[word]))
+
+
+        for word in query.split("AND"):
+            sqs = sqs.filter(content=Raw(word))
+        for word in query.split("OR"):
+            sqs = sqs.filter_or(content=Raw(word))
 
     # filter by cateory
     if category is not None:

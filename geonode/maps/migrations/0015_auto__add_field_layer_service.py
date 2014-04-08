@@ -19,7 +19,7 @@ class Migration(SchemaMigration):
     def backwards(self, orm):
         
         # Deleting field 'Layer.service'
-        db.delete_column('maps_layer', 'service_id')
+        db.delete_column('maps_layer', 'service')
 
 
     models = {

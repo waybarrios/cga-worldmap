@@ -2479,8 +2479,10 @@ def post_save_stats(instance, sender, **kwargs):
         obj = instance.layer
     else:
         obj = instance.map
-    connections['default'].get_unified_index().get_index(type(obj)).update_object(obj)
-
+    try:
+        connections['default'].get_unified_index().get_index(type(obj)).update_object(obj)
+    except Exception, e:
+        logger.error("Error updating haystack with new stats: %s" % str(e))
 
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)

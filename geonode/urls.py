@@ -50,15 +50,16 @@ urlpatterns = patterns('',
     (r'^ratings/', include('agon_ratings.urls')),
     (r'^capabilities/', include('geonode.capabilities.urls')),
     # Accounts
-    url(r'^accounts/ajax_login$', 'geonode.views.ajax_login',
+    url(r'^account/ajax_login$', 'geonode.views.ajax_login',
         name='auth_ajax_login'),
-    url(r'^accounts/ajax_lookup$', 'geonode.views.ajax_lookup',
+    url(r'^account/ajax_lookup$', 'geonode.views.ajax_lookup',
         name='auth_ajax_lookup'),
-    (r'^accounts/ajax_lookup_email$', 'geonode.views.ajax_lookup_email'),
+    (r'^account/ajax_lookup_email$', 'geonode.views.ajax_lookup_email'),
 
     #(r'^accounts/login', 'django.contrib.auth.views.login'),
     #(r'^accounts/logout', 'django.contrib.auth.views.logout'),
 
+    url(r"^accounts/", include("geonode.register.urls")),
     url(r"^account/", include("geonode.register.urls")),
 
     # Meta

@@ -133,7 +133,6 @@ INSTALLED_APPS = (
     'djcelery',
     'kombu.transport.django',
     'piston',
-    'djgeojson',
     'haystack',
 
     # GeoNode internal apps
@@ -539,8 +538,8 @@ HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
         'URL': 'http://127.0.0.1:9200/',
-        'INDEX_NAME': 'haystack',
+        'INDEX_NAME': 'geonode',
         },
     }
-
+#HAYSTACK_DEFAULT_OPERATOR = 'OR'
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
