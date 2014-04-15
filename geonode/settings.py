@@ -758,12 +758,6 @@ PROXY_URL = '/proxy/?url='
 
 
 
-# Load more settings from a file called local_settings.py if it exists
-try:
-    from local_settings import *
-except ImportError:
-    pass
-
 # Available download formats
 DOWNLOAD_FORMATS_METADATA = [
     'Atom', 'DIF', 'Dublin Core', 'ebRIM', 'FGDC', 'TC211',
@@ -778,3 +772,8 @@ DOWNLOAD_FORMATS_RASTER = [
 ]
 
 
+# Load more settings from a file called local_settings.py if it exists
+try:
+    from local_settings import *
+except ImportError:
+    pass

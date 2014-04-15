@@ -14,6 +14,7 @@ class Migration(SchemaMigration):
         raise RuntimeError("Cannot reverse this migration.")
 
 
+
     models = {
         'actstream.action': {
             'Meta': {'ordering': "('-timestamp',)", 'object_name': 'Action'},

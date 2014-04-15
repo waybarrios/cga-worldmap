@@ -5,11 +5,35 @@ from south.v2 import DataMigration
 from django.db import models
 from geonode.base.models import ResourceBase
 
+LLBBOX_MIGRATION_SQL = """
+UPDATE base_resourcebase
+SET bbox_x0 = cast(left((string_to_array(trim(both '[]' from layers_layer.llbbox), ','))[1],10) as double precision) from layers_layer
+--INNER JOIN base_resourcebase on layers_layer.resourcebase_ptr_id = base_resourcebase.id
+WHERE layers_layer.resourcebase_ptr_id = base_resourcebase.id and layers_layer.llbbox is not NULL and layers_layer.llbbox NOT LIKE '%inf%';
+
+UPDATE base_resourcebase
+SET bbox_y0 = cast(left((string_to_array(trim(both '[]' from layers_layer.llbbox), ','))[2],10) as double precision) from layers_layer
+--INNER JOIN base_resourcebase on layers_layer.resourcebase_ptr_id = base_resourcebase.id
+WHERE layers_layer.resourcebase_ptr_id = base_resourcebase.id and layers_layer.llbbox is not NULL and layers_layer.llbbox NOT LIKE '%inf%';
+
+UPDATE base_resourcebase
+SET bbox_x1 = cast(left((string_to_array(trim(both '[]' from layers_layer.llbbox), ','))[3],10) as double precision) from layers_layer
+--INNER JOIN base_resourcebase on layers_layer.resourcebase_ptr_id = base_resourcebase.id
+WHERE layers_layer.resourcebase_ptr_id = base_resourcebase.id and layers_layer.llbbox is not NULL and layers_layer.llbbox NOT LIKE '%inf%';
+
+UPDATE base_resourcebase
+SET bbox_y1 = cast(left((string_to_array(trim(both '[]' from layers_layer.llbbox), ','))[4],10) as double precision) from layers_layer
+--INNER JOIN base_resourcebase on layers_layer.resourcebase_ptr_id = base_resourcebase.id
+WHERE layers_layer.resourcebase_ptr_id = base_resourcebase.id and layers_layer.llbbox is not NULL and layers_layer.llbbox NOT LIKE '%inf%';
+"""
+
 class Migration(DataMigration):
 
     depends_on = (
         ("documents", "0001_initial"),
     )
+
+
 
     def forwards(self, orm):
 
@@ -36,11 +60,12 @@ class Migration(DataMigration):
                 data_quality_statement=layer.data_quality_statement,
                 srid=layer.srid,
                 csw_typename=layer.csw_typename,
-                bbox_x0=layer.bbox_x0,
+                bbox_x0=layer.llbbox,
                 bbox_x1=layer.bbox_x1,
                 bbox_y0=layer.bbox_y0,
                 bbox_y1=layer.bbox_y1
             )
+
             # Move the spatial_representation_type CHOICES based field to the new spatial_representation_type_new
             srt = orm['base.SpatialRepresentationType'].objects.filter(identifier=layer.spatial_representation_type)
             if srt:
@@ -64,6 +89,9 @@ class Migration(DataMigration):
             # assign layer to resource base
             layer.resourcebase_ptr = rbase
             layer.save()
+
+        #Transfer existing llbbox values
+        db.execute(LLBBOX_MIGRATION_SQL)
 
     def backwards(self, orm):
         raise RuntimeError("Cannot reverse this migration.")
