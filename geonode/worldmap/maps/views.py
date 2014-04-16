@@ -11,9 +11,9 @@ import logging
 import re
 from geonode.documents.models import get_related_documents
 import httplib2
-from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
+from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.maps.models import Map, MapLayer
-from geonode.maps.views import _resolve_map, map_json as basemap_json, map_set_permissions, new_map_config, map_detail
+from geonode.maps.views import _resolve_map, map_json as basemap_json, new_map_config, map_detail
 from geonode.maps.views import MAP_LEV_NAMES, _PERMISSION_MSG_GENERIC, _PERMISSION_MSG_LOGIN, _PERMISSION_MSG_VIEW
 from geonode.security.views import _perms_info
 from geonode.utils import resolve_object, ogc_server_settings
@@ -129,7 +129,7 @@ def ajax_map_permissions(request, mapid, use_email=False):
         )
 
     spec = json.loads(request.raw_post_data)
-    map_set_permissions(map_obj, spec, use_email)
+    map_obj.set_permissions(map_obj, spec, use_email)
 
 def ajax_map_permissions_by_email(request, mapid):
     return ajax_map_permissions(request, mapid, True)

@@ -18,6 +18,7 @@
 #########################################################################
 
 from django.core.cache import cache
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
@@ -85,12 +86,16 @@ def _annotate(normalizers):
 def apply_normalizers(results):
     '''build the appropriate normalizers for the query set(s) and annotate'''
     normalized = []
+
     mapping = [
         ('maps', MapNormalizer),
         ('layers', LayerNormalizer),
         ('documents', DocumentNormalizer),
-        ('users', OwnerNormalizer),
+        ('users', OwnerNormalizer)
     ]
+    if "geonode.contrib.groups" in settings.INSTALLED_APPS:
+        mapping.append(('groups', GroupNormalizer))
+
     for k,n in mapping:
         r = results.get(k, None)
         if not r: continue
@@ -124,7 +129,6 @@ class Normalizer:
             if self.o._deferred:
                 self.o = getattr(type(self.o),'objects').get(pk = self.o.pk)
             self.dict = self.populate(self.data or {}, exclude)
-            self.dict['iid'] = self.iid
             self.dict['relevance'] = getattr(self.o, 'relevance', 0)
             if hasattr(self,'views'):
                 self.dict['views'] = self.views
@@ -261,4 +265,24 @@ class OwnerNormalizer(Normalizer):
         doc['doc_cnt'] = Document.objects.filter(owner = user).count()
         doc['_type'] = 'owner'
         doc['_display_type'] = extension.USER_DISPLAY
+        return doc
+
+
+class GroupNormalizer(Normalizer):
+    """
+    Normalization object for Groups.
+    """
+    def last_modified(self):
+        return self.o.last_modified
+
+    def populate(self, doc, **kwargs):
+        group = self.o
+        doc['id'] = group.id
+        doc['slug'] = group.slug
+        doc['title'] = group.title
+        doc['members_cnt'] = group.member_queryset().count()
+        doc['description'] = group.description
+        doc['last_modified'] = extension.date_fmt(group.last_modified)
+        doc['_type'] = 'group'
+        doc['keywords'] = group.keyword_list()
         return doc

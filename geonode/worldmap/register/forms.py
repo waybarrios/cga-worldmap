@@ -16,9 +16,9 @@ class ForgotUsernameForm(forms.Form):
 
 
 class UserRegistrationForm(account.forms.SignupForm):
-    if (settings.USE_CUSTOM_ORG_AUTHORIZATION):
+    if (settings.CUSTOM_AUTH["enabled"]):
         is_org_member = forms.TypedChoiceField(coerce=lambda x: bool(int(x)),
                    choices=((1, _(u'Yes')), (0, _(u'No'))),
                    widget=forms.RadioSelect,
-                   initial=0, label=settings.CUSTOM_ORG_AUTH_TEXT
+                   initial=0, label=settings.CUSTOM_AUTH["text"]
                 )

@@ -11,10 +11,10 @@
         <input type="radio" name="viewmode" id="perms_view_registered" value="REGISTERED">
         {% trans "Any registered user" %}
       </label>
-      {% if USE_CUSTOM_ORG_AUTHORIZATION %}
+      {% if CUSTOM_AUTH.enabled %}
       <label class="radio">
         <input type="radio" name="viewmode" id="perms_view_custom" value="CUSTOM">
-        {{ CUSTOM_GROUP_NAME }}
+        {{ CUSTOM_AUTH.name }}
       </label>
       {% endif %}
       <label class="radio">
@@ -30,12 +30,6 @@
         <input type="radio" name="editmode" id="perms_edit_registered" value="REGISTERED">
         {% trans "Any registered user" %}
       </label>
-      {% if USE_CUSTOM_ORG_AUTHORIZATION %}
-      <label class="radio">
-        <input type="radio" name="editmode" id="perms_edit_custom" value="CUSTOM">
-        {{ CUSTOM_GROUP_NAME }}
-      </label>
-      {% endif %}
       <label class="radio">
         <input type="radio" name="editmode" id="perms_edit_list" value="LIST" checked="checked">
         {% trans "Only the following users or groups:" %}

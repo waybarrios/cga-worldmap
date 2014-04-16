@@ -77,9 +77,10 @@ setup(name='GeoNode',
         "pillow",
         "lxml",
         # python dependencies
-        "gsconfig==0.6.7",
+        "gsconfig==0.6.8",
         "OWSLib==0.7.2",
         "Django==1.5.5",
+        "gsimporter==0.1",
         # Django Apps
         "pinax-theme-bootstrap==3.0a11",
         "pinax-theme-bootstrap-account==1.0b2",
@@ -114,6 +115,9 @@ setup(name='GeoNode',
         "MultipartPostHandler",
         # translation
         "transifex-client",
+        #haystack/elasticsearch
+        "django-haystack==2.1.0",
+        "pyelasticsearch==0.6.1"
         ],
       zip_safe=False,
       )

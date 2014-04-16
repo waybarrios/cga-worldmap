@@ -36,6 +36,7 @@ def resource_urls(request):
         VERSION=get_version(),
         SITE_NAME=site.name,
         SITE_DOMAIN=site.domain,
+        GROUPS_APP = True if "geonode.contrib.groups" in settings.INSTALLED_APPS else False,
         UPLOADER_URL = reverse('data_upload') if getattr(settings, 'UPLOADER', dict()).get('BACKEND', 'geonode.rest') == 'geonode.importer' else reverse('layer_upload'),
         GEOGIT_ENABLED = ogc_server_settings.GEOGIT_ENABLED,
         TIME_ENABLED = getattr(settings, 'UPLOADER', dict()).get('OPTIONS', dict()).get('TIME_ENABLED', False),
@@ -43,11 +44,11 @@ def resource_urls(request):
         MF_PRINT_ENABLED = ogc_server_settings.MAPFISH_PRINT_ENABLED,
         PRINTNG_ENABLED = ogc_server_settings.PRINTNG_ENABLED,
         GS_SECURITY_ENABLED = ogc_server_settings.GEONODE_SECURITY_ENABLED,
-        USE_CUSTOM_ORG_AUTHORIZATION = settings.USE_CUSTOM_ORG_AUTHORIZATION,
-        CUSTOM_GROUP_NAME = settings.CUSTOM_GROUP_NAME,
+        CUSTOM_AUTH = settings.CUSTOM_AUTH,
         GOOGLE_API_KEY=settings.GOOGLE_API_KEY,
         GOOGLE_ANALYTICS_CODE=settings.GOOGLE_ANALYTICS_CODE,
         PROXY_URL = getattr(settings, 'PROXY_URL', '/proxy/?url='),
         SOCIAL_BUTTONS = getattr(settings, 'SOCIAL_BUTTONS', True),
-        USE_DOCUMENTS = 'geonode.documents' in settings.INSTALLED_APPS
+        USE_DOCUMENTS = 'geonode.documents' in settings.INSTALLED_APPS,
+        HAYSTACK_SEARCH = settings.HAYSTACK_SEARCH,
     )

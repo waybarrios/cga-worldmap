@@ -148,7 +148,7 @@ def create_pg_layer(request):
 
         return render_to_response(pagetorender, RequestContext(request, {
             "layer_form": layer_form,
-            "customGroup": settings.CUSTOM_GROUP_NAME if settings.USE_CUSTOM_ORG_AUTHORIZATION else '',
+            "customGroup": settings.CUSTOM_AUTH["name"] if settings.CUSTOM_AUTH["enabled"] else '',
             "geoms": GEOMETRY_CHOICES
         }))
 

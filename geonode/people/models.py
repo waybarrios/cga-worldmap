@@ -61,7 +61,7 @@ class Profile(models.Model):
 
     #### WorldMap Custom Fields #####
     display_email = models.BooleanField(_('Display my email address on my profile'), blank=False, default=False, null=False)
-    is_org_member = models.BooleanField(settings.CUSTOM_ORG_AUTH_TEXT, blank=True, null=False, default=False)
+    is_org_member = models.BooleanField(settings.CUSTOM_AUTH["text"], blank=True, null=False, default=False)
     member_expiration_dt = models.DateField(_('Affiliation expires on: '), blank=False, null=False, default=datetime.today())
     #### WorldMap Custom Fields #####
         

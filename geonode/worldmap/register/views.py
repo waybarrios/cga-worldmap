@@ -29,7 +29,7 @@ class SignupView(account.views.SignupView):
             if new_user.get_profile().is_org_member:
                 self.request.session["group_username"] = new_user.username
                 logger.debug("group username set to [%s]", new_user.username)
-                return settings.CUSTOM_ORG_AUTH_URL
+                return settings.CUSTOM_AUTH["auth_url"]
             elif "bra_harvard_redirect" in self.request.session:
                 new_user.active = True
                 new_user.save()
@@ -85,10 +85,10 @@ def forgotUsername(request,template_name='register/username_form.html'):
 
 
 def confirm(request):
-    if request.user and settings.CUSTOM_ORG_AUTH_URL is not None:
+    if request.user and settings.CUSTOM_AUTH["auth_url"] is not None:
         request.session["group_username"] = request.user.username
         logger.debug("group username set to [%s]", request.user.username)
-        return HttpResponseRedirect(settings.CUSTOM_ORG_AUTH_URL)
+        return HttpResponseRedirect(settings.CUSTOM_AUTH["auth_url"])
     else:
         return HttpResponseRedirect("/")
 
@@ -140,7 +140,7 @@ def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner
     new_user.save()
     if new_user:
         new_profile = Profile.objects.get_or_create(user=new_user, name=new_user.username, email=new_user.email)
-        if settings.USE_CUSTOM_ORG_AUTHORIZATION and new_user.email.endswith(settings.CUSTOM_GROUP_EMAIL_SUFFIX):
+        if settings.CUSTOM_AUTH["enabled"] and new_user.email.endswith(settings.CUSTOM_AUTH["email_suffix"]):
             new_profile.is_org_member = True
             new_profile.member_expiration_dt = datetime.today() + timedelta(days=365)
             new_profile.save()

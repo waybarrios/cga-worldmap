@@ -182,6 +182,41 @@ ALLOWED_DOCUMENT_TYPES = [
 ]
 MAX_DOCUMENT_SIZE = 2 # MB
 
+GEONODE_APPS = (
+    # GeoNode internal apps
+    'geonode.people',
+    'geonode.base',
+    'geonode.layers',
+    'geonode.upload',
+    'geonode.maps',
+    'geonode.proxy',
+    'geonode.security',
+    'geonode.search',
+    'geonode.social',
+    'geonode.catalogue',
+    'geonode.documents',
+
+    # GeoNode Contrib Apps
+    'geonode.contrib.groups',
+    #'geonode.contrib.services'
+)
+
+WORLDMAP_APPS = (
+    'geonode.worldmap',
+    'geonode.worldmap.core',
+    'geonode.worldmap.profile',
+    'geonode.worldmap.register',
+    'geonode.worldmap.mapnotes',
+    'geonode.worldmap.capabilities',
+    'geonode.worldmap.layers',
+    'geonode.worldmap.maps',
+    'geonode.worldmap.proxy',
+    'geonode.worldmap.security',
+    'geonode.worldmap.stats',
+    'geonode.worldmap.hoods',
+    'geonode.worldmap.gazetteer',
+    'geonode.worldmap.queue',
+)
 
 INSTALLED_APPS = (
 
@@ -206,6 +241,9 @@ INSTALLED_APPS = (
     'friendlytagloader',
     'geoexplorer',
     'django_extensions',
+    'haystack',
+    'modeltranslation',
+    'autocomplete_light',
 
     # Theme
     "pinax_theme_bootstrap_account",
@@ -226,38 +264,10 @@ INSTALLED_APPS = (
     'djcelery',
     'djkombu',
 
-    # GeoNode internal apps
-    'geonode.people',
-    'geonode.base',
-    'geonode.layers',
-    'geonode.upload',
-    'geonode.maps',
-    'geonode.proxy',
-    'geonode.security',
-    'geonode.search',
-    'geonode.social',
-    'geonode.catalogue',
-    'geonode.documents',
-    
-    'geonode.worldmap',
-    'geonode.worldmap.profile',
-    'geonode.worldmap.register',
-    'geonode.worldmap.mapnotes',
-    'geonode.worldmap.capabilities',
-    'geonode.worldmap.layers',
-    'geonode.worldmap.maps',
-    'geonode.worldmap.proxy',
-    'geonode.worldmap.security',
-    'geonode.worldmap.stats',
-    'geonode.worldmap.hoods',
-    'geonode.worldmap.gazetteer',
-    'geonode.worldmap.queue',
-
-    'modeltranslation',
-    'autocomplete_light',
-
+    #Debugging
     #'debug_toolbar',
-)
+) + GEONODE_APPS + WORLDMAP_APPS
+
 
 LOGGING = {
     'version': 1,
@@ -334,7 +344,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.contrib.messages.context_processors.messages',
     'account.context_processors.account',
-    'pinax_theme_bootstrap_account.context_processors.theme',
     # The context processor below adds things like SITEURL
     # and GEOSERVER_BASE_URL to all pages that use a RequestContext
     'geonode.context_processors.resource_urls',
@@ -369,11 +378,6 @@ def get_user_url(u):
 ABSOLUTE_URL_OVERRIDES = {
     'auth.user': get_user_url
 }
-
-# Redirects to home page after login
-# FIXME(Ariel): I do not know why this setting is needed,
-# it would be best to use the ?next= parameter
-LOGIN_REDIRECT_URL = "/"
 
 #
 # Settings for default search size
@@ -476,7 +480,7 @@ OGC_SERVER = {
 
 # Uploader Settings
 UPLOADER = {
-    'BACKEND' : 'geonode.rest',
+    'BACKEND' : 'geonode.importer',
     'OPTIONS' : {
         'TIME_ENABLED': False,
         'GEOGIT_ENABLED': False,
@@ -721,17 +725,17 @@ if USE_QUEUE:
 GOOGLE_API_KEY = ''
 GOOGLE_ANALYTICS_CODE=''
 
-#Set name of additional permissions group (besides anonymous and authenticated)
-CUSTOM_GROUP_NAME = 'Organization Users'
+
 
 #If you want to redirect members of your organization to a separate authentication system when registering, change the following settings
-USE_CUSTOM_ORG_AUTHORIZATION = False
-CUSTOM_ORG_AUTH_TEXT = 'Are you affiliated with XXXX?'
-#Automatically add users with the following email address suffix to the custom group, if created via layer/map permissions
-CUSTOM_GROUP_EMAIL_SUFFIX = ''
-#URL to redirect to if user indicates they are a member of your organization
-CUSTOM_ORG_AUTH_URL = ''
-CUSTOM_ORG_COOKIE = ''
+CUSTOM_AUTH = {
+    'enabled' : True,
+    'slug': 'harvard',
+    'name': 'Harvard Users',
+    'text': 'Are you affiliated with Harvard?',
+    'email_suffix': 'harvard.edu',
+    'auth_url' : None
+}
 
 DEFAULT_WORKSPACE = 'geonode'
 
@@ -754,8 +758,19 @@ if LOCKDOWN_GEONODE:
 PROXY_ALLOWED_HOSTS = ()
 
 # The proxy to use when making cross origin requests.
-PROXY_URL = '/proxy/?url='
+PROXY_URL = '/proxy/?url=' if DEBUG else None
 
+HAYSTACK_SEARCH= False
+# Haystack Search Backend Configuration
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'geonode',
+        },
+    }
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 20
 
 
 # Available download formats

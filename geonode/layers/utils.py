@@ -46,7 +46,7 @@ from geonode.layers.models import Layer, Style
 from geonode.people.models import Profile
 from geonode.geoserver.helpers import cascading_delete, get_sld_for, delete_from_postgis
 from geonode.layers.metadata import set_metadata
-from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS, CUSTOM_GROUP_USERS
+from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS
 from geonode.base.models import SpatialRepresentationType, TopicCategory
 from geonode.utils import ogc_server_settings
 from geonode.upload.files import _clean_string, _rename_zip
@@ -70,8 +70,6 @@ def layer_set_permissions(layer, perm_spec, use_email=False):
         layer.set_gen_level(AUTHENTICATED_USERS, perm_spec['authenticated'])
     if "anonymous" in perm_spec:
         layer.set_gen_level(ANONYMOUS_USERS, perm_spec['anonymous'])
-    if "customgroup" in perm_spec:
-        layer.set_gen_level(CUSTOM_GROUP_USERS, perm_spec['customgroup'])             
     if isinstance(perm_spec['users'], dict): perm_spec['users'] = perm_spec['users'].items()
     users = [n[0] for n in perm_spec['users']]
     excluded = users + [layer.owner]
@@ -89,7 +87,6 @@ def layer_set_permissions(layer, perm_spec, use_email=False):
         else:
             user = User.objects.get(username=username)
         layer.set_user_level(user, level)
-
 
 def layer_type(filename):
     """Finds out if a filename is a Feature or a Vector
@@ -586,7 +583,7 @@ def create_django_record(user, title, keywords, abstract, gs_resource, permissio
     logger.info('>>> Step 10. Setting default permissions for [%s]', name)
 
     if permissions is not None and len(permissions.keys()) > 0:
-        layer_set_permissions(saved_layer, permissions)
+        saved_layer.set_permissions(permissions)
     else:
         saved_layer.set_default_permissions()
 
