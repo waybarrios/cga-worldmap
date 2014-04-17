@@ -125,7 +125,7 @@ def _get_all_keywords():
 def search_api(request, format='json', **kwargs):
     if request.method not in ('GET','POST'):
         return HttpResponse(status=405)
-    debug = True
+    debug = logger.isEnabledFor(logging.DEBUG)
     if debug:
         connection.queries = []
     ts = time()
