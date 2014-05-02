@@ -1,5 +1,6 @@
 from decimal import Decimal
 import json
+from math import log10
 from agon_ratings.models import OverallRating
 from dialogos.models import Comment
 
@@ -15,11 +16,14 @@ from geonode.flexidates import parse_julian_date
 
 class LayerIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
-    iid = indexes.IntegerField(model_attr='id')
+    oid = indexes.IntegerField(model_attr='id')
+    uuid = indexes.CharField(model_attr='uuid')
     type = indexes.CharField(faceted=True)
     subtype = indexes.CharField(faceted=True)
-    name = indexes.CharField(model_attr="title")
-    description = indexes.CharField(model_attr="abstract")
+    name = indexes.CharField(model_attr="name")
+    title = indexes.CharField(model_attr="title", boost=2)
+    title_sortable = indexes.CharField(indexed=False) #Necessary for sorting
+    description = indexes.CharField(model_attr="abstract",boost=1.5)
     owner = indexes.CharField(model_attr="owner", faceted=True, null=True)
     created = indexes.DateTimeField(model_attr="date")
     modified = indexes.DateTimeField(model_attr="date")
@@ -36,19 +40,32 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
     keywords = indexes.MultiValueField(model_attr="keyword_list", null=True)
     local = indexes.CharField(faceted=True)
     service = indexes.CharField(model_attr="service", default=settings.SITENAME, faceted=True)
-    ptype = indexes.CharField(faceted=True)
+    ptype = indexes.CharField(faceted=True, model_attr="ptype")
     overall_rating = indexes.IntegerField(boost=1.125)
     num_ratings = indexes.IntegerField(boost=1.125)
     num_comments = indexes.IntegerField(boost=1.125)
-    comments = indexes.MultiValueField(model_attr="comment_text")
     unique_views = indexes.IntegerField()
-    #json = indexes.CharField(indexed=False)
+
+
+    # """
+    # Factor in social factors into document relevance
+    # """
+    # def prepare(self, obj):
+    #     data = super(LayerIndex, self).prepare(obj)
+    #     social_relevance = log10(1+(data['num_ratings']
+    #                          + data['num_comments'] + data['share_count']
+    #                          + data['popular_count']) * (data['overall_rating']))
+    #     data['boost'] = 1 + social_relevance
+    #     return data
 
     def get_model(self):
         return Layer
 
     def prepare_type(self, obj):
         return "layer"
+
+    # def prepare_ptype(self,obj):
+    #     return obj.ptype
 
     def prepare_temporal_extent_start_julian(self,obj):
         if obj.temporal_extent_start:
@@ -183,41 +200,68 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
 
 class MapIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
-    title = indexes.CharField(model_attr="title")
-    iid = indexes.IntegerField(model_attr='id')
+    title = indexes.CharField(model_attr="title", boost=2)
+    title_sortable = indexes.CharField(model_attr="title", indexed=False)
+    oid = indexes.IntegerField(model_attr='id')
     type = indexes.CharField(faceted=True)
     # bbox_left = indexes.FloatField(model_attr='bbox_left')
     # bbox_right = indexes.FloatField(model_attr='bbox_right')
     # bbox_top = indexes.FloatField(model_attr='bbox_top')
     # bbox_bottom = indexes.FloatField(model_attr='bbox_bottom')
-    abstract = indexes.CharField(model_attr='abstract')
+    abstract = indexes.CharField(model_attr='abstract',boost=1.5)
     content = indexes.CharField(model_attr='content')
     owner = indexes.CharField(model_attr="owner", faceted=True, null=True)
     created = indexes.DateTimeField(model_attr="created_dttm")
     modified = indexes.DateTimeField(model_attr="last_modified")
     detail_url = indexes.CharField(model_attr="get_absolute_url")
-    #json = indexes.CharField(indexed=False)
+    keywords = indexes.MultiValueField(model_attr="keyword_list", null=True)
+    overall_rating = indexes.IntegerField(boost=1.125)
+    num_ratings = indexes.IntegerField(boost=1.125)
+    num_comments = indexes.IntegerField(boost=1.125)
+    unique_views = indexes.IntegerField()
 
     def get_model(self):
         return Map
 
+
     def prepare_type(self, obj):
         return "map"
 
-    def prepare_json(self, obj):
-        data = {
-            "_type": self.prepare_type(obj),
-            "id": obj.id,
-            "last_modified": obj.last_modified.strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "title": obj.title,
-            "description": obj.abstract,
-            "owner": obj.owner.username,
-            "keywords": [keyword.name for keyword in obj.keywords.all()] if obj.keywords else [],
-            #"thumb": Thumbnail.objects.get_thumbnail(obj),
-            "detail_url": obj.get_absolute_url(),
-            }
+    def prepare_title_sortable(self, obj):
+        return obj.title.lower()
 
-        if obj.owner:
-            data.update({"owner_detail": Contact.objects.get(user=obj.owner).get_absolute_url()})
+    def prepare_overall_rating(self,obj):
+        ct = ContentType.objects.get_for_model(obj)
+        try:
+            rating = OverallRating.objects.filter(
+                object_id = obj.pk,
+                content_type = ct
+            ).aggregate(r = Avg("rating"))["r"]
+            return float(str(rating or "0"))
+        except OverallRating.DoesNotExist:
+            return 0.0
 
-        return json.dumps(data)
+    def prepare_num_ratings(self,obj):
+        ct = ContentType.objects.get_for_model(obj)
+        try:
+            return OverallRating.objects.filter(
+                object_id = obj.pk,
+                content_type = ct
+            ).all().count()
+        except OverallRating.DoesNotExist:
+            return 0
+
+    def prepare_num_comments(self,obj):
+        try:
+            return Comment.objects.filter(
+                object_id=obj.pk,
+                content_type=ContentType.objects.get_for_model(obj)
+            ).all().count()
+        except:
+            return 0
+
+
+    def prepare_unique_views(self,obj):
+        stats = obj.mapstats_set.all()
+        if stats.count() > 0:
+            return stats[0].uniques

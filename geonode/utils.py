@@ -153,3 +153,27 @@ def slugify(text, delim=u'-'):
     for word in punct_re.split(text.lower()):
         result.extend(unidecode(word).split())
     return unicode(delim.join(result))
+
+def _split_query(query):
+    """
+    split and strip keywords, preserve space
+    separated quoted blocks.
+    """
+
+    qq = query.split(' ')
+    keywords = []
+    accum = None
+    for kw in qq:
+        if accum is None:
+            if kw.startswith('"'):
+                accum = kw[1:]
+            elif kw:
+                keywords.append(kw)
+        else:
+            accum += ' ' + kw
+            if kw.endswith('"'):
+                keywords.append(accum[0:-1])
+                accum = None
+    if accum is not None:
+        keywords.append(accum)
+    return [kw.strip() for kw in keywords if kw.strip()]

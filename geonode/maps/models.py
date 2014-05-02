@@ -626,6 +626,9 @@ class Contact(models.Model):
     The last time the object was modified.
     """
 
+    @property
+    def class_name(self):
+        return self.__class__.__name__
 
     def clean(self):
         # the specification says that either name or organization should be provided
@@ -1059,6 +1062,10 @@ class Layer(models.Model, PermissionLevelMixin):
             return [float(n) for n in re.findall('[0-9\.\-]+', self.bbox)]
         except:
             return self.llbbox_coords
+
+    @property
+    def class_name(self):
+        return self.__class__.__name__
 
     def download_links(self):
         """Returns a list of (mimetype, URL) tuples for downloads of this data
@@ -1931,6 +1938,11 @@ class Map(models.Model, PermissionLevelMixin):
     @property
     def local_layers(self):
         return True
+
+    @property
+    def class_name(self):
+        return self.__class__.__name__
+
 
     def json(self, layer_filter):
         map_layers = MapLayer.objects.filter(map=self.id)
