@@ -13,7 +13,7 @@ from django.db.models import Q
 from geonode.maps.models import MapLayer, Map
 from geonode.layers.models import Layer, Attribute
 from django.core.cache import cache
-from geonode.flexidates import parse_julian_date
+from geonode.worldmap.flexidates import parse_julian_date
 import re
 from geonode.worldmap.queue.models import GazetteerUpdateJob
 

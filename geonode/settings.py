@@ -770,7 +770,7 @@ PROXY_URL = '/proxy/?url=' if DEBUG else None
 # Set HAYSTACK_SEARCH to True
 # Run "python manage.py rebuild_index"
 
-HAYSTACK_SEARCH= True
+HAYSTACK_SEARCH= False
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',

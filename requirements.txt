@@ -12,6 +12,7 @@ python-dateutil==1.5 #For Python < 3.0
 datautil
 jdcal
 
+
 #Uncomment the following to use the django debug toolbar
 #-e git+https://github.com/robhudson/django-debug-toolbar.git#egg=django-debug-toolbar
 
@@ -26,9 +27,17 @@ django-celery
 django-kombu
 
 #For mapnotes
-vectorformats
 pytz
-simplejson
+-e git+https://github.com/cga-harvard/vectorformats.git#egg=vectorformats
 
 #For autocomplete
-django-autocomplete-light
+django-autocomplete-light==1.4.5
+unidecode==0.04.14
+
+#For haystack
+django-haystack
+pyelasticsearch
+
+#ArcGIS REST services
+-e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest
+pyproj
