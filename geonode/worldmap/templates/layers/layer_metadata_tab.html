@@ -1,0 +1,339 @@
+{% extends "tab_base.html" %}
+{% load i18n %}
+{% load bootstrap_tags %}
+
+{% block title %}{{ layer.typename }} — {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+    <script type="text/javascript" src="{{ STATIC_URL }}worldmap/js/nicEdit.js"></script>
+    <style type="text/css">
+        .su_only {
+            display: none;
+        }
+
+        .su_only_gaz {
+            display: none;
+        }
+
+        .helptext {
+            display: inline-block;
+            font-size: 0px;
+            vertical-align: top;
+            width: 22px;
+            height: 22px;
+            background: url("img/system_help_22.png");
+        }
+
+        .modal_help {
+            display: none;
+            height: auto;
+            width: auto;
+            position: fixed;
+            top: 25%;
+            left: 50%;
+            margin: 10px;
+            padding: 10px;
+            background-color: #ced9e7;
+            border: 1px solid #000;
+        }
+
+        .tdpadr {
+            padding-right:10px;
+        }
+
+        .narrow {
+            width: 50px;
+        }
+
+        textarea {
+            width: auto;
+            max-width: 500px;
+        }
+
+    </style>
+
+    <script type="text/javascript">
+        function showGazetteerOptions(checkbox) {
+            $("*.su_only_gaz").css('display', (checkbox.checked ? 'table-cell' : 'none'));
+        }
+    </script>
+
+{% endblock %}
+
+{% block body_class %}data{% endblock %}
+
+{% block body %}
+    <div class="block">
+    <div class="span8 tabbed">
+    <form class="form-horizontal" id="worldmap_describe_form" onsubmit="return false;">
+        <legend>
+            {% blocktrans with layer.typename as layer_title %}
+                Editing details for {{ layer_title }}
+            {% endblocktrans %}
+        </legend>
+        {% if layer.metadata_uploaded %}
+            <div style="background-color: orange;">{% blocktrans %}Note: this layer's orginal metadata was populated by
+                importing a metadata XML file.
+                GeoNode's metadata import supports a subset of ISO, FGDC, and Dublin Core metadata elements.
+                Some of your original metadata may have been lost.{% endblocktrans %}</div>
+        {% endif %}
+
+        {% if layer_form.errors or attribute_errors or category_form.errors %}
+            <div style="background-color: pink">{% blocktrans %}Error updating metadata.  Please check the following
+                fields: {% endblocktrans %}
+                <ul>
+                    {% for field in layer_form %}
+                        {% if field.errors %}
+                            <li>{{ field.label }}</li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if attribute_errors %}
+                        <li>{% trans "Attributes" %}</li>
+                        {% for field in attribute_form %}
+                            {% if field.errors %}
+                                <li>{{ field.errors }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if category_form.errors %}
+                        <li>{{ category_form.errors.as_ul }}</li>
+                    {% endif %}
+
+                </ul>
+            </div>
+        {% endif %}
+        <br/>
+        {% csrf_token %}
+        <div class="form-controls">
+            {{ layer_form|as_bootstrap }}
+        </div>
+
+        <fieldset id="category_form">
+            <label class="control-label required-field">{% trans "Category" %}</label><br/>
+            {% autoescape off %}
+                <div style="clear:both;padding-left:175px;">
+                    {% for choice in category_form.category_choice_field.field.choices %}
+                        <div style="width:50%;float:left;padding-bottom:5px;">
+                            <input type="radio" name="category_choice_field" value="{{ choice.0 }}"
+                                    {% ifequal category_form.initial choice.0 %}
+                                   checked="checked"
+                                    {% endifequal %}/>
+                            <label for="" style="display:inline">{{ choice.1 }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endautoescape %}
+
+
+        </fieldset>
+
+
+        {% if attribute_form.errors %}
+            <li>{{ attribute_form.errors.as_ul }}</li>
+        {% endif %}
+        <fieldset id="attribute_form" {% if attribute_form.hidden %}style="display:none"
+                  {% else %}style="width:800px"{% endif %}>
+            <p>
+
+            <div {% if not show_gazetteer_options %} style="display:none" {% endif %} >
+                <input type="checkbox" value="include" name="gazetteer_include" id="gazetteer_include"
+                       onclick="showGazetteerOptions(this);"  {% if layer.in_gazetteer %}checked="checked"{% endif %} >Include in gazetteer
+            </div>
+            <div class="su_only_gaz">
+                Optional:
+                <table cellpadding="5" cellspacing="5" style="margin-left:20px;">
+                    <tr>
+                        <td colspan="2">{{ gazetteer_form.project.label_tag }}{{ gazetteer_form.project }}</td>
+                    </tr>
+
+                    <tr id="start_date">
+                        <td id="startDateCell"
+                            style="padding-right:10px">{{ gazetteer_form.startDate.label_tag }}{{ gazetteer_form.startDate }}</td>
+                        <td id="startDateFormatCell" style="display:none">{{ gazetteer_form.startDateFormat.label_tag }}{{ gazetteer_form.startDateFormat }} {% trans "Examples: 'YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD'" %}</td>
+                    </tr>
+
+                    <tr id="end_date">
+                        <td id="endDateCell"
+                            style="padding-right:10px">{{ gazetteer_form.endDate.label_tag }}{{ gazetteer_form.endDate }}</td>
+                        <td id="endDateFormatCell"
+                            style="display:none">{{ gazetteer_form.endDateFormat.label_tag }}{{ gazetteer_form.endDateFormat }} {% trans "Examples: 'YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD'" %} </td>
+                    </tr>
+                </table>
+            </div>
+            </p>
+            <legend>Attributes</legend>
+            {{ attribute_form.management_form }}
+            <table cellpadding="5" cellspacing="5">
+                <tr>
+                    <th class="tdpadr">{% trans "Attribute" %}</th>
+                    <th class="tdpadr">{% trans "Label" %}</th>
+                    <th class="tdpadr">{% trans "Description" %}</th>
+                    <th class="tdpadr narrow">{% trans "Display Order" %}</th>
+                    <th class="tdpadr narrow">{% trans "Visible?" %}</th>
+                    <th class="tdpadr narrow">{% trans "Searchable?" %}</th>
+                    <th class="su_only_gaz" >{% trans "Add to Gazetteer?" %}</th>
+                    {% for form in attribute_form.forms %}
+                        {% if form.attribute %}
+                            <tr>
+                                <td class="tdpadr">{{ form.attribute }}</td>
+                                <td class="tdpadr">
+                                    {{ form.id }}
+                                    {{ form.attribute_label }}</td>
+                                <td class="tdpadr">{{ form.description }}</td>
+                                <td class="tdpadr narrow"> {{ form.display_order }}</td>
+                                <td class="tdpadr narrow"> {{ form.visible }}</td>
+                                <td class="tdpadr narrow"> {{ form.searchable }}</td>
+                                <td class="su_only_gaz"> {{ form.in_gazetteer }}</td>
+
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+            </table>
+        </fieldset>
+
+
+        <fieldset class="form-controls modal-forms modal hide fade" id="poc_form">
+            <h2>{% trans "Point of Contact" %}</h2>
+            {{ poc_form|as_bootstrap }}
+            <button type='button' class="modal-cloose-btn btn btn-primary">Done</button>
+        </fieldset>
+        <fieldset class="form-controls modal-forms modal hide fade" id="metadata_form">
+            <h2>{% trans "Metadata Provider" %}</h2>
+            {{ author_form|as_bootstrap }}
+            <button type='button' class="modal-cloose-btn btn btn-primary">Done</button>
+        </fieldset>
+        <div class="form-actions" align="center">
+            <input type="submit" id="submit_button" class="btn btn-primary" value="{% trans "Update" %}"/>
+        </div>
+    </form>
+    <div id="modalhelp" class="modal_help"></div>
+    </div>
+
+    </div>
+{% endblock %}
+{% block extra_script %}
+    {% include 'metadata_form_js.html' %}
+    <script type="text/javascript">
+        console.log("TAB!")
+
+        function hideModal() {
+            $("#modalhelp").css("display", "none");
+        }
+        function showModal(text) {
+            $("#modalhelp").css("display", "block").html(text);
+        }
+        function showHelp(event) {
+            showModal(event.target.innerHTML);
+        }
+
+
+            {% autoescape off %}
+                console.log("READY!")
+                var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif";
+                var myNicEditor = new nicEditor({fullPanel: true, maxHeight: 190, iconsPath: nicEditIconsPath}).panelInstance("id_resource-abstract");
+
+                var ajaxSubmit = function() {
+                    Ext.MessageBox.wait('Saving ...');
+                    var htmlAbstract = myNicEditor.instanceById("id_resource-abstract").getContent();
+                    document.getElementById("id_resource-abstract").value = htmlAbstract;
+                    alert("Ajax call");
+                    Ext.Ajax.request({
+                        url: "/layers/{{layer.typename}}/metadata/tab/",
+                        method: 'POST',
+                        params : Ext.Ajax.serializeForm(Ext.get("worldmap_describe_form")),
+                        success: function(response, options) {
+                            try {
+                                var panelName = "{{ tab }}"
+                                var uPanel = Ext.getCmp(panelName);
+                                switch (panelName) {
+                                    case "worldmap_update_panel":
+                                        uPanel.load({url:'/upload/tab/', scripts: true});
+                                        break;
+                                    case "worldmap_create_panel":
+                                        uPanel.load({url:'/layers/create_pg_layer?tab=true'});
+                                        break;
+                                }
+
+                                var geoEx = window.app;
+                                var LayerRec = Ext.data.Record.create([{name: 'title', name: 'name', name: 'uuid', name: 'tiled', name:"bbox", name:"category" }]);
+                                console.log("LayerRec:" + LayerRec);
+                                var thisLayerRec = new LayerRec({title: '{{ layer.title|escape }}', name: '{{ layer.typename }}',
+                                    uuid: '{{ layer.uuid }}', tiled: true, category: response.responseText,
+                                    bbox: {minx: {{ layer.bbox_x0 }}, miny: {{ layer.bbox_y0 }},
+                                           maxx: {{ layer.bbox_x1 }}, maxy: {{ layer.bbox_y1 }}} });
+
+                                geoEx.addWorldMapLayers([thisLayerRec]);
+
+
+
+                            } catch (Exception) {
+                                Ext.Msg.alert("Layer Error", "An unexpected problem occurred and your layer could not be loaded.")
+                            }
+                            Ext.MessageBox.hide();
+                        },
+                        failure: function(response, options)
+                        {
+                            Ext.MessageBox.hide();
+                            var uPanel = Ext.getCmp("{{ tab }}");
+                            uPanel.update(response.responseText, true);
+
+                            Ext.Msg.show({
+                                title: gettext("Error"),
+                                msg: gettext("Please review your submission and correct the indicated problems."),
+                                minWidth: 200,
+                                modal: true,
+                                icon: Ext.Msg.ERROR,
+                                buttons: Ext.Msg.OK
+                            });
+                            uPanel.body.scrollTo('top',0);
+                        },
+                        scope: this
+                    });
+                }
+
+                $("#submit_button").click(function() {
+                    ajaxSubmit();
+                    return false;
+                });
+
+                console.log("SUBMIT SET!")
+
+                $(".helptext").on('mouseover', showHelp);
+                $(".helptext").on('mouseout', hideModal);
+                showGazetteerOptions($("#gazetteer_include")[0]);
+
+                var types = {{ datatypes }};
+
+                function toggleFormat(dateField, formatFieldName) {
+                    var optionValue = dateField.options[dateField.selectedIndex].value;
+                    if (optionValue != "" &&  types[optionValue].indexOf("xsd:date") == -1) {
+                        $("#" + formatFieldName).show();
+                    } else {
+                        $("#" + formatFieldName).hide();
+                    }
+                }
+
+                $('#id_startDate').on('change', function() {
+                    toggleFormat(this, 'startDateFormatCell');
+                });
+
+                $('#id_endDate').on('change', function() {
+                    toggleFormat(this, 'endDateFormatCell');
+                });
+
+
+
+
+                toggleFormat($('#id_startDate')[0], 'startDateFormatCell');
+                toggleFormat($('#id_endDate')[0], 'endDateFormatCell');
+
+            {% endautoescape %}
+
+
+
+
+
+    </script>
+{% endblock %}
