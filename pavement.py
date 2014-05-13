@@ -60,19 +60,21 @@ OPENGEO_SUITE_SDK_URL="http://boundlessgeo.com/wp-content/opengeosuite/sdk/OpenG
 
 @task
 @cmdopts([
-    ('fast', 'f', 'Fast. Skip some operations for speed.'),
 ])
 def setup_geonode_sdk(options):
-    """Prepare a testing instance of GeoServer."""
-    fast = options.get('fast', False)
     
     sh("git submodule update --init")
+
+    
     
     download_dir = path('downloaded')
     if not download_dir.exists():
         download_dir.makedirs()
         
     worldmap_client = path('worldmap-client')
+    with pushd(worldmap_client):
+        sh("git submodule update --init")
+
     sdk_bin = download_dir / os.path.basename(OPENGEO_SUITE_SDK_URL)
     sdk_dir = "opengeosuite-4.0-sdk"
 
