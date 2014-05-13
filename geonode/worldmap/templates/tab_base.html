@@ -21,18 +21,12 @@
     <![endif]-->
   </head>
   <body class="{% block body_class %}{% endblock %}">
-    {% block header %}
-                <form class="input-append  pull-right" action="{% url "search" %}" method="GET">
-                {# csrf_token #}
-                <input id="search" type="text" name="q"/>
-              </form>
-    {% endblock header %}
     {% block middle %}
-    <div class="content-wrap">
-        <div class="container">
+    <div class="content-wrap tabbed">
+        <div class="container tabbed">
           <div class="row">
             {% block body_outer %}
-              <div class="span8">
+              <div class="span8 tabbed">
                 {% block body %}{% endblock %}
               </div>
               <div class="span4">
@@ -46,41 +40,6 @@
     {% block footer %}
     {% endblock footer %}
 
-    <script>
-      $("#search").select2({
-        minimumInputLength: 1,
-        placeholder: 'Search...',
-        width: 'element',     
-        ajax: {
-          url: '{% url "search_api" %}',
-          data: function(term,page){
-            page = (page - 1) * 10;
-            return {
-              type: 'all',
-              limit: 10,
-              sort: 'none',
-              start: page,
-              q: term
-            }
-          },
-          results: function(data, page) {
-            var more = (page * 10) < data.total;
-            return {
-              results: $.map(data.results,function(object){
-                return {id: object.id, text: object.title};
-              }),
-              more: more
-            }
-          }          
-        },
-        createSearchChoice:function(term, data) { if ($(data).filter(function() { return this.text.localeCompare(term)===0; }).length===0) {return {id:term, text:term};} 
-        },
-        formatSelection: function(item){
-          $('#search').val(item.text);
-          $('#search').parent().submit();
-        }
-      });
-    </script>
 
     {% block extra_script %}{% endblock extra_script %}
 

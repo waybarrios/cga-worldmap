@@ -345,7 +345,8 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
     if request.method == "POST":
         layer_form = WorldMapLayerForm(request.POST, instance=layer, prefix="resource")
         attribute_form = layer_attribute_set(request.POST, instance=layer, prefix="layer_attribute_set", queryset=Attribute.objects.order_by('display_order'))
-        category_form = LayerCategoryForm(request.POST,prefix="category_choice_field", initial=int(request.POST["category_choice_field"]))
+        category_form = LayerCategoryForm(request.POST,prefix="category_choice_field",
+            initial=int(request.POST["category_choice_field"]) if "category_choice_field" in request.POST else None)
         if show_gazetteer_form:
             gazetteer_form = GazetteerForm(request.POST)
             gazetteer_form.fields['startDate'].queryset = gazetteer_form.fields['endDate'].queryset = layer.attribute_set
@@ -442,8 +443,8 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
 
             mapid = layer_form.cleaned_data['map_id']
 
-            if request.is_ajax():
-                return HttpResponse('success', status=200)
+            if "tab" in request.path:
+                return HttpResponse(the_layer.category.gn_description, status=200)
             elif mapid != '' and str(mapid).lower() != 'new':
                 logger.debug("adding layer to map [%s]", str(mapid))
                 maplayer = MapLayer.objects.create(map=Map.objects.get(id=mapid),
@@ -502,7 +503,7 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
         return HttpResponse(data, status=412)
 
     #Display the view in a panel tab
-    if 'tab' in request.path:
+    if tab:
         return render_to_response("layers/layer_metadata_tab.html", RequestContext(request, {
         "layer": layer,
         "layer_form": layer_form,
@@ -536,7 +537,7 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
 def layer_upload(request, template='upload/layer_upload.html'):
     if request.method == 'GET':
         if 'tab' in request.path:
-            return render_to_response('upload/layer_upload_tabbed.html',
+            return render_to_response('upload/layer_upload_tab.html',
                                       RequestContext(request, {
                                           'async_upload' : _ASYNC_UPLOAD,
                                           'incomplete' : Upload.objects.get_incomplete_uploads(request.user),

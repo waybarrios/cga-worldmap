@@ -19,7 +19,7 @@ If instead, you are interested in doing development on the WorldMap source code,
     sudo apt-get update
 
     # Essential build tools and libraries
-    sudo apt-get install -y build-essential libxml2-dev libxslt1-dev
+    sudo apt-get install -y build-essential libxml2-dev libxslt1-dev libjpeg-dev
 
     # Python native dependencies
     sudo apt-get install -y python-dev python-imaging python-lxml python-pyproj python-shapely python-nose python-httplib2 python-pip python-software-properties
@@ -72,10 +72,6 @@ If instead, you are interested in doing development on the WorldMap source code,
 WorldMap is only known to run on Ubuntu Linux. While it may be possible to run WorldMap on other flavors of Linux,
 Mac OSX, or Windows, no technical support can be provided for those operating systems.  Try using GeoNode instead if
 you need to use another OS besides Linux.
-
-
-
-Once fully started, you should see a message indicating the address of your worldmap instance.
 
 
 The default username and password are ``admin`` and ``admin``::

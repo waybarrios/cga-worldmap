@@ -51,3 +51,19 @@
     color: #000000;
 }
 
+content-wrap .tabbed {
+    width: auto;
+}
+
+.container .tabbed {
+    width: auto;
+}
+
+.span8 .tabbed {
+    width: 400px;
+}
+
+.content-wrap .tabbed form input[type="text"]{
+    padding-top: 0px;
+    padding-bottom: 0px;
+}

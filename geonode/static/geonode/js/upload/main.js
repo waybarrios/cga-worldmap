@@ -16,6 +16,7 @@ define(['upload/upload'], function (upload) {
     'use strict';
 
     $(function () {
+        console.log("upload");
         upload.initialize({
             form: '#file-uploader',
             dropZone: '#drop-zone',
@@ -23,5 +24,6 @@ define(['upload/upload'], function (upload) {
             clear_button: '#clear-button',
             upload_button: '#upload-button'
         });
+        console.log("upload done");
     });
 });

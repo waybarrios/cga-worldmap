@@ -81,7 +81,7 @@ define(['underscore',
      */
     buildFileInfo = function (files) {
         var name, info;
-        var count = 0;
+
         for (name in files) {
             // filter out the prototype properties
 
@@ -93,17 +93,16 @@ define(['underscore',
                     info = layers[name];
                     $.merge(info.files, files[name]);
                     info.displayFiles();
-                } else if (count < 1) {
+                } else if (!metadata_enabled || jQuery.isEmptyObject(layers)) {
+                    //Add to queue only if forwarding to metadata page is disabled
+                    // or layers is empty.  Only 1 upload at a time should be
+                    // allowed if metadata-forwarding is enabled
                     info = new LayerInfo({
                         name: name,
                         files: files[name]
                     });
                     info.collectErrors();
                     layers[name] = info;
-                    if (metadata_enabled)
-                    {
-                    	count++;
-                    }
                 }
             }
         }

@@ -58,7 +58,7 @@ class LayerCategoryForm(forms.Form):
 
 
         if not ccf_data:
-            msg = u"This field is required."
+            msg = _("Category is required.")
             self._errors = self.error_class([msg])
 
         # Always return the full collection of cleaned data.

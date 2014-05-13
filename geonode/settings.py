@@ -241,9 +241,10 @@ INSTALLED_APPS = (
     'friendlytagloader',
     'geoexplorer',
     'django_extensions',
-    'haystack',
     'modeltranslation',
     'autocomplete_light',
+    'haystack',
+
 
     # Theme
     "pinax_theme_bootstrap_account",
@@ -480,7 +481,7 @@ OGC_SERVER = {
 
 # Uploader Settings
 UPLOADER = {
-    'BACKEND' : 'geonode.importer',
+    'BACKEND' : 'geonode.rest',
     'OPTIONS' : {
         'TIME_ENABLED': False,
         'GEOGIT_ENABLED': False,
@@ -569,8 +570,10 @@ MAP_BASELAYERS = [{
     "source": {
         "ptype": "gxp_wmscsource",
         "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
-        "restUrl": "/gs/rest"
-     }
+        "restUrl": "/gs/rest" ,
+        "requiredProperties" : []
+     },
+
   },{
     "source": {"ptype": "gxp_olsource"},
     "type":"OpenLayers.Layer",
@@ -760,13 +763,19 @@ PROXY_ALLOWED_HOSTS = ()
 # The proxy to use when making cross origin requests.
 PROXY_URL = '/proxy/?url=' if DEBUG else None
 
-HAYSTACK_SEARCH= False
-# Haystack Search Backend Configuration
+
+# Haystack Search Backend Configuration.  To enable, first install the following:
+# - pip install django-haystack
+# - pip install pyelasticsearch
+# Set HAYSTACK_SEARCH to True
+# Run "python manage.py rebuild_index"
+
+HAYSTACK_SEARCH= True
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
         'URL': 'http://127.0.0.1:9200/',
-        'INDEX_NAME': 'geonode',
+        'INDEX_NAME': 'worldmap',
         },
     }
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
@@ -785,6 +794,11 @@ DOWNLOAD_FORMATS_RASTER = [
     'JPEG', 'PDF', 'PNG', 'ArcGrid', 'GeoTIFF', 'Gtopo30', 'ImageMosaic', 'KML',
     'View in Google Earth', 'Tiles',
 ]
+
+ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE = False
+
+# gravatar settings
+AUTO_GENERATE_AVATAR_SIZES = (20,32,80,100,140,200)
 
 
 # Load more settings from a file called local_settings.py if it exists

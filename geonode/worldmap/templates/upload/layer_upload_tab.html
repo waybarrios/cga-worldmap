@@ -15,35 +15,29 @@
 
 <!-- TODO Move this to site-wide css or remove -->
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geonode/css/fileuploadfield.css"/>
-<style type="text/css">
-    .uip {
-        border: 1px solid gray;
-        border-radius: 3px;
-        padding: .5em;
-        margin: .5em
-    }
-    #drop-zone {
-      background: #eee;
-      height: 100px;
-      margin-bottom: 10px;
-      padding: 5px;
-      border: 4px dashed gray;
-    }
-    #drop-zone h2 {
-      vertical-align:middle;
-      text-align: center;
-      margin-top: 30px;
-      color: gray;
-      font-size: 36px;
-    }
-</style>
+
 {{ block.super }}
+
+
+    <style type="text/css">
+        .uip {
+            border: 1px solid gray;
+            border-radius: 3px;
+            padding: .5em;
+            margin: .5em
+        }
+        #drop-zone {height: 40px;}
+        #drop-zone h2{color:#bbb;margin:0px 0;text-align:center}
+        #drop-zone h2 i{font-size:1em}
+
+    </style>
+
 {% endblock %}
 
 {% block body %}
   <div class="block">
-    <div class="span8">
-      <h2 class="page-title">{% trans "Upload Layers" %}</h2>
+    <div class="span8 tabbed">
+
 
         {% if incomplete %}
             <section style="border: none" class="uip">
@@ -101,6 +95,9 @@
    					</option>
 			  {% endfor %}
               </select>
+
+              <p><input type="checkbox" id="termsAgreement" class="required" />{% trans "I agree to the <a href='' onclick='javascript:showTOC();return false;'>Terms and Conditions</a>" %} </p>
+
               </form>
               </div>
 
@@ -131,12 +128,44 @@
 {% endblock %}
 
 {% block extra_script %}
-<script data-main="{{STATIC_URL}}geonode/js/upload/main"
-        src="{{ STATIC_URL }}lib/js/require.js">
-</script>
+
+
+
+
 
 <script type="text/javascript">
 {% autoescape off %}
+
+    require.config({
+        baseUrl: '{{ STATIC_URL }}lib/js',
+        shim: {
+            'underscore': { exports: '_'}
+        },
+        paths: {
+            'upload': '../../geonode/js/upload',
+            'templates': '../../geonode/js/templates',
+            'progress': 'jquery.ajax-progress'
+        }
+    });
+
+    require(['upload/upload'], function (upload) {
+        'use strict';
+
+        $(function () {
+            console.log("upload");
+            upload.initialize({
+                form: '#file-uploader',
+                dropZone: '#drop-zone',
+                file_queue: '#file-queue',
+                clear_button: '#clear-button',
+                upload_button: '#upload-button'
+            });
+            console.log("upload done");
+        });
+    });
+
+
+  //var modules_registered = _.keys(require.s.contexts['_'].registry);
 
   csrf_token =  "{{ csrf_token }}",
   form_target = "{{ UPLOADER_URL }}",

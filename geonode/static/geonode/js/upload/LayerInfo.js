@@ -265,11 +265,16 @@ define(function (require, exports) {
             level: 'alert-success',
             empty: 'true'
         });
-    	var redirect = resp.url + '/metadata';
+    	var redirect = resp.url + '/metadata/';
     	var tab = $("#worldmap_update_panel .x-panel-body");
+        var tab_id = "worldmap_update_panel";
+        if (tab.length == 0) {
+            tab = $("#worldmap_create_panel .x-panel-body");
+            tab_id = "worldmap_create_panel";
+        }
     	if (tab.length > 0) {
-    		redirect += "?tab=true";
-            tab[0].load(redirect);
+    		redirect += "tab/?tab=" + tab_id;
+            tab.load(redirect);
     	} else
     		document.location.href = redirect;
     };
