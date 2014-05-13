@@ -1,3 +1,0 @@
-[submodule "worldmap-client"]
-	path = worldmap-client
-	url = git://github.com/mbertrand/geonode-suite-sdk.git

@@ -74,7 +74,7 @@ def setup_geonode_sdk(options):
         
     worldmap_client = path('worldmap-client')
     sdk_bin = download_dir / os.path.basename(OPENGEO_SUITE_SDK_URL)
-    sdk_dir = worldmap_client / "opengeosuite-4.0-sdk"
+    sdk_dir = "opengeosuite-4.0-sdk"
 
     grab(OPENGEO_SUITE_SDK_URL, sdk_bin, os.path.basename(OPENGEO_SUITE_SDK_URL))
 
@@ -83,10 +83,10 @@ def setup_geonode_sdk(options):
 
     print 'extracting ' + sdk_bin
     with zipfile.ZipFile(sdk_bin, "r") as z:
-        z.extractall(worldmap_client)
+        z.extractall()
             
     sh("rm -rf %s/build/" % worldmap_client)
-    sh("ant -f %s/build.xml -Dapp.path=../../%s -Dsdk.build=geonode/static -Dapp.name=sdk package" % (sdk_dir,worldmap_client))
+    sh("ant -f %s/build.xml -Dapp.path=../%s -Dsdk.build=geonode/static -Dapp.name=sdk package" % (sdk_dir,worldmap_client))
 
 
 @task
