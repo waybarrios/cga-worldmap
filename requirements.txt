@@ -1,0 +1,34 @@
+ordereddict
+psycopg2
+
+#Uncomment the following to use memcached
+#python-memcached
+
+#The following are for the gazetteer
+-e git+https://github.com/cga-harvard/geopy.git#egg=geopy
+geojson
+https://bitbucket.org/jespern/django-piston/get/5b3ef294fe89.zip
+python-dateutil==1.5 #For Python < 3.0
+datautil
+jdcal
+
+#Uncomment the following to use the django debug toolbar
+#-e git+https://github.com/robhudson/django-debug-toolbar.git#egg=django-debug-toolbar
+
+boto
+-e git+https://github.com/deschler/django-modeltranslation#egg=django-modeltranslation
+
+#Uncomment the following to use memcached
+#python-memcached
+
+#For scheduled tasks
+django-celery
+django-kombu
+
+#For mapnotes
+vectorformats
+pytz
+simplejson
+
+#For autocomplete
+django-autocomplete-light
