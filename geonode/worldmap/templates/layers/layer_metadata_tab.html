@@ -216,7 +216,6 @@
 {% block extra_script %}
     {% include 'metadata_form_js.html' %}
     <script type="text/javascript">
-        console.log("TAB!")
 
         function hideModal() {
             $("#modalhelp").css("display", "none");
@@ -230,7 +229,6 @@
 
 
             {% autoescape off %}
-                console.log("READY!")
                 var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif";
                 var myNicEditor = new nicEditor({fullPanel: true, maxHeight: 190, iconsPath: nicEditIconsPath}).panelInstance("id_resource-abstract");
 
@@ -238,7 +236,6 @@
                     Ext.MessageBox.wait('Saving ...');
                     var htmlAbstract = myNicEditor.instanceById("id_resource-abstract").getContent();
                     document.getElementById("id_resource-abstract").value = htmlAbstract;
-                    alert("Ajax call");
                     Ext.Ajax.request({
                         url: "/layers/{{layer.typename}}/metadata/tab/",
                         method: 'POST',
@@ -258,7 +255,6 @@
 
                                 var geoEx = window.app;
                                 var LayerRec = Ext.data.Record.create([{name: 'title', name: 'name', name: 'uuid', name: 'tiled', name:"bbox", name:"category" }]);
-                                console.log("LayerRec:" + LayerRec);
                                 var thisLayerRec = new LayerRec({title: '{{ layer.title|escape }}', name: '{{ layer.typename }}',
                                     uuid: '{{ layer.uuid }}', tiled: true, category: response.responseText,
                                     bbox: {minx: {{ layer.bbox_x0 }}, miny: {{ layer.bbox_y0 }},
@@ -297,8 +293,6 @@
                     ajaxSubmit();
                     return false;
                 });
-
-                console.log("SUBMIT SET!")
 
                 $(".helptext").on('mouseover', showHelp);
                 $(".helptext").on('mouseout', hideModal);
