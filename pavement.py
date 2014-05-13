@@ -56,7 +56,7 @@ def grab(src, dest, name):
 GEOSERVER_URL="http://build.geonode.org/geoserver/latest/geoserver.war"
 DATA_DIR_URL="http://build.geonode.org/geoserver/latest/data.zip"
 JETTY_RUNNER_URL="http://repo2.maven.org/maven2/org/mortbay/jetty/jetty-runner/8.1.8.v20121106/jetty-runner-8.1.8.v20121106.jar"
-OPENGEO_SUITE_SDK_URL="http://repo.opengeo.org/suite/releases/sdk/OpenGeoSuite-3.0.2-sdk.zip"
+OPENGEO_SUITE_SDK_URL="http://boundlessgeo.com/wp-content/opengeosuite/sdk/OpenGeoSuite-4.0-sdk.zip"
 
 @task
 @cmdopts([
@@ -71,23 +71,23 @@ def setup_geonode_sdk(options):
     download_dir = path('downloaded')
     if not download_dir.exists():
         download_dir.makedirs()
-
-    suite_sdk_dir = path('opengeosuite-3.0.1-sdk')
-
+        
+    worldmap_client = path('worldmap-client')
     sdk_bin = download_dir / os.path.basename(OPENGEO_SUITE_SDK_URL)
+    sdk_dir = worldmap_client / "opengeosuite-4.0-sdk"
 
-    grab(OPENGEO_SUITE_SDK_URL, sdk_bin, "suite sdk")
+    grab(OPENGEO_SUITE_SDK_URL, sdk_bin, os.path.basename(OPENGEO_SUITE_SDK_URL))
 
-    if not suite_sdk_dir.exists():
-        suite_sdk_dir.makedirs()
+    #if not suite_sdk_dir.exists():
+    #    suite_sdk_dir.makedirs()
 
-        print 'extracting suite sdk'
-        with zipfile.ZipFile(sdk_bin, "r") as z:
-            z.extractall()
+    print 'extracting ' + sdk_bin
+    with zipfile.ZipFile(sdk_bin, "r") as z:
+        z.extractall(worldmap_client)
             
-    sh("rm -rf ../geonode-suite-sdk/build/*")    
-    sh("ant -f %s/build.xml -Dapp.path=../../geonode-suite-sdk -Dsdk.build=../../geonode-suite-sdk/build -Dapp.name=geonode-suite-sdk package" % (suite_sdk_dir))
-    sh("cp -R ../geonode-suite-sdk/build/geonode-suite-sdk/* geonode/static/sdk")
+    sh("rm -rf %s/build/" % worldmap_client)
+    sh("ant -f %s/build.xml -Dapp.path=../../%s -Dsdk.build=geonode/static -Dapp.name=sdk package" % (sdk_dir,worldmap_client))
+
 
 @task
 @cmdopts([
@@ -149,6 +149,7 @@ def update_static(options):
 @task
 @needs([
     'setup_geoserver',
+    'setup_geonode_sdk'
 ])
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
