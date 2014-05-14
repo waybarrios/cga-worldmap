@@ -128,12 +128,15 @@ INSTALLED_APPS = (
     'dialogos',
     'agon_ratings',
     'taggit',
+    'taggit_templatetags',
     'south',
     'autocomplete_light',
     'djcelery',
     'kombu.transport.django',
     'piston',
-    'haystack',
+    #'haystack',
+    'pagination',
+    'friendlytagloader',
 
     # GeoNode internal apps
     'geonode.core',
@@ -147,7 +150,7 @@ INSTALLED_APPS = (
     'geonode.certification',
     'geonode.hoods',
     'geonode.contrib.services',
-    'geonode.search',
+    'geonode.dvn',
 )
 LOGGING = {
     'version': 1,
@@ -227,6 +230,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'account.middleware.LocaleMiddleware',
     'account.middleware.TimezoneMiddleware',
+    'pagination.middleware.PaginationMiddleware',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
@@ -533,7 +537,7 @@ CSRF_COOKIE_HTTPONLY = True
 
 OGP_URL = ""
 
-# Haystack Search Backend Configuration
+HAYSTACK_SEARCH = False
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
@@ -541,5 +545,8 @@ HAYSTACK_CONNECTIONS = {
         'INDEX_NAME': 'geonode',
         },
     }
-#HAYSTACK_DEFAULT_OPERATOR = 'OR'
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 20
+DEFAULT_SEARCH_SIZE = 20
+
+DVN_TOKEN = "JdPGVSga9yM8gt74ZpLp"
