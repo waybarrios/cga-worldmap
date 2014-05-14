@@ -1,20 +1,21 @@
 {% extends "site_base.html" %}
 {% load i18n %}
 {% load staticfiles %}
+
 {% load url from future %}
 
 {% block head %}
 
 
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/base.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/bootstrap.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/datepicker.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/fontselect.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/jquery.dataTables.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/multi-select.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/qunit.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}theme/misc/select2.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/bootstrap.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/datepicker.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/fontselect.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/multi-select.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/qunit.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/select2.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/base.css">
 {{ block.super }}
 {% endblock %}
 
@@ -22,19 +23,21 @@
 
 {% block body_class %}search{% endblock %}
 
-{% block body %}
-    <div class="span12">
+{% block content %}
+    <div style="margin:10px;padding:10px;">
+    <div class="col-lg-12">
       <h2 class="page-title">{% trans "Search" %}</h2>
     </div>
-    <div class="span8 filter">
+
+    <div class="col-lg-12 filter">
+      Search:<input type="text" id="wordsearch">
       {% include "search/_sort_filters.html" %}
     </div>
-    <div class="span4">
-      <div class="pull-right" data-viewby="list">
-        {% include "_viewby.html" %}
-      </div>
-    </div>
-    <div class="span12">
+
+
+
+
+    <div class="col-lg-12">
       <div class="row" id="contain-slider">
         <div class="span4">
           <div class="selections">
@@ -46,33 +49,50 @@
           <div id="slide-pane">
             <a href="#" class="toggle toggle-pane"><i class="icon-chevron-left"></i></a>
             {% include "search/_type_filters.html" %}
-	          {% include "search/_extent_filter.html" %}
+
             {% include "search/_general_filters.html" %}
           </div>
         </div>
-        <div class="tab-content span8 paginate paginate-auto" id="search-content">
+        <div class="tab-content span6 paginate paginate-auto" id="search-content">
           {% include 'search/search_content.html' %}
         </div>
+          <div class="tab-content" id="map-content">
+
+                      <div class="control-group">
+                          <div id="search_map" class="search-map" style="width:100%;"></div>
+                          <div class="controls hidden" >
+                              <input type="text" id="extent" class="trigger-extent" name="extent" />
+                          </div>
+                      </div>
+
+
+          </div>
       </div>
+    </div>
     </div>
 {% endblock %}
 
 {%  block footer %} {{ block.super }} {%  endblock %}
 
 {% block extra_script %}
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.dataTables.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.timeago.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.ajaxprogress.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.ajaxQueue.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery-ui.custom.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.raty.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/bootstrap.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/json2.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/select2.js"></script>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/waypoints.js"></script>
+
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.dataTables.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.timeago.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.ajaxprogress.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.ajaxQueue.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery-ui.custom.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.raty.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/json2.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/select2.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/waypoints.js"></script>
     <script src="{{ STATIC_URL }}geonode/script/base.js"></script>
     <script src="{{ STATIC_URL }}geonode/script/utils.js"></script>
+    <script src="{{ GEONODE_CLIENT_LOCATION }}script/OpenLayers.js"></script>
+
+
+
+
     <script>
         $("#search").select2({
             minimumInputLength: 1,
@@ -81,17 +101,17 @@
             ajax: {
                 url: '{% url "search_api" %}',
                 data: function(term,page){
-                    page = (page - 1) * 10;
+                    page = (page - 1) * 20;
                     return {
                         type: 'all',
-                        limit: 10,
+                        limit: 500,
                         sort: 'none',
                         start: page,
                         q: term.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
                     }
                 },
                 results: function(data, page) {
-                    var more = (page * 10) < data.total;
+                    var more = (page * 20) < data.total;
                     return {
                         results: $.map(data.results,function(object){
                             return {id: object.id, text: object.title, url: object.detail };
@@ -116,12 +136,32 @@
                 };
             }
         });
+
+
+        function resizeMap() {
+            var canvasheight=$('#contain-slider').css('height');
+            $('#search_map').css("height", canvasheight);
+        }
+
+        $().ready(function () {
+            resizeMap();
+        })
+
+        $(window).resize(function () {
+            resizeMap();
+        });
+
     </script>
 
     {% with include_spatial='true' %}
         {% include 'search_scripts.html' %}
     {% endwith %}
+
+
+
 {% endblock extra_script %}
+
+
 
 <script type="text/javascript" src="{% url "django.views.i18n.javascript_catalog" %}"></script>
 <script type="text/javascript" src="{% url "lang" %}"></script>

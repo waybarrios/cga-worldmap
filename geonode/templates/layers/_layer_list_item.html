@@ -12,29 +12,32 @@
 
 {% if can_view_layer %}
 <article>
-  <div class="content">
-    <div class="item-header">
-      <h3><i class="icon-unchecked icon-rotate-45"></i> <a href="{% url "data_detail" layer.service_typename %}">{{ layer.title }}</a></h3>
+    <div class="accordion-group">
+        <div class="heading">
+            <a class="accordion-toggle"  data-toggle="collapse" href="#layer-{{layer.id}}">
+                <i class="icon-unchecked icon-rotate-45"></i> <a href="{% url "data_detail" layer.service_typename %}">{{ layer.title }}</a>
+            </a>
+        </div>
+        <div id="layer-{{layer.id}}" class="accordion-body collapse" style="height: 0px; ">
+            <div class="accordion-inner">
+                <div class="meta">
+                    <p>Layer {% trans 'from' %} <a href="{% url "profile_detail" layer.owner.username %}">{{ layer.owner }}</a>, {{ layer.date|timesince }} {% trans 'ago' %}</p>
+                    <p class="abstract">{{ layer.abstract }}</p>
+                    <ul class="nav stats">
+                        <li><a href="{% url "data_detail" layer.service_typename %}"><strong>{{ layer.popular_count }}</strong> {% trans "view" %}{{ layer.popular_count|pluralize }}</a></li>
+                        <li><a href="{% url "data_detail" layer.service_typename %}"><strong><span class="avg_rating" data-rating="{{ layer_rating }}"> <span class="overall_rating"></span></span></strong> {% trans "Average rating" %} ({{num_votes}} {% trans "votes" %})</a></li>
+                    </ul>
+                </div> <!-- /.meta -->
+                <div class="tools">
+                    <p>
+                        <a href="#download-{{layer.id}}" data-toggle="modal" class="btn btn-mini">{% trans "Download" %}</a>
+                        <a href="{% url "maps_new" %}?layer={{ layer.service_typename }}" class="btn btn-mini">{% trans "Create a map" %}</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="details">
-      <div class="meta">
-        <p>Layer {% trans 'from' %} <a href="{% url "profile_detail" layer.owner.username %}">{{ layer.owner }}</a>, {{ layer.date|timesince }} {% trans 'ago' %}</p>
-        <p class="abstract">{{ layer.abstract }}</p>
-        <ul class="nav stats">
-          <li><a href="{% url "data_detail" layer.service_typename %}"><strong>{{ layer.popular_count }}</strong> {% trans "view" %}{{ layer.popular_count|pluralize }}</a></li>
-          <li><a href="{% url "data_detail" layer.service_typename %}#rate"><strong><span class="avg_rating" data-rating="{{ layer_rating }}"> <span class="overall_rating"></span></span></strong> {% trans "Average rating" %} ({{num_votes}} {% trans "votes" %})</a></li>
-        </ul>
-      </div> <!-- /.meta -->
-      <div class="tools">
-        <p>
-          <a href="#download-{{layer.id}}" data-toggle="modal" class="btn btn-mini">{% trans "Download" %}</a>
-          <a href="{% url "maps_new" %}?layer={{ layer.service_typename }}" class="btn btn-mini">{% trans "Create a map" %}</a>
-        </p>
-      </div>
-    </div> <!-- /.details -->  
-  </div> <!-- /.content -->
 
-  
   <div class="modal custom hide" id="download-{{layer.id}}">
     <div class="modal-header">
       <button class="close" data-dismiss="modal">×</button>
@@ -43,25 +46,29 @@
     <div class="modal-body">
     </div>
     <div class="modal-footer">
-      {% if layer.link_set.download|length > 0 %}
-        {% for link in layer.link_set.download %}
-        {% if forloop.counter0 == 0 %}
-        <div class="span2 offset1">
-          <ul class="unstyled">
-            <li><a href="{{ link.url }}">{{ link.name }}</a></li>
-        {% elif forloop.counter0 >= forloop.revcounter0 and forloop.revcounter0|add:1 >= forloop.counter0 %}
-          </ul>
-        </div>
-        <div class="span2">
-          <ul class="unstyled">
-            <li><a href="{{ link.url }}">{{ link.name }}</a></li>
-        {% else %}
-            <li><a href="{{ link.url }}">{{ link.name }}</a></li>
-        {% endif %}
-        {% endfor %} 
+
+      {% if layer.download_links.length > 0 %}
+          <!-- layer links start -->
+        {% for  extension, type, link in layer.download_links %}
+            <!--for link -->
+            {% if forloop.counter0 == 0 %}
+                <!--0--><div class="span2 offset1">
+                    <ul class="unstyled">
+                        <li><a href="{{ link }}">{{ type }}</a></li>
+            {% elif forloop.counter0 >= forloop.revcounter0 and forloop.revcounter0|add:1 >= forloop.counter0 %}
+                    <!--elif--></ul>
+                </div>
+                <div class="span2">
+                <ul class="unstyled">
+                    <li><a href="{{ link}}">{{ type }}</a></li>
+            {% else %}
+                <!--else--><li><a href="{{ link }}">{{ type }}</a></li>
+            {% endif %}
+        {% endfor %}
+          <!--endfor link-->
         </ul>
       </div>
-    {% endif %} 
+    {% endif %}
     </div>
   </div>
 </article>
@@ -78,7 +85,7 @@
                 <p class="abstract">{%  trans "You do not have permission to view this layer" %}</p>
                 <ul class="nav stats">
                     <li><a><strong>{{ layer.popular_count }}</strong> {% trans "view" %}{{ layer.popular_count|pluralize }}</a></li>
-                    <li><a><strong><span class="avg_rating" data-rating="{{ layer_rating }}"> <span class="overall_rating"></span></span></strong> {% trans "Average rating" %} ({{num_votes}} {% trans "votes" %})</a></li>
+                    <li><a><strong><span><span class="overall_rating" data-rating="{{ layer_rating }}"></span></span></strong> {% trans "Average rating" %} ({{num_votes}} {% trans "votes" %})</a></li>
                 </ul>
             </div> <!-- /.meta -->
             <div class="tools">

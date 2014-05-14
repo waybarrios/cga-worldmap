@@ -80,6 +80,7 @@ urlpatterns = patterns('',
     (r'^certification/', include('geonode.certification.urls')),    
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     (r'^search/?', include('geonode.search.urls')),
+    (r'^dvn/?', include('geonode.dvn.urls')),
     )
 
 urlpatterns += geonode.proxy.urls.urlpatterns

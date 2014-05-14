@@ -11,6 +11,7 @@
 {% include "geonode/app_header.html" %}
 {% include "geonode/geo_header.html" %}
 {{ block.super }}
+<script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.raty.js"></script>
 <script type="text/javascript">
     var app;
     var mapurl = "{% url "geonode.maps.views.view" map.id %}";
@@ -231,20 +232,26 @@
 {% endblock %}
 
 {% block end_body_js %}
-{% if request.user.is_authenticated %}
-	{% user_rating_js request.user map "map" %}
-{% else %}
-	<script src="{{ STATIC_URL }}agon_ratings/js/jquery.raty.js"></script>
-{% endif %}
-<script type="text/javascript">
-	$(function() {
-		$('div.overall_rating').raty({
-			half: true,
-			readOnly: true,
-			start: $('div.overall_rating').data('rating'),
-			path: "{{ STATIC_URL }}agon_ratings/img/"
-		});
-	});
+
+    {% if request.user.is_authenticated %}
+        {% user_rating_js request.user map "map" %}
+    {% else %}
+        {% overall_rating layer 'map' as the_map_rating %}
+    {% endif %}
+    <script type="text/javascript">
+        $(function() {
+            $('div.overall_rating').raty({
+                half: true,
+                readOnly: true,
+                start: $('div.overall_rating').data('rating'),
+                path: '/static/agon_ratings/img/'
+                {% if not request.user.is_authenticated %},
+                    score: {{ the_map_rating }}
+                {% endif %}
+            });
+            var activeTab = $('[href=' + location.hash + ']');
+            activeTab && activeTab.tab('show');
+        });
 
 	(function() {
 		var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;

@@ -184,7 +184,7 @@
 	Ext.select(".helptext").on('mouseout',hideModal);
 	hideModal();
     
-    Ext.Ajax.timeout = 120000cur;
+    Ext.Ajax.timeout = 120000;
     var ajaxSubmit = function() {
         Ext.MessageBox.wait('Saving ...');
         var htmlAbstract = myNicEditor.instanceById("id_layer-abstract").getContent();

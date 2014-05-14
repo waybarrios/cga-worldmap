@@ -216,8 +216,11 @@ class OwnerNormalizer(Normalizer):
     def last_modified(self):
         try:
             return self.o.user.date_joined
-        except ObjectDoesNotExist:
-            return None
+        except:
+            try:
+                return self.o.created_dttm
+            except:
+                return None
     def layer_count(self):
         return Layer.objects.filter(owner = self.o.user).count()
 
@@ -226,20 +229,23 @@ class OwnerNormalizer(Normalizer):
 
     def populate(self, doc, exclude):
         contact = self.o
-        user = contact.user
+
         try:
+            user = contact.user
+            doc['id'] = user.username
             doc['thumb'] = user.avatar_set.all()[0].avatar_url(80)
-        except IndexError:
+            doc['title'] = user.get_full_name() or user.username
+            doc['layer_cnt'] = Layer.objects.filter(owner = user).count()
+            doc['map_cnt'] = Map.objects.filter(owner = user).count()
+        except:
             doc['thumb'] = _default_avatar_url
-        doc['id'] = user.username
-        doc['title'] = user.get_full_name() or user.username
+            doc['title'] = contact.name
+
         doc['organization'] = contact.organization
-        doc['abstract'] = contact.profile
         modified = self.last_modified()
         doc['last_modified'] = extension.date_fmt(modified) if modified else ''
-        doc['detail'] = contact.get_absolute_url()
-        doc['layer_cnt'] = Layer.objects.filter(owner = user).count()
-        doc['map_cnt'] = Map.objects.filter(owner = user).count()
+        doc['detail'] = contact.get_absolute_url() if user else None
+
         doc['_type'] = 'owner'
         doc['_display_type'] = extension.USER_DISPLAY
         return doc

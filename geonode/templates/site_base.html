@@ -7,7 +7,7 @@
 <head>
   <title>{% block title %} {{ SITENAME }} {% endblock %}</title>
   <link rel="shortcut icon" href="{{ STATIC_URL }}theme/img/favicon.ico"/>
-    <script src="{{ STATIC_URL }}geonode/externals/misc/jquery.js"></script>
+    <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.js"></script>
     <script type="text/javascript" src="{{ GEONODE_CLIENT_LOCATION }}externals/ext/adapter/jquery/ext-jquery-adapter.js"></script>
   {% include 'autocomplete_light/static.html' %}
   {% block head_extra_meta %}{% endblock %}
@@ -100,9 +100,9 @@
     </div><!-- /#header -->
 
     <div id="main">
+        {% block content %}{% endblock %}
         <div class="wrap selfclear">
             {% block body %}{% endblock %}
-            {% block content %}{% endblock %}
             {% block sidebar %}{% endblock %}
         </div><!-- /.wrap -->
     </div><!-- /#main -->

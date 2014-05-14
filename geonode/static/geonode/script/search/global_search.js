@@ -111,20 +111,15 @@ $(function(){
             var rating = $(this).parents(".avg_rating").data('rating');
             star(this, rating);
         });
-        $(".loadmore").on("load.loadmore", function(e, o) {          
-            o.find(".overall_rating").each(function() {
-                var rating = $(this).parents(".avg_rating").data('rating');
-            star(this, rating);
-            });
-        });
+
     }
     function star(elem, rating) {
         $(elem).raty({
             half: true,
             readOnly: true,
             score: rating,
-            path: '/static/lib/img/'
-        });        
+            path: '/static/agon_ratings/img/'
+        });
     }
 
     var loading = "<div class='loading'><p>Loading more items&hellip;</p></div>";
@@ -206,7 +201,13 @@ $(function(){
 	//does not automatically fire with programmatically updated text
 	$('.trigger-extent').bind("change", 
 		function(event){
-			query();
+            var extentval_start = $('#extent').val();
+            setTimeout(function() {
+                var extentval_end = $('#extent').val();
+                if (extentval_start === extentval_end) {
+                    query();
+                }
+            }, 1000);
 		}
 	);
     $('.datepicker').change(

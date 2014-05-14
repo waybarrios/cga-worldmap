@@ -218,6 +218,7 @@ def haystack_search_api(request, format="json", **kwargs):
     service = request.REQUEST.get("service", None)
     local = request.REQUEST.get("local", None)
 
+    default_facet_types = [("map",0), ("layer",0), ("user",0), ("vector",0), ("raster",0)]
 
     # Geospatial Elements
     bbox = request.REQUEST.get("extent", None)
@@ -239,8 +240,9 @@ def haystack_search_api(request, format="json", **kwargs):
         subtype_facets = ["vector", "raster"]
         types = []
         subtypes = []
+
         for type in type_facets:
-            if type in ["map", "layer", "user", "document", "group"]:
+            if type in ["map", "layer", "user"]:
                 # Type is one of our Major Types (not a sub type)
                 types.append(type)
             elif type in subtype_facets:
@@ -444,7 +446,7 @@ def haystack_search_api(request, format="json", **kwargs):
             "type": type_facets,
             },
         "results": results,
-        "facets": dict(facet_counts.get("fields")['type']+facet_counts.get('fields')['subtype']) if sqs.count() > 0 else [],
+        "facets": dict(default_facet_types+facet_counts.get("fields")['type']+facet_counts.get('fields')['subtype']) if sqs.count() > 0 else [],
         "categories": {facet[0]:facet[1] for facet in facet_counts.get('fields')['category']} if sqs.count() > 0 else {},
         "keywords": {facet[0]:facet[1] for facet in facet_counts.get('fields')['keywords']} if sqs.count() > 0 else {},
         }

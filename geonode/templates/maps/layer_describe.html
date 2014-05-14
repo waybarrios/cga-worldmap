@@ -5,7 +5,7 @@
 
 {% block head %}
 {% include "geonode/ext_header.html" %}
-<script type="text/javascript" src="{{ GEONODE_CLIENT_LOCATION }}externals/misc/nicEdit.js"></script>
+<script type="text/javascript" src="{{ GEONODE_CLIENT_LOCATION }}externals/lib/js/nicEdit.js"></script>
 <style type="text/css">
     .su_only {
         display:none;
@@ -161,7 +161,7 @@
 {% endautoescape %}
 </script>
  <script type="text/javascript">
-     var nicEditIconsPath = "{{ GEONODE_CLIENT_LOCATION }}externals/misc/images/nicEditorIcons.gif"
+     var nicEditIconsPath = "{{ GEONODE_CLIENT_LOCATION }}externals/lib/img/nicEditorIcons.gif"
      var myNicEditor = new nicEditor({fullPanel : true,  maxHeight: 190, iconsPath: nicEditIconsPath}).panelInstance("id_layer-abstract");
  </script>
 {% endblock %}
