@@ -45,7 +45,7 @@ def _bbox(obj):
         pass
     except AttributeError:
         pass
-    # unknown extent, just give something that works
+        # unknown extent, just give something that works
     extent = idx.extent.extent if idx else map(str,(obj.bbox_x0, obj.bbox_y0, obj.bbox_x1, obj.bbox_y1))
     return dict(minx=extent[0], miny=extent[1], maxx=extent[2], maxy=extent[3])
 
@@ -154,7 +154,7 @@ class MapNormalizer(Normalizer):
         doc['last_modified'] = extension.date_fmt(mapobj.last_modified)
         doc['_type'] = 'map'
         doc['_display_type'] = extension.MAP_DISPLAY
-#        doc['thumb'] = map.get_thumbnail_url()
+        #        doc['thumb'] = map.get_thumbnail_url()
         doc['keywords'] = keywords
         if 'bbox' not in exclude:
             doc['bbox'] = [mapobj.center_x, mapobj.center_y]
@@ -167,11 +167,11 @@ class LayerNormalizer(Normalizer):
     def populate(self, doc, exclude):
         layer = self.o
         doc['owner'] = layer.owner.username if layer.owner else None
-#        doc['thumb'] = layer.get_thumbnail_url()
+        #        doc['thumb'] = layer.get_thumbnail_url()
         doc['last_modified'] = extension.date_fmt(layer.date)
         doc['id'] = layer.id
         doc['_type'] = 'layer'
-#        doc['owsUrl'] = layer.get_virtual_wms_url()
+        #        doc['owsUrl'] = layer.get_virtual_wms_url()
         doc['category'] = layer.topic_category.name if layer.topic_category else 'location'
         doc['name'] = layer.typename
         doc['abstract'] = defaultfilters.linebreaks(layer.abstract)
@@ -204,7 +204,7 @@ class DocumentNormalizer(Normalizer):
         doc['last_modified'] = extension.date_fmt(document.date)
         doc['_type'] = 'document'
         doc['_display_type'] = extension.DOCUMENT_DISPLAY
-#        doc['thumb'] = map.get_thumbnail_url()
+        #        doc['thumb'] = map.get_thumbnail_url()
         doc['keywords'] = document.keyword_list()
         if 'bbox' not in exclude:
             doc['bbox'] = _bbox(document)

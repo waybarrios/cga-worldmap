@@ -95,7 +95,7 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
             return "vector"
         elif obj.storeType == "coverageStore":
             return "raster"
-            
+
     def prepare_download_links(self,obj):
         try:
             links = obj.download_links()
@@ -154,7 +154,7 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
             poc_profile = Contact.objects.get(user=obj.poc.user)
         except:
             poc_profile = None
-		
+
         data = {
             "_type": self.prepare_type(obj),
             "_display_type": obj.display_type,
@@ -181,11 +181,11 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
                 "miny": bbox[2],
                 "maxx": bbox[1],
                 "maxy": bbox[3],
-            },
+                },
             "attribution": {
                 "title": poc_profile.name if poc_profile else "",
                 "href": poc_profile.get_absolute_url() if poc_profile else "",
-            },
+                },
             "temporal_extent_start": obj.temporal_extent_start,
             "temporal_extent_end": obj.temporal_extent_end,
             #"temporal_extent_start_julian": self.temporal_extent_start_julian,

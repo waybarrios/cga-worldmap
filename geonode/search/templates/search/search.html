@@ -7,16 +7,16 @@
 {% block head %}
 
 
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/bootstrap.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/datepicker.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/fontselect.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/jquery.dataTables.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/multi-select.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/qunit.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/select2.css">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/base.css">
-{{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/datepicker.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/fontselect.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/multi-select.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/qunit.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/select2.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}geonode/externals/lib/css/base.css">
+    {{ block.super }}
 {% endblock %}
 
 {% block title %} {% trans "Search" %} - {{ block.super }} {% endblock %}
@@ -25,50 +25,50 @@
 
 {% block content %}
     <div style="margin:10px;padding:10px;">
-    <div class="col-lg-12">
-      <h2 class="page-title">{% trans "Search" %}</h2>
-    </div>
-
-    <div class="col-lg-12 filter">
-      Search:<input type="text" id="wordsearch">
-      {% include "search/_sort_filters.html" %}
-    </div>
-
-
-
-
-    <div class="col-lg-12">
-      <div class="row" id="contain-slider">
-        <div class="span4">
-          <div class="selections">
-            <h4>
-              {% trans "Your selections" %}
-              <a href="." id="clear-search" class="pull-right">Clear all</a>
-            </h4>
-          </div>
-          <div id="slide-pane">
-            <a href="#" class="toggle toggle-pane"><i class="icon-chevron-left"></i></a>
-            {% include "search/_type_filters.html" %}
-
-            {% include "search/_general_filters.html" %}
-          </div>
+        <div class="col-lg-12">
+            <h2 class="page-title">{% trans "Search" %}</h2>
         </div>
-        <div class="tab-content span6 paginate paginate-auto" id="search-content">
-          {% include 'search/search_content.html' %}
+
+        <div class="col-lg-12 filter">
+            Search:<input type="text" id="wordsearch">
+            {% include "search/_sort_filters.html" %}
         </div>
-          <div class="tab-content" id="map-content">
-
-                      <div class="control-group">
-                          <div id="search_map" class="search-map" style="width:100%;"></div>
-                          <div class="controls hidden" >
-                              <input type="text" id="extent" class="trigger-extent" name="extent" />
-                          </div>
-                      </div>
 
 
-          </div>
-      </div>
-    </div>
+
+
+        <div class="col-lg-12">
+            <div class="row" id="contain-slider">
+                <div class="span4">
+                    <div class="selections">
+                        <h4>
+                            {% trans "Your selections" %}
+                            <a href="." id="clear-search" class="pull-right">Clear all</a>
+                        </h4>
+                    </div>
+                    <div id="slide-pane">
+                        <a href="#" class="toggle toggle-pane"><i class="icon-chevron-left"></i></a>
+                        {% include "search/_type_filters.html" %}
+
+                        {% include "search/_general_filters.html" %}
+                    </div>
+                </div>
+                <div class="tab-content span6 paginate paginate-auto" id="search-content">
+                    {% include 'search/search_content.html' %}
+                </div>
+                <div class="tab-content" id="map-content">
+
+                    <div class="control-group">
+                        <div id="search_map" class="search-map" style="width:100%;"></div>
+                        <div class="controls hidden" >
+                            <input type="text" id="extent" class="trigger-extent" name="extent" />
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
 

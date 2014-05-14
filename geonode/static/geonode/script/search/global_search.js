@@ -1,9 +1,9 @@
 $(function(){
-    
+
     function build_query(){
         /*
-        * Builds the "data" parameter used in the ajax query. Collects all the parameters from the page
-        */
+         * Builds the "data" parameter used in the ajax query. Collects all the parameters from the page
+         */
         var params = {
             types: [],
             categories: [],
@@ -11,10 +11,10 @@ $(function(){
             date_start: [],
             date_end: [],
             sort: [],
-			extent:[],
+            extent:[],
             q: initial_query
         };
-        
+
         // traverse the active filters to build the query parameters
         $('.filter > ul').each(function(){
             var id = $(this).attr('id');
@@ -22,7 +22,7 @@ $(function(){
                 params[id].push($(this).attr('data-class'));
             });
         });
-        
+
         if(params.date_start[0] === 'yyyy-mm-dd'){
             params.date_start = [''];
         }
@@ -34,7 +34,7 @@ $(function(){
             params.categories.shift();
         }
 
-		var extentval = $('#extent').val();
+        var extentval = $('#extent').val();
 
         var data = {
             'type': params.types.join(','),
@@ -44,25 +44,25 @@ $(function(){
             'end_date': params.date_end[0],
             'sort': params.sort[0],
             'q': params.q,
-			'extent': extentval
+            'extent': extentval
         };
-        
+
         if (typeof default_type != 'undefined' && data.type == ''){
             data.type = default_type;
         }
-        
+
         return data;
     }
 
     function query(){
         /*
-        * Sends the query used for search
-        */
+         * Sends the query used for search
+         */
         var data = build_query();
         $.ajax({
             type: 'POST',
             url: '/search/html',
-            data: data, 
+            data: data,
             success: function(data){
                 $('#search-content').html(data);
                 //call the pagination
@@ -75,8 +75,8 @@ $(function(){
 
     function manage_element(element){
         /*
-        * Manage the classes of the filters on the page
-        */
+         * Manage the classes of the filters on the page
+         */
 
         // logic to make sure that whne clicking on the layer filter it also 
         //activate/deactivated vector and raster
@@ -99,7 +99,7 @@ $(function(){
                     $(this).removeClass('active');
                 });
                 $(element).addClass('active');
-            } 
+            }
         }
         else if ($(element).parents('ul').attr('id') === 'categories'){
             $('a[data-class="all"]').removeClass('active');
@@ -125,8 +125,8 @@ $(function(){
     var loading = "<div class='loading'><p>Loading more items&hellip;</p></div>";
     function fetchMore(a) {
         /*
-        * Fetch more results respecting the current query
-        */
+         * Fetch more results respecting the current query
+         */
         $(a).before($(loading));
         $.ajax({
             type: 'POST',
@@ -147,16 +147,16 @@ $(function(){
             }
         });
     }
-        
+
     function paginate() {
         /*
-        * Main pagination function
-        */
+         * Main pagination function
+         */
         $(".paginate").each(function() {
             var p$ = $(this);
             var auto = p$.hasClass("paginate-auto") ? true : false,
-            hasMore = parseInt(p$.find(".pagination .current.page").html(),10) < parseInt(p$.find(".pagination .page_total").html(),10),
-            $pages = p$.find(".pagination");
+                hasMore = parseInt(p$.find(".pagination .current.page").html(),10) < parseInt(p$.find(".pagination .page_total").html(),10),
+                $pages = p$.find(".pagination");
             opts = {
                 offset: '100%'
             };
@@ -169,20 +169,20 @@ $(function(){
                     }, opts);
                 } else {
                     $pages.prepend($("<a></a>", {
-                        href: $pages.find("a.more").attr("href"),
-                        html: "<i class=\"icon-chevron-down\"></i> Show more",
-                        "class": "more"
+                            href: $pages.find("a.more").attr("href"),
+                            html: "<i class=\"icon-chevron-down\"></i> Show more",
+                            "class": "more"
                         }
                     ).click(function(e) {
-                        e.preventDefault();
-                        fetchMore(this);
-                    }));
+                            e.preventDefault();
+                            fetchMore(this);
+                        }));
                 }
             }
             rateMore();
         });
     }
-    
+
     paginate();
 
     // add some listeners
@@ -193,14 +193,14 @@ $(function(){
                 $(this).removeClass('active');
             } else {
                 $(this).addClass('active');
-            }   
+            }
             manage_element($(this));
             query();
         }
     );
-	//does not automatically fire with programmatically updated text
-	$('.trigger-extent').bind("change", 
-		function(event){
+    //does not automatically fire with programmatically updated text
+    $('.trigger-extent').bind("change",
+        function(event){
             var extentval_start = $('#extent').val();
             setTimeout(function() {
                 var extentval_end = $('#extent').val();
@@ -208,15 +208,15 @@ $(function(){
                     query();
                 }
             }, 1000);
-		}
-	);
+        }
+    );
     $('.datepicker').change(
         function(){
             $(this).addClass('active');
             $(this).attr('data-class', $(this).val());
             manage_element(this);
             query();
-        } 
+        }
     );
     $('.date-query').click(
         function(){

@@ -5,62 +5,62 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-  <title>{% block title %} {{ SITENAME }} {% endblock %}</title>
-  <link rel="shortcut icon" href="{{ STATIC_URL }}theme/img/favicon.ico"/>
+    <title>{% block title %} {{ SITENAME }} {% endblock %}</title>
+    <link rel="shortcut icon" href="{{ STATIC_URL }}theme/img/favicon.ico"/>
     <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.js"></script>
     <script type="text/javascript" src="{{ GEONODE_CLIENT_LOCATION }}externals/ext/adapter/jquery/ext-jquery-adapter.js"></script>
-  {% include 'autocomplete_light/static.html' %}
-  {% block head_extra_meta %}{% endblock %}
-  {% block head %}
+    {% include 'autocomplete_light/static.html' %}
+    {% block head_extra_meta %}{% endblock %}
+    {% block head %}
 
-      <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
-
-
-  	{% if urlsuffix %}
-		<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/boilerplate-min.css" media="screen" />
-    	<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/site.css" media="screen" />
-    	  <!--[if lte IE 6]><link rel="stylesheet" href="{{STATIC_URL}}theme/boilerplate-ie-min.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
-    {% else %}
-    	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}theme/boilerplate-min.css" media="screen" />
-    	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}theme/site.css"  media="screen" />
-    	  <!--[if lte IE 6]><link rel="stylesheet" href="{{ STATIC_URL }}theme/boilerplate-ie-min.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
-    {% endif %}
-
-    <script type="text/javascript" src="{% url "jscat" %}"></script>
-    <script type="text/javascript" src="{% url "django.views.i18n.javascript_catalog" %}"></script>
-    <script type="text/javascript" src="{% url "lang" %}"></script>
+        <script src="{{ STATIC_URL }}bootstrap/js/bootstrap.min.js"></script>
 
 
-  	{% endblock %}
+        {% if urlsuffix %}
+            <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/boilerplate-min.css" media="screen" />
+            <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/site.css" media="screen" />
+            <!--[if lte IE 6]><link rel="stylesheet" href="{{STATIC_URL}}theme/boilerplate-ie-min.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
+        {% else %}
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}theme/boilerplate-min.css" media="screen" />
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}theme/site.css"  media="screen" />
+            <!--[if lte IE 6]><link rel="stylesheet" href="{{ STATIC_URL }}theme/boilerplate-ie-min.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
+        {% endif %}
+
+        <script type="text/javascript" src="{% url "jscat" %}"></script>
+        <script type="text/javascript" src="{% url "django.views.i18n.javascript_catalog" %}"></script>
+        <script type="text/javascript" src="{% url "lang" %}"></script>
+
+
+    {% endblock %}
     {% autoescape off %}
         {{ GOOGLE_ANALYTICS_CODE }}
     {% endautoescape %}
-    
+
     <script type="text/javascript">
-		function hideModal() {
-			Ext.get("modalhelp").setStyle("display","none");
-		}
-		function showModal(text) {
-			Ext.get("modalhelp").setStyle("display","block").update(text);
-		}
-		function showHelp(event) {
-			showModal(event.target.innerHTML);
-		}
-		if (Ext.onReady) {
-        	Ext.onReady(function() {
-        		{% autoescape off %}
-            		Ext.select(".helptext").on('mouseover',showHelp);
-        			Ext.select(".helptext").on('mouseout',hideModal);
-            	{% endautoescape %}
-    		});
-		}
+        function hideModal() {
+            Ext.get("modalhelp").setStyle("display","none");
+        }
+        function showModal(text) {
+            Ext.get("modalhelp").setStyle("display","block").update(text);
+        }
+        function showHelp(event) {
+            showModal(event.target.innerHTML);
+        }
+        if (Ext.onReady) {
+            Ext.onReady(function() {
+                {% autoescape off %}
+                    Ext.select(".helptext").on('mouseover',showHelp);
+                    Ext.select(".helptext").on('mouseout',hideModal);
+                {% endautoescape %}
+            });
+        }
 
         $(document).ajaxStart(function ()
         {
             $('html').addClass('wait');
         }).ajaxComplete(function () {
-            $('html').removeClass('wait');
-        });
+                    $('html').removeClass('wait');
+                });
     </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -144,7 +144,7 @@
 
 
 {% block extra_body %}{% endblock %}{% block end_body_js %}{% endblock %}
-  <div id="modalhelp" class="modal_help"></div>
+<div id="modalhelp" class="modal_help"></div>
 {% block extra_script %}{% endblock extra_script %}
 </body>
 </html>
