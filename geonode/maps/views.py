@@ -645,9 +645,10 @@ def additional_layers(request, map_obj, layerlist):
     groups = set()
     layers = []
     bbox = None
-    for uuid in layerlist:
+    for service_typename in layerlist:
         try:
-            layer = Layer.objects.get(uuid=uuid)
+            service, typename = _get_service_and_typename(service_typename)
+            layer = get_object_or_404(Layer, typename=typename, service__name=service)
         except ObjectDoesNotExist:
             # bad layer, skip
             continue
@@ -2834,3 +2835,7 @@ def mobilemap(request, mapid=None, snapshot=None):
         'urlsuffix': get_suffix_if_custom(map_obj),
     }))
 
+def handle_uploaded_file(f):
+    with open('/tmp/', 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)

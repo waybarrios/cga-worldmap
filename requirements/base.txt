@@ -25,7 +25,11 @@ geonode-avatar==2.1.1
 dialogos==0.1
 agon-ratings==0.2
 South==0.7.3
-django-taggit==0.9.3
+#django-taggit==0.9.3
+django-taggit==0.10a1
+django-taggit-templatetags
+django-pagination==1.0.7
+django-friendly-tag-loader==1.1
 ordereddict
 defusedxml
 
@@ -53,7 +57,7 @@ jdcal
 -e git+https://github.com/cga-harvard/vectorformats.git#egg=vectorformats
 #For autocomplete
 django-autocomplete-light==1.4.5
-unidecode
+unidecode==0.04.14
 
 #ArcGIS REST services
 -e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest

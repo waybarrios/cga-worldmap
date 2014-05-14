@@ -808,7 +808,7 @@ def _register_arcgis_layers(service, arc=None):
         layer_uuid = str(uuid.uuid1())
         layer_bbox = [layer.extent.xmin, layer.extent.ymin, layer.extent.xmax, layer.extent.ymax]
         layer_srs = "EPSG:%s" % layer.extent.spatialReference.wkid
-        llbbox =  project_to_wgs84(layer_srs, layer_bbox)
+        llbbox =  mercator_to_llbbox(layer_bbox)
         # Need to check if layer already exists??
         saved_layer, created = Layer.objects.get_or_create(
             service=service,

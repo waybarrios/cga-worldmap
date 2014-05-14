@@ -13,6 +13,7 @@
 {% include "geonode/app_header.html" %}
 {% include "geonode/geo_header.html" %}
 
+<script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.raty.js"></script>
 <link rel="stylesheet" type="text/css" href="{{ GEONODE_CLIENT_LOCATION }}theme/ux/colorpicker/color-picker.ux.css" />
 <link rel="stylesheet" type="text/css" href="{{ GEONODE_CLIENT_LOCATION }}theme/ux/spinner/Spinner.css" />
 
@@ -188,8 +189,9 @@
             <div><p>{% trans "Source:" %}<a href="/services/{{layer.service.id}}">{{ layer.service.title }}</a></p></div>
             <div><p>{% trans "Type:" %}{{ layer.service.type }}</p></div>
         {% endif %}
+
         {% overall_rating layer "layer" as layer_rating %}
-        <div class="overall_rating" data-rating="{{ layer_rating }}"></div>
+        <div class="overall_rating"  data-rating="{{ layer_rating }}"></div>
 		<g:plusone size="small" href="http://{{ request.get_host }}{{ request.get_full_path }}"></g:plusone>
 		<div class="fb-like" data-href="http://{{ request.get_host }}{{ request.get_full_path }}" data-send="false" data-width="50" data-layout="button_count" data-show-faces="false"></div>
 	</div>
@@ -321,11 +323,11 @@
     {% endif %}
 </div>
 
-{% if request.user.is_authenticated %}
-	<h3>{% trans "Rate this layer" %}</h3>
-	{% user_rating request.user layer "layer" as user_layer_rating %}
-	<div id="user_rating" class="category-layer"></div>
-{% endif %}
+    {% if request.user.is_authenticated %}
+        <h3>{% trans "Rate this layer" %}</h3>
+        {% user_rating request.user layer "layer" as user_layer_rating %}
+        <div id="user_rating" class="category-layer"></div>
+    {% endif %}
 
 	
 
@@ -519,25 +521,34 @@
 </div>
 {% endblock %}
 {% block end_body_js %}
-{% if request.user.is_authenticated %}
-	{% user_rating_js request.user layer "layer" %}
-{% else %}
-	<script src="{{ STATIC_URL }}agon_ratings/js/jquery.raty.js"></script>
-{% endif %}
-<script type="text/javascript">
-	$(function() {
-		$('div.overall_rating').raty({
-			half: true,
-			readOnly: true,
-			start: $('div.overall_rating').data('rating'),
-			path: "{{ STATIC_URL }}agon_ratings/img/"
-		});
-	});
 
-	(function() {
-		var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-		po.src = 'https://apis.google.com/js/plusone.js';
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-	})();
-</script>
+
+
+
+    {% if request.user.is_authenticated %}
+        {% user_rating_js request.user layer "layer" %}
+    {% else %}
+        {% overall_rating layer 'layer' as the_layer_rating %}
+    {% endif %}
+    <script type="text/javascript">
+            $(function() {
+                $('div.overall_rating').raty({
+                    half: true,
+                    readOnly: true,
+                    start: $('div.overall_rating').data('rating'),
+                    path: '/static/agon_ratings/img/'
+                    {% if not request.user.is_authenticated %},
+                        score: {{ the_layer_rating }}
+                    {% endif %}
+                });
+                var activeTab = $('[href=' + location.hash + ']');
+                activeTab && activeTab.tab('show');
+            });
+
+	    (function() {
+		    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+		    po.src = 'https://apis.google.com/js/plusone.js';
+		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+	    })();
+    </script>
 {% endblock %}

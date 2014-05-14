@@ -17,94 +17,213 @@
 #
 #########################################################################
 
+from django.db import connection
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.template import RequestContext
-import json
-import logging
-from geonode.flexidates import parse_julian_date
-from geonode.maps.models import Map
-from geonode.maps.views import default_map_config
+from django.contrib.auth.models import User
+from django.core.cache import cache
+from taggit.models import TaggedItem
 
+if "geonode.contrib.groups" in settings.INSTALLED_APPS:
+    from geonode.contrib.groups.models import Group
+from geonode.maps.views import default_map_config
+from geonode.maps.models import Layer, LayerCategory
+from geonode.maps.models import Map
+from geonode.maps.models import Contact
+from geonode.search.util import resolve_extension
+from geonode.search.normalizers import MapNormalizer, LayerNormalizer, OwnerNormalizer, GroupNormalizer
+from geonode.search.query import query_from_request
+
+
+
+from datetime import datetime
+from time import time
+import json
+import cPickle as pickle
+import operator
+import logging
+import zlib
+
+import xmlrpclib
 
 logger = logging.getLogger(__name__)
 
+_extra_context = resolve_extension('extra_context')
 
-# Haystack Implementation
-
-
-import xmlrpclib
-from haystack.inputs import AutoQuery, Raw
-from haystack.query import SearchQuerySet, SQ
+DEFAULT_MAPS_SEARCH_BATCH_SIZE = 10
 
 
-
-default_facets = ["map", "layer", "vector", "raster", "contact", "keywords", "service"]
-fieldsets = {
-    "brief": ["name", "type", "description"],
-    "summary": ["name", "type", "description", "owner"],
-    "full": ["name", "type", "description", "owner", "language"],
-}
-
-
-def search(request):
-    """
-    View that drives the search page
-    """
-
+def _create_viewer_config():
     DEFAULT_MAP_CONFIG, DEFAULT_BASE_LAYERS = default_map_config()
-    #DEFAULT_MAP_CONFIG, DEFAULT_BASE_LAYERS = default_map_config(request)
-    # for non-ajax requests, render a generic search page
-
-    params = dict(request.REQUEST)
-
-    map = Map(projection="EPSG:900913", zoom=1, center_x=0, center_y=0)
-
-    # Default Counts to 0, JS will Load the Correct Counts
-    facets = {}
-    for facet in default_facets:
-        facets[facet] = 0
-
-    return render_to_response("search/search.html", RequestContext(request, {
-        "init_search": json.dumps(params),
-        #'viewer_config': json.dumps(map.viewer_json(added_layers=DEFAULT_BASE_LAYERS, authenticated=request.user.is_authenticated())),
-        "viewer_config": json.dumps(map.viewer_json(*DEFAULT_BASE_LAYERS)),
-        "GOOGLE_API_KEY": settings.GOOGLE_API_KEY,
-        "site": settings.SITEURL,
-        "facets": None,
-        "keywords": None
-    }))
+    _map = Map(projection="EPSG:900913", zoom = 1, center_x = 0, center_y = 0)
+    return json.dumps(_map.viewer_json(*DEFAULT_BASE_LAYERS))
+_viewer_config = _create_viewer_config()
 
 
-def haystack_search_api(request):
+def search_page(request, template='search/search.html', **kw):
+    initial_query = request.REQUEST.get('q','')
+
+    query = query_from_request(request, kw)
+    search_response, results = haystack_search_api(request, format="html", **kw)
+    facets = search_response['facets']
+
+    categories = {}
+    counts = search_response["categories"]
+    topics = LayerCategory.objects.all()
+    for topic in topics:
+        if topic.name in counts:
+            categories[topic] = counts[topic.name]
+        else:
+            categories[topic] = 0
+
+    total = search_response['total']
+
+    tags = {}
+
+    # get the keywords and their count
+    keywords = search_response["keywords"]
+    for keyword in keywords:
+        try:
+            tagged_item = TaggedItem.objects.filter(tag__name=keyword)[0]
+            tags[tagged_item.tag.slug] = tags.get(tagged_item.tag.slug,{})
+            tags[tagged_item.tag.slug]['slug'] = tagged_item.tag.name
+            tags[tagged_item.tag.slug]['name'] = tagged_item.tag.name
+            tags[tagged_item.tag.slug]['count'] = keywords[keyword]
+        except Exception, e:
+            logger.error("Could not find TaggedItem for keyword %s" % keyword)
+
+    return render_to_response(template, RequestContext(request, {'object_list': results, 'total': total, "categories": categories,
+                                                                 'facets': facets, 'query': json.dumps(query.get_query_response()), 'tags': tags,
+                                                                 'initial_query': initial_query}))
+
+def advanced_search(request, **kw):
+    ctx = {
+        'category_list': LayerCategory.objects.all(),
+        }
+
+    return render_to_response('search/advanced_search.html', RequestContext(request, ctx))
+
+def _get_search_context():
+    cache_key = 'simple_search_context'
+    context = cache.get(cache_key)
+    if context: return context
+
+    counts = {
+        'maps' : Map.objects.count(),
+        'layers' : Layer.objects.count(),
+        'vector' : Layer.objects.filter(storeType='dataStore').count(),
+        'raster' : Layer.objects.filter(storeType='coverageStore').count(),
+        'users' : Contact.objects.count(),
+        }
+    if "geonode.contrib.groups" in settings.INSTALLED_APPS:
+        counts['groups'] = Group.objects.count()
+
+    topics = Layer.objects.all().values_list('topic_category',flat=True)
+    topic_cnts = {}
+    for t in topics: topic_cnts[t] = topic_cnts.get(t,0) + 1
+    context = {
+        'viewer_config': _viewer_config,
+        "site" : settings.SITEURL,
+        'counts' : counts,
+        'users' : User.objects.all(),
+        'topics' : topic_cnts,
+        'keywords' : _get_all_keywords()
+    }
+    if _extra_context:
+        _extra_context(context)
+    cache.set(cache_key, context, settings.CACHE_TIME)
+
+    return context
+
+
+def _get_all_keywords():
+    allkw = {}
+    # @todo tagging added to maps and contacts, depending upon search type,
+    # need to get these... for now it doesn't matter (in mapstory) as
+    # only layers support keywords ATM.
+    for l in Layer.objects.all().select_related().only('keywords'):
+        kw = [ k.name for k in l.keywords.all() ]
+        for k in kw:
+            allkw[k] = allkw.get(k,0) + 1
+
+    return allkw
+
+
+def search_api(request, format='json', **kwargs):
+    return haystack_search_api(request, format=format, **kwargs)
+
+def _search_json(query, items, facets, time):
+    total = len(items)
+
+    if query.limit is not None and query.limit > 0:
+        items = items[query.start:query.start + query.limit]
+
+    exclude = query.params.get('exclude')
+    exclude = set(exclude.split(',')) if exclude else ()
+    items = map(lambda r: r.as_dict(exclude), items)
+
+    results = {
+        '_time' : time,
+        'results' : items,
+        'total' :  total,
+        'success' : True,
+        'query' : query.get_query_response(),
+        'facets' : facets
+    }
+    return HttpResponse(json.dumps(results), mimetype="application/json")
+
+
+def cache_key(query,filters):
+    return str(reduce(operator.xor,map(hash,filters.items())) ^ hash(query))
+
+
+def author_list(req):
+    q = User.objects.all()
+
+    query = req.REQUEST.get('query',None)
+    start = int(req.REQUEST.get('start',0))
+    limit = int(req.REQUEST.get('limit',20))
+
+    if query:
+        q = q.filter(username__icontains=query)
+
+    vals = q.values_list('username',flat=True)[start:start+limit]
+    results = {
+        'total' : q.count(),
+        'names' : [ dict(name=v) for v in vals ]
+    }
+    return HttpResponse(json.dumps(results), mimetype="application/json")
+
+def haystack_search_api(request, format="json", **kwargs):
     """
     View that drives the search api
     """
+    from haystack.inputs import Raw
+    from haystack.query import SearchQuerySet, SQ
 
     # Retrieve Query Params
     id = request.REQUEST.get("id", None)
     query = request.REQUEST.get('q',None)
-    name = request.REQUEST.get("name", None)
-    category = request.REQUEST.get("cat", None)
+    category = request.REQUEST.get("category", None)
     limit = int(request.REQUEST.get("limit", getattr(settings, "HAYSTACK_SEARCH_RESULTS_PER_PAGE", 20)))
     startIndex = int(request.REQUEST.get("startIndex", 0))
-    startPage = int(request.REQUEST.get("startPage", 0))
     sort = request.REQUEST.get("sort", "relevance")
-    order = request.REQUEST.get("order", "asc")
-    type = request.REQUEST.get("type", None)
-    fields = request.REQUEST.get("fields", None)
-    fieldset = request.REQUEST.get("fieldset", None)
-    format = request.REQUEST.get("format", "json")
-    temporal_start = request.REQUEST.get("temporalStart", None)
-    temporal_end = request.REQUEST.get("temporalEnd", None)
-    keyword = request.REQUEST.get("keyword", None)
+    type_facets = request.REQUEST.get("type", None)
+    format = request.REQUEST.get("format", format)
+    date_start = request.REQUEST.get("start_date", None)
+    date_end = request.REQUEST.get("end_date", None)
+    keyword = request.REQUEST.get("kw", None)
     service = request.REQUEST.get("service", None)
     local = request.REQUEST.get("local", None)
 
-    # Geospatial Elements
-    bbox = request.REQUEST.get("bbox", None)
+    default_facet_types = [("map",0), ("layer",0), ("user",0), ("vector",0), ("raster",0)]
 
+    # Geospatial Elements
+    bbox = request.REQUEST.get("extent", None)
+
+    ts = time()
     sqs = SearchQuerySet()
 
     limit = min(limit,500)
@@ -113,94 +232,111 @@ def haystack_search_api(request):
     if id:
         sqs = sqs.narrow("django_id:%s" % id)
 
-    # Filter by Type
-    if type is not None:
-        if type in ["map", "layer", "contact"]:
-            # Type is one of our Major Types (not a sub type)
-            sqs = sqs.narrow("type:%s" % type)
-        elif type in ["vector", "raster"]:
-            # Type is one of our sub types
-            sqs = sqs.narrow("subtype:%s" % type)
+
+
+    # Filter by Type and subtype
+    if type_facets is not None:
+        type_facets = type_facets.replace("owner","user").split(",")
+        subtype_facets = ["vector", "raster"]
+        types = []
+        subtypes = []
+
+        for type in type_facets:
+            if type in ["map", "layer", "user"]:
+                # Type is one of our Major Types (not a sub type)
+                types.append(type)
+            elif type in subtype_facets:
+                subtypes.append(type)
+
+        if len(subtypes) > 0:
+            for sub_type in subtype_facets:
+                if sub_type not in subtypes:
+                    sqs = sqs.exclude(subtype='%s' % sub_type)
+
+        if len(types) > 0:
+            sqs = sqs.narrow("type:%s" % ','.join(map(str, types)))
 
     # Filter by Query Params
+    # haystack bug? if boosted fields aren't included in the
+    # query, then the score won't be affected by the boost
     if query:
-        if query.startswith("\"") and query.endswith("\""):
-            sqs = sqs.filter(content_exact=Raw(query.replace("\"","")))
+        if query.startswith('"') or query.startswith('\''):
+            #Match exact phrase
+            phrase = query.replace('"','')
+            sqs = sqs.filter(
+                SQ(title__exact=phrase) |
+                SQ(abstract__exact=phrase) |
+                SQ(content__exact=phrase)
+            )
         else:
             words = query.split()
-            for word in range(0,len(words)-1):
+            for word in range(0,len(words)):
                 if word == 0:
-                    sqs = sqs.filter(content=Raw(words[word]))
+                    sqs = sqs.filter(
+                        SQ(title=Raw(words[word])) |
+                        SQ(abstract=Raw(words[word])) |
+                        SQ(content=Raw(words[word]))
+                    )
                 elif words[word] in ["AND","OR"]:
                     pass
-                elif words[word-1] == "OR":
-                    sqs = sqs.filter_or(content=Raw(words[word]))
-                else:
-                    sqs = sqs.filter(content=Raw(words[word]))
-
-
-        for word in query.split("AND"):
-            sqs = sqs.filter(content=Raw(word))
-        for word in query.split("OR"):
-            sqs = sqs.filter_or(content=Raw(word))
+                elif words[word-1] == "OR": #previous word OR this word
+                    sqs = sqs.filter_or(
+                        SQ(title=Raw(words[word])) |
+                        SQ(abstract=Raw(words[word])) |
+                        SQ(content=Raw(words[word]))
+                    )
+                else: #previous word AND this word
+                    sqs = sqs.filter(
+                        SQ(title=Raw(words[word])) |
+                        SQ(abstract=Raw(words[word])) |
+                        SQ(content=Raw(words[word]))
+                    )
 
     # filter by cateory
-    if category is not None:
+    if category:
         sqs = sqs.narrow('category:%s' % category)
 
     #filter by keyword
-    if keyword is not None:
+    if keyword:
         sqs = sqs.narrow('keywords:%s' % keyword)
 
-    #filter by service
-    if service is not None:
-        sqs = sqs.narrow('service:%s' % service)
-
-    if local is not None:
-        sqs = sqs.narrow('local:%s' % local)
-
-    # Apply Sort
-    # TODO: Handle for Revised sort types
-    # [relevance, alphabetically, rating, created, updated, popularity]
-    if sort.lower() == "newest":
-        sqs = sqs.order_by("-date")
-    elif sort.lower() == "oldest":
-        sqs = sqs.order_by("date")
-    elif sort.lower() == "alphaaz":
-        sqs = sqs.order_by("title")
-    elif sort.lower() == "alphaza":
-        sqs = sqs.order_by("-title")
-
-    # Setup Search Results
-    results = []
-
-    if temporal_start:
-        temporal_start = parse_julian_date(temporal_start)
-    if temporal_end:
-        temporal_end = parse_julian_date(temporal_end)
-
-
-    if temporal_start and temporal_end:
-        #Return anything with a start date < temporal_end or an end date > temporal_start
+    if date_start:
         sqs = sqs.filter(
-            SQ(temporal_extent_end_julian__gte=temporal_start) & SQ(temporal_extent_start_julian__lte=temporal_end)
+            SQ(date__gte=date_start)
+        )
+
+    if date_end:
+        sqs = sqs.filter(
+            SQ(date__lte=date_end)
+        )
+
+    """
+    ### Code to filter on temporal extent start/end dates instead
+
+    if date_start or date_end:
+        #Exclude results with no dates at all
+        sqs = sqs.filter(
+            SQ(temporal_extent_start=Raw("[* TO *]")) | SQ(temporal_extent_end=Raw("[* TO *]"))
+        )
+    if temporal_start and temporal_end:
+        #Return anything with a start date < date_end or an end date > date_start
+        sqs = sqs.filter(
+            SQ(temporal_extent_end__gte=date_start) | SQ(temporal_extent_start__lte=date_end)
         )
     elif temporal_start:
-        #Return anything with an end date < temporal_start or (any start date and no end date)
-        sqs = sqs.filter(
-            SQ(temporal_extent_end_julian__gte=temporal_start)   |
-            SQ(temporal_extent_start__isnull=False) & SQ(temporal_extent_end__isnull=True)
+        #Exclude anything with an end date <date_start
+        sqs = sqs.exclude(
+            SQ(temporal_extent_end__lte=date_start)
         )
     elif temporal_end:
-        #Return anything with a start date < temporal_end or (no start date and any end date)
-        sqs = sqs.filter(
-            SQ(temporal_extent_start_julian__lte=temporal_end) |
-            SQ(temporal_extent_end__isnull=False) & SQ(temporal_extent_start__isnull=True)
+        #Exclude anything with a start date > date_end
+        sqs = sqs.exclude(
+            SQ(temporal_extent_start__gte=date_end)
         )
+    """
 
-
-    if bbox is not None:
-        left,bottom,right,top = bbox.split(',')
+    if bbox:
+        left,right,bottom,top = bbox.split(',')
         sqs = sqs.filter(
             # first check if the bbox has at least one point inside the window
             SQ(bbox_left__gte=left) & SQ(bbox_left__lte=right) & SQ(bbox_top__gte=bottom) & SQ(bbox_top__lte=top) | #check top_left is inside the window
@@ -213,45 +349,77 @@ def haystack_search_api(request):
 
 
     # Filter by permissions
-    """
+    '''
+    ### Takes too long with many results.
+    ### Instead, show all results but disable links on restricted ones.
+
     for i, result in enumerate(sqs):
         if result.type == 'layer':
-            if not request.user.has_perm('maps.view_layer',obj = result.object):
+            if not request.user.has_perm('layers.view_layer',obj = result.object):
                 sqs = sqs.exclude(id = result.id)
         if result.type == 'map':
             if not request.user.has_perm('maps.view_map',obj = result.object):
                 sqs = sqs.exclude(id = result.id)
-    """
+    '''
+
+    #filter by service
+    '''
+    if service:
+        sqs = sqs.narrow('service:%s' % service)
+
+    if local:
+        sqs = sqs.narrow('local:%s' % local)
+    '''
+
+    # Apply Sort
+    # TODO: Handle for Revised sort types
+    # [relevance, alphabetically, rating, created, updated, popularity]
+    if sort.lower() == "newest":
+        sqs = sqs.order_by("-modified")
+    elif sort.lower() == "oldest":
+        sqs = sqs.order_by("modified")
+    elif sort.lower() == "alphaaz":
+        sqs = sqs.order_by("title_sortable")
+    elif sort.lower() == "alphaza":
+        sqs = sqs.order_by("-title_sortable")
+    elif sort.lower() == "popularity":
+        sqs = sqs.order_by("-popular_count")
+    else:
+        sqs = sqs.order_by("-_score")
+
+
+    # Setup Search Results
+    results = []
+    items = []
 
     # Build the result based on the limit
     for i, result in enumerate(sqs[startIndex:startIndex + limit]):
         logger.info(result)
         data = result.get_stored_fields()
-        # data.pop("modified",None)
-        # data.pop("created",None)
-        data["modified"] = data["modified"].strftime("%Y-%m-%dT%H:%M:%S.%f")
-        data["created"] = data["created"].strftime("%Y-%m-%dT%H:%M:%S.%f")
-        #data.pop("json",None)
-        data["iid"] =  i + startIndex
-        print (data)
-        #data.update({"iid": i + startIndex})
+        resource = None
+        if "modified" in data:
+            data["modified"] = data["modified"].strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if "last_modified" in data:
+            data["last_modified"] = data["last_modified"].strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if "created" in data:
+            data["created"] = data["created"].strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if "temporal_extent_start" in data and data["temporal_extent_start"] is not None:
+            data["temporal_extent_start"] = data["temporal_extent_start"].strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if "temporal_extent_end" in data and data["temporal_extent_end"] is not None:
+            data["temporal_extent_end"] = data["temporal_extent_end"].strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if data['type'] == "map":
+            resource = MapNormalizer(Map.objects.get(pk=data['oid']))
+        elif data['type'] == "layer":
+            resource = LayerNormalizer(Layer.objects.get(pk=data['oid']))
+        elif data['type'] == "user":
+            resource = OwnerNormalizer(Contact.objects.get(pk=data['oid']))
+        elif data['type'] == "group" and "geonode.contrib.groups" in settings.INSTALLED_APPS:
+            resource = GroupNormalizer(Group.objects.get(pk=data['oid']))
+        if resource:
+            resource.rating = data["rating"] if "rating" in data else 0
         results.append(data)
+        items.append(resource)
 
-
-
-    # Filter Fields/Fieldsets
-    if fieldset:
-        if fieldset in fieldsets.keys():
-            for result in results:
-                for key in result.keys():
-                    if key not in fieldsets[fieldset]:
-                        del result[key]
-    elif fields:
-        fields = fields.split(',')
-        for result in results:
-            for key in result.keys():
-                if key not in fields:
-                    del result[key]
 
     # Setup Facet Counts
     sqs = sqs.facet("type").facet("subtype")
@@ -264,12 +432,9 @@ def haystack_search_api(request):
 
     sqs = sqs.facet('local')
 
-    facets = sqs.facet_counts()
+    facet_counts = sqs.facet_counts()
 
     # Prepare Search Results
-    from django.core.serializers.json import DjangoJSONEncoder
-    #results =  json.dumps(results, cls=DjangoJSONEncoder).replace("\\","")
-
     data = {
         "success": True,
         "total": sqs.count(),
@@ -278,23 +443,21 @@ def haystack_search_api(request):
             "startIndex": startIndex,
             "limit": limit,
             "sort": sort,
-            "type": type,
-        },
-        "facets": facets,
+            "type": type_facets,
+            },
         "results": results,
-        "counts": dict(facets.get("fields")['type']+facets.get('fields')['subtype']) if sqs.count() > 0 else [],
-        "categories": [facet[0] for facet in facets.get('fields')['category']] if sqs.count() > 0 else [],
-        "keywords": [facet[0] for facet in facets.get('fields')['keywords']] if sqs.count() > 0 else [],
-        "services": [facet[0] for facet in facets.get('fields')['service']] if sqs.count() > 0 else [],
-        "local":  [facet[0] for facet in facets.get('fields')['local']] if sqs.count() > 0 else []
-    }
+        "facets": dict(default_facet_types+facet_counts.get("fields")['type']+facet_counts.get('fields')['subtype']) if sqs.count() > 0 else [],
+        "categories": {facet[0]:facet[1] for facet in facet_counts.get('fields')['category']} if sqs.count() > 0 else {},
+        "keywords": {facet[0]:facet[1] for facet in facet_counts.get('fields')['keywords']} if sqs.count() > 0 else {},
+        }
 
     # Return Results
-    if format:
-        if format == "xml":
-            return HttpResponse(xmlrpclib.dumps((data,), allow_none=True), mimetype="text/xml")
-        elif format == "json":
-            return HttpResponse(json.dumps(data), mimetype="application/json")
-    else:
-        return HttpResponse(json.dumps(data), mimetype="application/json")
+    ts1 = time() - ts
 
+    if format == "html": #Send to search/explore page
+        return data, items
+    elif format == "raw":
+        return HttpResponse(json.dumps(data), mimetype="application/json")
+    else:
+        query = query_from_request(request, kwargs)
+        return _search_json(query, items, data["facets"], ts1)

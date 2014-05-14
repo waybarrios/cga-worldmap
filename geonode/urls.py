@@ -79,6 +79,7 @@ urlpatterns = patterns('',
     (r'^bostonhoods/?', include('geonode.hoods.urls')),
     (r'^certification/', include('geonode.certification.urls')),    
     url(r'^autocomplete/', include('autocomplete_light.urls')),
+    (r'^search/?', include('geonode.search.urls')),
     (r'^dvn/?', include('geonode.dvn.urls')),
     )
 
