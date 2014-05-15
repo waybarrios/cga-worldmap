@@ -1738,7 +1738,7 @@ def search_result_detail(request):
 
     try:
         layer = Layer.objects.get(uuid=uuid)
-        layer_is_remote = False
+        layer_is_remote = layer.service is not None
         category = layer.topic_category
     except Exception:
         layer = None
