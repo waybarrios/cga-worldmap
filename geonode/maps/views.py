@@ -818,8 +818,7 @@ def tweetview(request):
 
 def embed(request, mapid=None, snapshot=None):
     if mapid is None:
-        DEFAULT_MAP_CONFIG, DEFAULT_BASE_LAYERS = default_map_config()
-        config = DEFAULT_MAP_CONFIG
+        config = json.loads(newmap_config(request))
     else:
         if mapid.isdigit():
             map_obj = get_object_or_404(Map,pk=mapid)
@@ -828,11 +827,20 @@ def embed(request, mapid=None, snapshot=None):
 
         if not request.user.has_perm('maps.view_map', obj=map_obj):
             return HttpResponse(_("Not Permitted"), status=401, mimetype="text/plain")
+
+        if 'layer' in request.GET:
+            addedlayers, groups, bbox = additional_layers(request,map_obj, request.GET.getlist('layer'))
+            config = map_obj.viewer_json(request.user, *addedlayers)
+            for group in groups:
+                if group not in json.dumps(config['map']['groups']):
+                    config['map']['groups'].append({"expanded":"true", "group":group})
+
         if snapshot is None:
             config = map_obj.viewer_json(request.user)
         else:
             config = snapshot_config(snapshot, map_obj, request.user)
         config['first_visit'] = False
+
         
     return render_to_response('maps/embed.html', RequestContext(request, {
         'config': json.dumps(config)

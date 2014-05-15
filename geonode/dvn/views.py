@@ -60,7 +60,7 @@ def dvn_import(request):
                     "success": True,
                     "layer_name": saved_layer.typename,
                     "layer_link": "%sdata/%s" % (settings.SITEURL, saved_layer.service_typename),
-                    "embed_map_link": "%smaps/new/embed?layers=%s" % (settings.SITEURL, saved_layer.service_typename),
+                    "embed_map_link": "%smaps/embed?layers=%s" % (settings.SITEURL, saved_layer.service_typename),
                     "worldmap_username": user.username
                 }))
 

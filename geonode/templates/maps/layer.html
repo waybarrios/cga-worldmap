@@ -160,7 +160,7 @@
     function addToMap(selectInput) {
     	var selectedValue = selectInput.options[selectInput.selectedIndex].value;
     	if (selectedValue != '') {
-    	    window.location.href='/maps/' + selectedValue + '/?layer={{layer.uuid}}'
+    	    window.location.href='/maps/' + selectedValue + '/?layer={{layer.service_typename}}'
     	}
     }
     {% endautoescape %}
