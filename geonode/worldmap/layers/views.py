@@ -45,7 +45,7 @@ def addLayerJSON(request):
             layer = Layer.objects.get(typename=layername)
             if not request.user.has_perm("maps.view_layer", obj=layer):
                 return HttpResponse(status=401)
-            sfJSON = {'layer': layer.layer_config(request.user)}
+            sfJSON = {'layer': layer.layer_config()}
             logger.debug('sfJSON is [%s]', str(sfJSON))
             return HttpResponse(json.dumps(sfJSON))
         except Exception, e:

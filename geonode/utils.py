@@ -558,7 +558,7 @@ class GXPMapBase(object):
                 'title':    self.title,
                 'abstract': self.abstract
             },
-            'defaultSourceType': "gxp_wmscsource",
+            'defaultSourceType': "gxp_geonodecataloguesource",
             'sources': sources,
             'map': {
                 'layers': [layer_config(l) for l in layers],

@@ -568,12 +568,10 @@ DEFAULT_MAP_ZOOM = 0
 
 MAP_BASELAYERS = [{
     "source": {
-        "ptype": "gxp_wmscsource",
+        "ptype": "gxp_geonodecataloguesource",
         "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
-        "restUrl": "/gs/rest" ,
-        "requiredProperties" : []
+        "restUrl": "/gs/rest"
      },
-
   },{
     "source": {"ptype": "gxp_olsource"},
     "type":"OpenLayers.Layer",
