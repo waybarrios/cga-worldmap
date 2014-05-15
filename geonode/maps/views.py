@@ -2501,11 +2501,11 @@ def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner
     new_user = User.objects.create_user(user_name, user_email, random_password)
 
     if new_user:
-        new_user.is_active = False
+        new_user.is_active = True
         new_user.save()
         email_address = EmailAddress.objects.get(email=new_user.email)
         email_address.send_confirmation()
-
+        _send_new_user_email(new_user,random_password)
 
         new_profile = new_user.get_profile()
         if settings.USE_CUSTOM_ORG_AUTHORIZATION and new_user.email.endswith(settings.CUSTOM_GROUP_EMAIL_SUFFIX):
@@ -2513,6 +2513,24 @@ def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner
             new_profile.member_expiration_dt = datetime.today() + timedelta(days=365)
             new_profile.save()
     return new_user
+
+
+def _send_new_user_email(user, password):
+
+    current_site = Site.objects.get_current()
+    user = User.objects.get(email = user.email)
+
+    subject = render_to_string('registration/new_user_email_subject.txt',
+                               { 'site': current_site})
+    # Email subject *must not* contain newlines
+    subject = ''.join(subject.splitlines())
+
+    message = render_to_string('registration/new_user_email.txt',
+                               { 'site': current_site,
+                                 'username': user.username,
+                                 'password' : password })
+
+    send_mail(subject, message, settings.NO_REPLY_EMAIL, [user.email])
 
 def get_suffix_if_custom(map):
     if map.use_custom_template:
