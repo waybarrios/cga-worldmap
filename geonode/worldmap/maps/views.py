@@ -59,6 +59,7 @@ def map_view(request, mapid, snapshot=None, template='maps/map_view.html'):
         'config': json.dumps(config),
         'title': map_obj.title,
         'DB_DATASTORE' : ogc_server_settings.DATASTORE,
+        'USE_GAZETTEER' : settings.USE_GAZETTEER,
         'urlsuffix': get_suffix_if_custom(map_obj)
     }))
 
@@ -107,7 +108,8 @@ def new_map(request, template='maps/map_view.html'):
     else:
         return render_to_response(template, RequestContext(request, {
             'config': json.dumps(config),
-            'DB_DATASTORE' : ogc_server_settings.DATASTORE
+            'DB_DATASTORE' : ogc_server_settings.DATASTORE,
+            'USE_GAZETTEER' : settings.USE_GAZETTEER
         }))
 
 

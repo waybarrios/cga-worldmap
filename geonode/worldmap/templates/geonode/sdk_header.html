@@ -116,7 +116,15 @@ var nicEditIconsPath = "{{ STATIC_URL }}worldmap/img/nicEditorIcons.gif"
              autoExpand: "query",
              actionTarget: "paneltbar",
              outputTarget: "query"
-         },
+         }{% if USE_GAZETTEER %},
+                     {
+                         ptype: "gxp_gazetteertool",
+                         actionTarget: "paneltbar",
+                         title: '<span class="x-btn-text">{% trans 'Gazetteer' %}</span>',
+                         iconCls: null,
+                         toggleGroup: 'interaction',
+                         pressed: false
+                     }{% endif %},
          {
              actions: ["-"],
              actionTarget: "paneltbar"

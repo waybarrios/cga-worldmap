@@ -7,7 +7,8 @@ psycopg2
 #The following are for the gazetteer
 -e git+https://github.com/cga-harvard/geopy.git#egg=geopy
 geojson
-https://bitbucket.org/jespern/django-piston/get/5b3ef294fe89.zip
+#https://bitbucket.org/jespern/django-piston/get/5b3ef294fe89.zip
+-e git+https://github.com/cga-harvard/django-piston.git#egg=django-piston
 python-dateutil==1.5 #For Python < 3.0
 datautil
 jdcal

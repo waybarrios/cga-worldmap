@@ -244,6 +244,7 @@ INSTALLED_APPS = (
     'modeltranslation',
     'autocomplete_light',
     'haystack',
+    'rest_framework',
 
 
     # Theme
@@ -709,7 +710,19 @@ USE_GAZETTEER = False
 #
 #    }
 #SOUTH_TESTS_MIGRATE = False
-#GAZETTEER_FULLTEXTSEARCH = False
+GAZETTEER_FULLTEXTSEARCH = False
+REST_FRAMEWORK = {
+    # Use hyperlinked styles by default.
+    # Only used if the `serializer_class` attribute is not set on a view.
+    'DEFAULT_MODEL_SERIALIZER_CLASS':
+        'rest_framework.serializers.HyperlinkedModelSerializer',
+
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AnonReadOnly'
+    ]
+}
 ##### END GAZETTEER SETTINGS #####
 
 #Set to true to schedule asynchronous updates of
@@ -724,6 +737,7 @@ if USE_QUEUE:
     djcelery.setup_loader()
 
 GOOGLE_API_KEY = ''
+GOOGLE_SECRET_KEY=''
 GOOGLE_ANALYTICS_CODE=''
 GEONAMES_USER=''
 

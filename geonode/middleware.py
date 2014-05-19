@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpResponse
 from django.utils import simplejson as json
 
 from geonode.security.enumerations import AUTHENTICATED_USERS, ANONYMOUS_USERS
