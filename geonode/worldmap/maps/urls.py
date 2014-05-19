@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import *
+from django.conf.urls import patterns, url, include
 from geonode.maps.urls import urlpatterns as mappatterns
 
 urlpatterns = patterns('geonode.maps.views',

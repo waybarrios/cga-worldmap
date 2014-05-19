@@ -76,9 +76,6 @@ class Map(ResourceBase, GXPMapBase):
     last_modified = models.DateTimeField(auto_now_add=True)
     # The last time the map was modified.
 
-    popular_count = models.IntegerField(default=0)
-    share_count = models.IntegerField(default=0)
-
     urlsuffix = models.CharField(_('Site URL'), max_length=255, blank=True)
     # Alphanumeric alternative to referencing maps by id, appended to end of URL instead of id, ie http://domain/maps/someview
 
@@ -585,6 +582,3 @@ def pre_delete_map(instance, sender, **kwrargs):
 
 
 signals.pre_delete.connect(pre_delete_map, sender=Map)
-signals.pre_save.connect(pre_save_map, sender=Map)
-signals.post_save.connect(resourcebase_post_save, sender=Map)
-signals.post_delete.connect(resourcebase_post_delete, sender=Map)

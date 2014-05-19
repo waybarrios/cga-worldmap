@@ -15,7 +15,6 @@ from geonode.base.enumerations import CHARSETS
 from geonode.base.models import TopicCategory
 from geonode.maps.models import Map, MapLayer
 from geonode.layers.models import Layer, Attribute
-from geonode.layers.utils import layer_set_permissions
 from geonode.layers.views import layer_upload as geonode_upload
 from geonode.worldmap.gazetteer.utils import update_gazetteer, queue_gazetteer_update
 from geonode.worldmap.profile.forms import ContactProfileForm, LayerContactForm
@@ -100,7 +99,7 @@ def ajax_layer_permissions(request, layername, use_email=False):
         )
 
     permission_spec = json.loads(request.raw_post_data)
-    layer_set_permissions(layer, permission_spec, use_email)
+    layer.set_permissions(permission_spec, use_email)
 
     return HttpResponse(
         "Permissions updated",

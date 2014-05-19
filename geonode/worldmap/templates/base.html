@@ -296,7 +296,7 @@
         placeholder: 'Search...',
         width: 'element',     
         ajax: {
-          url: '{% url "search_api" %}',
+          url: '{% url "search" %}',
           data: function(term,page){
             page = (page - 1) * 10;
             return {

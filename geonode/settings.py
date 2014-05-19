@@ -195,11 +195,12 @@ GEONODE_APPS = (
     'geonode.catalogue',
     'geonode.documents',
     'geonode.api',
+    'geonode.search',
 
     # GeoNode Contrib Apps
     'geonode.contrib.services',
     'geonode.contrib.groups',
-    'geonode.contrib.services'
+    'geonode.contrib.services',
     'geonode.contrib.dynamic',
 
     # GeoServer Apps

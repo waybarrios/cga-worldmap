@@ -1,6 +1,6 @@
 __author__ = 'mbertrand'
 from geonode.worldmap.gazetteer.handlers import DjangoAuthentication
-from django.conf.urls.defaults import *
+from django.conf.urls import patterns, url, include
 from piston.resource import Resource
 
 

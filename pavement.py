@@ -59,8 +59,6 @@ JETTY_RUNNER_URL="http://repo2.maven.org/maven2/org/mortbay/jetty/jetty-runner/8
 OPENGEO_SUITE_SDK_URL="http://boundlessgeo.com/wp-content/opengeosuite/sdk/OpenGeoSuite-4.0-sdk.zip"
 
 @task
-@cmdopts([
-])
 def setup_geonode_sdk(options):
     
     sh("git submodule update --init")
@@ -151,15 +149,16 @@ def static(options):
     'setup_geonode_sdk'
     'static',
 ])
+def setup_webapps(options):
+    pass
+
+@task
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
 
 
     sh('pip install -e . --allow-external pyproj --allow-unverified pyproj')
     sh('pip install -r requirements.txt')
-])
-def setup(options):
-    """Get dependencies and prepare a GeoNode development environment."""
 
     info(('GeoNode development environment successfully set up.'
           'If you have not set up an administrative account,'
