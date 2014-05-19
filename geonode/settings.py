@@ -244,7 +244,6 @@ INSTALLED_APPS = (
     'modeltranslation',
     'autocomplete_light',
     'haystack',
-    'rest_framework',
 
 
     # Theme
