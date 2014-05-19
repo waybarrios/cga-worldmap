@@ -725,7 +725,7 @@ if USE_QUEUE:
 
 GOOGLE_API_KEY = ''
 GOOGLE_ANALYTICS_CODE=''
-
+GEONAMES_USER=''
 
 
 #If you want to redirect members of your organization to a separate authentication system when registering, change the following settings
