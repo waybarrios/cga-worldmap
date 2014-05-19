@@ -21,6 +21,7 @@ import httplib2
 import base64
 import re
 import math
+import copy
 
 from threading import local
 from urlparse import urlparse
