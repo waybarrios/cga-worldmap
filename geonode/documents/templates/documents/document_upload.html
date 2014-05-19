@@ -12,26 +12,27 @@
 {% endblock %}
 
 {% block body %}
-    <div class="block">
-        <div class="span8">
-          <h2 class="page-title">{% trans "Upload Documents" %}</h2>
-            <div>
-                <form id="upload_form"  method="post" enctype="multipart/form-data" action="{% url "document_upload" %}">
+
+<div class="col-md-12">
+  <h2 class="page-title">{% trans "Upload Documents" %}</h2>
+<div>
+
+<div class="col-md-8">
+<form id="upload_form"  method="post" enctype="multipart/form-data" action="{% url "document_upload" %}">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
                     {{ form.as_table }}
                     <div><br/><input class="btn" type="submit" value="Upload" /></div>
                 </form>
             </div>
         </div>
-    </div>
 {% endblock %}
 
 {% block sidebar %}
 
-<h3>{% trans "Permissions"  %}</h3>
-<div>
+<div class="col-md-4">
+  <h3>{% trans "Permissions"  %}</h3>
   <form id="permission_form">
-        {% include "_permissions.html" %}
+    {% include "_permissions.html" %}
   </form>
 </div>
 
@@ -43,12 +44,17 @@
 {% endwith %}
 
 <script type="text/javascript">
+    $('#id_doc_file').on('change', function(){
+        if($('#id_title').val() == ''){
+            $('#id_title').val($('#id_doc_file').val());
+        }
+    });
     $("#resource").select2({
         minimumInputLength: 1,
         placeholder: 'Select layer, map or empty',
         width: 'element',
         ajax: {
-          url: '{% url "search_api" %}',
+          url: '{% url 'api_dispatch_list' api_name='api' resource_name='base' %}',
           data: function(term,page){
             return {
               type: 'layer,map',

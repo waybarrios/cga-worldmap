@@ -141,17 +141,15 @@ def _install_data_dir():
 
 
 @task
-def update_static(options):
+def static(options):
     with pushd('geonode/static'):
-        sh('npm install')
-        sh('bower install')
-        sh('grunt production')
-        
+        sh('make')
 
 @task
 @needs([
     'setup_geoserver',
     'setup_geonode_sdk'
+    'static',
 ])
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
@@ -159,7 +157,9 @@ def setup(options):
 
     sh('pip install -e . --allow-external pyproj --allow-unverified pyproj')
     sh('pip install -r requirements.txt')
-
+])
+def setup(options):
+    """Get dependencies and prepare a GeoNode development environment."""
 
     info(('GeoNode development environment successfully set up.'
           'If you have not set up an administrative account,'
@@ -189,7 +189,7 @@ def sync(options):
     """
     Run the syncdb and migrate management commands to create and migrate a DB
     """
-    sh("python manage.py syncdb --all --noinput")
+    sh("python manage.py syncdb --noinput")
     #sh("python manage.py migrate --noinput")
     sh("python manage.py loaddata sample_admin.json")
 
@@ -417,6 +417,7 @@ def reset():
 
 def _reset():
     sh("rm -rf geonode/development.db")
+    sh("rm -rf geonode/uploaded/*")
     _install_data_dir()
 
 

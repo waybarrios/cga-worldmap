@@ -27,7 +27,6 @@ from django.views.decorators.csrf import csrf_exempt
 import logging
 from django.utils.http import is_safe_url
 from django.http.request import validate_host
-from geonode.utils import ogc_server_settings
 
 
 logger = logging.getLogger("geonode.proxy.views")
@@ -36,7 +35,15 @@ HGL_URL = 'http://hgl.harvard.edu:8080/HGL'
 
 @csrf_exempt
 def proxy(request):
-    PROXY_ALLOWED_HOSTS = (ogc_server_settings.hostname,) + getattr(settings, 'PROXY_ALLOWED_HOSTS', ())
+    PROXY_ALLOWED_HOSTS = getattr(settings, 'PROXY_ALLOWED_HOSTS', ())
+
+    host = None
+
+    if 'geonode.geoserver' in settings.INSTALLED_APPS:
+        from geonode.geoserver.helpers import ogc_server_settings
+        hostname = (ogc_server_settings.hostname,) if ogc_server_settings else ()
+        PROXY_ALLOWED_HOSTS += hostname
+        host = ogc_server_settings.netloc
 
     if 'url' not in request.GET:
         return HttpResponse(
@@ -63,7 +70,7 @@ def proxy(request):
                     )
     headers = {}
 
-    if settings.SESSION_COOKIE_NAME in request.COOKIES and is_safe_url(url=raw_url, host=ogc_server_settings.netloc):
+    if settings.SESSION_COOKIE_NAME in request.COOKIES and is_safe_url(url=raw_url, host=host):
         headers["Cookie"] = request.META["HTTP_COOKIE"]
 
     if request.method in ("POST", "PUT") and "CONTENT_TYPE" in request.META:
@@ -73,7 +80,7 @@ def proxy(request):
         conn = HTTPSConnection(url.hostname, url.port)
     else:
         conn = HTTPConnection(url.hostname, url.port)
-    conn.request(request.method, locator, request.raw_post_data, headers)
+    conn.request(request.method, locator, request.body, headers)
 
     result = conn.getresponse()
 

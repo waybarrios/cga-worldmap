@@ -25,8 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 import taggit
 from geonode.layers.forms import JSONField
 from geonode.upload.models import UploadFile 
-from geonode.utils import ogc_server_settings
-
+from geonode.geoserver.helpers import ogc_server_settings
 
 class UploadFileForm(forms.ModelForm):
     class Meta:

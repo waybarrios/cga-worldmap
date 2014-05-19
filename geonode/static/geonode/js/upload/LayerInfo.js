@@ -476,7 +476,7 @@ define(function (require, exports) {
              if ($(data).filter( function() {
                return this.name.localeCompare(term)===0;
              }).length===0) {
-               return {name:term.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')};
+               return {name:term.replace(/[`~!@#$%^&*()|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')};
              }
            }
           });

@@ -155,6 +155,9 @@ class PermissionLevelMixin(object):
     """
 
     LEVEL_NONE = "_none"
+    LEVEL_READ  = 'readonly'
+    LEVEL_WRITE = 'readwrite'
+    LEVEL_ADMIN = 'admin'
 
     @property
     def permission_levels(self):

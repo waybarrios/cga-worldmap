@@ -5,21 +5,15 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView
 
 from geonode.layers.models import Layer 
 from geonode.maps.models import Map
-from geonode.search.normalizers import apply_normalizers
 from geonode.contrib.groups.forms import GroupInviteForm, GroupForm, GroupUpdateForm, GroupMemberForm
 from geonode.contrib.groups.models import Group, GroupInvitation, GroupMember
-from django.views.generic import ListView
+from geonode.people.models import Profile
 
 
-def group_list(request, template='groups/group_list.html'):
-    from geonode.search.views import search_page
-    post = request.POST.copy()
-    post.update({'type': 'group'})
-    request.POST = post
-    return search_page(request, template=template)
 
 @login_required
 def group_create(request):
@@ -85,30 +79,7 @@ class GroupDetailView(ListView):
         context['layers'] = self.group.resources(resource_type=Layer)
         context['is_member'] = self.group.user_is_member(self.request.user)
         context['is_manager'] = self.group.user_is_role(self.request.user, "manager")
-        context['object_list'] = apply_normalizers({'users': [obj.user.profile for obj in context['object_list']]})
-        context['total'] = self.get_queryset().count()
         return context
-
-
-def group_detail(request, slug):
-    group = get_object_or_404(Group, slug=slug)
-    
-    if not group.can_view(request.user):
-        raise Http404()
-        
-    maps = group.resources(resource_type=Map)
-    layers = group.resources(resource_type=Layer)
-    
-    ctx = {
-        "object": group,
-        "maps": maps,
-        "layers": layers,
-        "object_list": group.member_queryset(),
-        "is_member": group.user_is_member(request.user),
-        "is_manager": group.user_is_role(request.user, "manager"),
-    }
-    ctx = RequestContext(request, ctx)
-    return render_to_response("groups/group_detail.html", ctx)
 
 
 def group_members(request, slug):
@@ -177,10 +148,10 @@ def group_join(request, slug):
         raise Http404()
     
     if group.user_is_member(request.user):
-        return redirect("group_members", slug=group.slug)
+        return redirect("group_detail", slug=group.slug)
     else:
         group.join(request.user, role="member")
-        return redirect("group_members", slug=group.slug)
+        return redirect("group_detail", slug=group.slug)
 
 
 @require_POST
@@ -193,8 +164,8 @@ def group_invite(request, slug):
     form = GroupInviteForm(request.POST)
     
     if form.is_valid():
-        for user in form.cleaned_data["user_identifiers"]:
-            group.invite(user, request.user, role=form.cleaned_data["role"])
+        for user in form.cleaned_data["invite_user_identifiers"].split("\n"):
+            group.invite(user, request.user, role=form.cleaned_data["invite_role"])
     
     return redirect("group_members", slug=group.slug)
 
