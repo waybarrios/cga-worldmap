@@ -146,13 +146,9 @@ def static(options):
 @task
 @needs([
     'setup_geoserver',
-    'setup_geonode_sdk'
+    'setup_geonode_sdk',
     'static',
 ])
-def setup_webapps(options):
-    pass
-
-@task
 def setup(options):
     """Get dependencies and prepare a GeoNode development environment."""
 
