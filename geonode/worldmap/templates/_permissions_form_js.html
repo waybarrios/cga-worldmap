@@ -4,28 +4,8 @@
   function permissionsString(form, type) {
     var anonymousPermissions, authenticatedPermissions, customPermissions, levels;
     if (typeof form === 'string'){
-        form = $(form);
+      form = $(form);
     }
-    
-/*      if (!form.serializeObject){
-    	form.serializeObject = function() {
-    	    var o = {};
-    	    var a = this.serializeArray();
-
-    	    $.each(a, function() {
-    	        if (o[this.name] !== undefined) {
-    	            if (!o[this.name].push) {
-    	                o[this.name] = [o[this.name]];
-    	            }
-    	            o[this.name].push(this.value || '');
-    	        } else {
-    	            o[this.name] = this.value || '';
-    	        }
-    	    });
-    	    return o;
-    	};
-    }  */
-    
     var data = form.serializeObject();
 
     if (type == "maps") {
@@ -51,15 +31,12 @@
       };
     }
 
-    
-
     if (data["viewmode"] === "ANYONE") {
       anonymousPermissions = levels['readonly'];
     } else {
       anonymousPermissions = levels['none'];
     }
 
-      
     if (data["editmode"] === "REGISTERED") {
       authenticatedPermissions = levels['readwrite'];
     } else if (data["viewmode"] === 'REGISTERED') {
@@ -68,7 +45,6 @@
       authenticatedPermissions = levels['none'];
     }
 
-    
     var perUserPermissions = [];
     if (data["editmode"] === "LIST") {
       var editusers = form.find("input[name=editusers]").select2("val");
@@ -81,6 +57,20 @@
       }
     }
 
+    var perGroupPermissions = [];
+    {% if GROUPS_APP %}
+    if (data["editmode"] === "LIST") {
+      var editgroups = form.find("input[name=editgroups]").select2("val");
+      if (editgroups instanceof Array) {
+        $.each(editgroups, function(index, value) {
+          perGroupPermissions.push([value, levels["readwrite"]]);
+        });
+      } else {
+        perGroupPermissions.push([editgroups, levels["readwrite"]]);
+      }
+    }
+    {% endif %}
+
     var manageusers = form.find("input[name=manageusers]").select2("val");
     if (manageusers) {
       if (manageusers instanceof Array) {
@@ -92,11 +82,25 @@
       }
     }
 
+    {% if GROUPS_APP %}
+    var managegroups = form.find("input[name=managegroups]").select2("val");
+    if (managegroups) {
+      if (managegroups instanceof Array) {
+        $.each(managegroups, function(index, value) {
+          perGroupPermissions.push([value, levels["admin"]]);
+        });
+      } else {
+        perGroupPermissions.push([managegroups, levels["admin"]]);
+      }
+    }
+    {% endif %}
+
     return {
         anonymous: anonymousPermissions,
         authenticated: authenticatedPermissions,
+        users: perUserPermissions,
+        groups: perGroupPermissions,
         customgroup: customPermissions,
-        users: perUserPermissions
     };
   };
 
@@ -105,7 +109,7 @@
     $('#permissions-body').ready(function(){
       {% if layer != "none" and document != "none" %}
       $.ajax(
-        "{% if layer %}{% url 'resource_permissions' 'layer' layer.id %}{% elif map %}{% url 'resource_permissions' 'map' map.id %}{% elif document %}{% url 'resource_permissions' 'document' document.id %}{% endif %}",
+        "{% if layer %}{% url "resource_permissions" 'layer' layer.id %}{% elif map %}{% url "resource_permissions" 'map' map.id %}{% elif document %}{% url "resource_permissions" 'document' document.id %}{% endif %}",
         {
           success: function(data){
             var perms = $.parseJSON($.parseJSON(data).permissions);
@@ -129,18 +133,21 @@
             } else if (!("anonymous" in perms)){
               	$('#perms_view_editors').attr("checked", "checked");
             }
-
-
-       
-            
-            if ((!("authenticated" in perms) || perms['authenticated'].split('_')[1] === 'readonly') && 
+            if ((!("authenticated" in perms) || perms['authenticated'].split('_')[1] === 'readonly') &&
             		(!("customgroup" in perms) || perms['customgroup'].split('_')[1] === 'readonly')) {
               $('#perms_edit_list').attr("checked", "checked");
-              var users = [];         
+              var users = [];
               for (var key in perms["users"]){
                 users.push(key);
               }
               $("#perms_edit_editusers").val(users.join());
+              {% if GROUPS_APP %}
+              var groups = [];
+              for (var key in perms["groups"]){
+                groups.push(key);
+              }
+              $("#perms_edit_editgroups").val(groups.join());
+              {% endif %}
             }
             var admins = [];
             for (var key in perms["users"]){
@@ -148,6 +155,16 @@
                 admins.push(key);
               }
             }
+            {% if GROUPS_APP %}
+            var group_admins = [];
+            for (var key in perms["groups"]){
+              if(perms["groups"][key].split('_')[1] === 'admin'){
+                group_admins.push(key);
+              }
+            }
+            $("#perms_edit_managegroups").val(group_admins.join());
+            addSelectGroups();
+            {% endif %}
             $("#perms_edit_manageusers").val(admins.join());
             addSelectUsers();
           }
@@ -155,9 +172,12 @@
       );
       {% else %}
       addSelectUsers();
+      {% if GROUPS_APP %}
+      addSelectGroups();
+      {% endif %}
       {% endif %}
     });
-    
+
     function addSelectUsers(){
       $("input.user-select").select2({
         placeholder: '{% trans "Choose one or more users..." %}',
@@ -190,18 +210,69 @@
         }
       });
     }
-    
+
+    {% if GROUPS_APP %}
+    function addSelectGroups(){
+      $("input.group-select").select2({
+        placeholder: '{% trans "Choose one or more groups..." %}',
+        minimumInputLength: 1,
+        multiple: true,
+        width: 'element',
+        ajax: {
+          url: "{% url "account_ajax_lookup" %}",
+          dataType: "json",
+          type: "POST",
+          data: function (term, page) {
+            return {
+              query: term,
+            };
+          },
+          results: function (data, page) {
+            return {results: data.groups};
+          }
+        },
+        id: groupID,
+        formatResult: groupFormatResult,
+        formatSelection: groupFormatSelection,
+        initSelection: function(element, callback) {
+          var data = [];
+          var val = element.val().split(",");
+          $(element.val().split(",")).each(function (index,value) {
+              data.push({name: value});
+          });
+          callback(data);
+        }
+      });
+    }
+    {% endif %}
+
     function userID(user) {
-      return user.username
+      return user.username;
     }
 
+    {% if GROUPS_APP %}
+    function groupID(group) {
+      return group.name;
+    }
+    {% endif %}
+
     function userFormatResult(user) {
-      return user.username
+      return user.username;
     }
 
     function userFormatSelection(user) {
         return user.username;
     }
+
+    {% if GROUPS_APP %}
+    function groupFormatResult(group) {
+      return group.name;
+    }
+
+    function groupFormatSelection(group) {
+        return group.name;
+    }
+    {% endif %}
 
     var toggle_buttons = function() {
       if ($("input.asset-selector:checked").length) {
@@ -211,7 +282,7 @@
       }
     };
 
-    $("input.asset-selector").live("change", toggle_buttons);
+    $("input.asset-selector").on("change", toggle_buttons);
     toggle_buttons();
 
     var perms_submit = function() {

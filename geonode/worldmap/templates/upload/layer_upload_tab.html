@@ -1,20 +1,14 @@
 {% extends "tab_base.html" %}
 {% load i18n %}
-{% load static from staticfiles %}
+{% load staticfiles %}
 
 {% block title %} {% trans "Upload Layer"  %} - {{ block.super }}  {% endblock %}
 
-{% block body_class %}data data-list upload{% endblock %}
+{% block body_class %}layers upload{% endblock %}
 
-{% block extra_head %}
-
-{% endblock %}
-
+{% block extra_head %}{% endblock %}
 
 {% block head %}
-
-<!-- TODO Move this to site-wide css or remove -->
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geonode/css/fileuploadfield.css"/>
 
 {{ block.super }}
 
@@ -35,103 +29,109 @@
 {% endblock %}
 
 {% block body %}
-  <div class="block">
-    <div class="span8 tabbed">
+
+    <div class="col-md-8 tabbed">
 
 
         {% if incomplete %}
-            <section style="border: none" class="uip">
-                <h3 class="uip">Incomplete Uploads</h3>
-                <p>You have the following incomplete uploads:</p>
-                {% for u in incomplete %}
-                    <div class="clearfix uip" style="" id="incomplete-{{ u.import_id }}">
-                        <div class="pull-left">{{ u.name }}, last updated on {{ u.date }}</div>
-                        <div class="upload_actions pull-right">
-                            <a class="btn btn-mini" href="#" id="resume-{{ u.import_id }}">Resume</a>
-                            <a class="btn btn-mini icon-trash" href="#" id="delete-{{ u.import_id }}">Delete</a>
-                        </div>
-                    </div>
-            </section>
-            {% endfor %}
-            <div id="confirm-delete" class="hide alert alert-warn" style="padding:10px; margin: 10px 0;">
-                Are you sure you want to delete this upload?
-                <div style="margin: 5px 0">
-                <a href="#y" class="btn btn-danger">Delete</a>
-                <a href="#n" class="btn">Cancel</a>
-                </div>
-                <a href="#yy" style="font-weight:normal">Delete, and don't ask me again.</a>
-            </div>
-        {% endif %}
-        {% block additional_info %}{% endblock %}
-        {% if errors %}
-            <div id="errors">
-                {% for error in errors %}
-                    <div>{{ error }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-            <section id="drop-zone">
-              <h2>{% trans "Drop files here" %}</h2>
-            </section>
-
-            or select them one by one:
-
-            <form id="file-uploader" method="post" enctype="multipart/form-data">
-              <input class="btn" id="file-input" type="file" multiple>
-            </form>
-
-
-              <div id="metadata-upload">
-              <form id="metadata-uploader" method="post" enctype="multipart/form-data">
-              <label for="title">{% trans "Title" %}</label><input type="text" id="layer_title" label="Title" class="required"></input>
-              <label for="abstract">{% trans "Abstract" %}</label><textarea rows="4" cols="50" id="abstract" label="Abstract" class="required"></textarea>
-              <label for="charset">{% trans "Encoding" %}</label>
-              <select id="charset">
-              {% for charset in charsets %}
-   				<option value="{{charset.0}}"
-       				{% if charset.0 == 'UTF-8' %}selected="selected"{% endif %}>
-       				{{charset.1}}
-   					</option>
-			  {% endfor %}
-              </select>
-
-              <p><input type="checkbox" id="termsAgreement" class="required" />{% trans "I agree to the <a href='' onclick='javascript:showTOC();return false;'>Terms and Conditions</a>" %} </p>
-
-              </form>
-              </div>
-
-            <section class="widget">
-              <ul id="global-errors"></ul>
-              <h2>{% trans "Files to be uploaded" %}</h2>
-              <div id="file-queue">
-              </div>
-            </section>
-
-            <section>
-              <a href="#" id="clear-button">Clear</a>
-              <a href="#" id="upload-button" class="btn">Upload files</a>
-            </section>
-
+    <section class="widget" id="incomplete-download-list">
+      <h3>{% trans "Incomplete Uploads" %}</h3>
+      <p>{% trans "You have the following incomplete uploads" %}:</p>
+      {% for u in incomplete %}
+      <div class="clearfix uip" id="incomplete-{{ u.import_id }}">
+        <div class="pull-left">{{ u.name }}, {% trans "last updated on" %} {{ u.date }}</div>
+        <div class="upload_actions pull-right">
+          <a class="btn btn-mini" href="#" id="resume-{{ u.import_id }}">{% trans "Resume" %}</a>
+          <a class="btn btn-mini" href="#" id="delete-{{ u.import_id }}"><i class="icon-trash"></i> {% trans "Delete" %}</a>
         </div>
+      </div>
+      {% endfor %}
+    </section>
+    <div id="confirm-delete" class="hidden alert alert-warning">
+      {% trans "Are you sure you want to delete this upload?" %}
+      <a href="#y" class="btn btn-danger">{% trans "Delete" %}</a>
+      <a href="#n" class="btn btn-default">{% trans "Cancel" %}</a>
+      <a href="#yy">{% trans "Delete, and don't ask me again." %}</a>
     </div>
+    {% endif %}
+
+    {% block additional_info %}{% endblock %}
+
+    {% if errors %}
+    <div id="errors" class="alert alert-danger">
+      {% for error in errors %}
+      <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <section id="drop-zone">
+        <h2>{% trans "Drop files here" %}</h2>
+    </section>
+
+    <p>{% trans " or select them one by one:" %}</p>
+
+    <form id="file-uploader" method="post" enctype="multipart/form-data">
+      <input class="btn" id="file-input" type="file" multiple>
+    </form>
+
+
+    <section class="metadata">
+        <label for="title">{% trans "Title" %}</label>
+        <div><input type="text" id="layer_title" label="Title" class="required" /></div>
+        <label for="abstract">{% trans "Abstract" %}</label>
+        <div><textarea rows="4" cols="50" id="abstract" label="Abstract" class="required"></textarea></div>
+        <label for="keywords">{% trans "Keywords" %}</label>
+        <div><input type="text" id="keywords" label="Keywords" class="required" /></div>
+    </section>
+    <section class="charset">
+      <p>{% trans "Select the charset or leave default" %}</p>
+      <select id="charset">
+        {% for charset in charsets %}
+        {% if charset.0 == 'UTF-8' %}
+        <option selected='selected' value={{ charset.0 }}>{{ charset.1 }}</option>
+        {% else %}
+        <option value={{ charset.0 }}>{{ charset.1 }}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+    </section>
+    <section class="terms">
+        <p><input type="checkbox" id="termsAgreement" class="required" />{% trans "I agree to the <a href='' onclick='javascript:showTOC();return false;'>Terms and Conditions</a>" %} </p>
+    </section>
+
+      <section class="widget">
+          <ul id="global-errors"></ul>
+          <h4>{% trans "Files to be uploaded" %}</h4>
+          <div id="file-queue"></div>
+      </section>
+
+    <section>
+      <a href="#" id="clear-button" class="btn btn-default">{% trans "Clear" %}</a>
+      <a href="#" id="upload-button" class="btn btn-danger">{% trans "Upload files" %}</a>
+    </section>
+  </div>
 {% endblock %}
+
 
 {% block sidebar %}
 
-<h3>{% trans "Permissions"  %}</h3>
-<div>
+{% if GS_SECURITY_ENABLED %}
+<div class="col-md-4 tabbed">
+  <h3>{% trans "Permissions"  %}</h3>
   <form id="permission_form">
-        {% include "_permissions.html" %}
+    {% include "_permissions.html" %}
   </form>
 </div>
+{% endif %}
+
 {% endblock %}
 
+
 {% block extra_script %}
-
-
-
-
+<script data-main="{% static 'geonode/js/upload/main' %}"
+  src="{% static 'lib/js/require.js' %}">
+</script>
 
 <script type="text/javascript">
 {% autoescape off %}
@@ -165,21 +165,21 @@
     });
 
 
-  //var modules_registered = _.keys(require.s.contexts['_'].registry);
+    //var modules_registered = _.keys(require.s.contexts['_'].registry);
 
-  csrf_token =  "{{ csrf_token }}",
-  form_target = "{{ UPLOADER_URL }}",
-  geogit_enabled = {{ GEOGIT_ENABLED|lower  }},
-  time_enabled = {{ TIME_ENABLED|lower  }},
-  metadata_enabled = true,
-  userLookup = "{% url "geonode.views.ajax_lookup" %}"
+    csrf_token =  "{{ csrf_token }}",
+            form_target = "{{ UPLOADER_URL }}",
+            geogit_enabled = {{ GEOGIT_ENABLED|lower  }},
+            time_enabled = {{ TIME_ENABLED|lower  }},
+            metadata_enabled = true,
+            userLookup = "{% url "geonode.views.ajax_lookup" %}"
 
-
-  
 {% endautoescape %}
 
 </script>
+{% if GS_SECURITY_ENABLED %}
 {% with "none" as layer %}
 {% include "_permissions_form_js.html" %}
 {% endwith %}
+{% endif %}
 {% endblock extra_script %}

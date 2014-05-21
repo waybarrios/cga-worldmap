@@ -23,7 +23,6 @@ scattered over the codebase
 '''
 
 import os.path
-from tempfile import mkstemp
 from geoserver.resource import FeatureType
 from geoserver.resource import Coverage
 from tempfile import mkstemp
@@ -153,6 +152,7 @@ def _rename_files(file_names):
         else:
             files.append(f)
     return files
+
 
 def _rename_zip(old_name, valid_name):
     """Rename files inside zip """

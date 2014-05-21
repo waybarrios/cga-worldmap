@@ -608,6 +608,7 @@ def view(req, step):
     except Exception, e:
         return _error_response(req, errors=e.args)
 
+
 @login_required
 def delete(req, id):
     upload = get_object_or_404(Upload, import_id=id)

@@ -44,16 +44,16 @@ class LayerUploadForm(forms.Form):
     geogit_store = forms.CharField(required=False)
     time = forms.BooleanField(required=False)
 
-    permissions = JSONField()
-
-    spatial_files = ("base_file", "dbf_file", "shx_file", "prj_file", "sld_file", "xml_file")
-
-    abstract = forms.CharField(required=True, error_messages={'required': 'Abstract is required'})
-    layer_title = forms.CharField(required=True, error_messages={'required': 'Title is required'})
+    abstract = forms.CharField(required=False)
+    layer_title = forms.CharField(required=False)
     keywords = taggit.forms.TagField(required=True,
                                      help_text=_("A space or comma-separated list of keywords"),
                                      error_messages={'required': _('Keywords required')})
     termsAgreement = forms.BooleanField(required=True,  error_messages={'required': _('You must agree to the terms and conditions')})
+
+    permissions = JSONField()
+
+    spatial_files = ("base_file", "dbf_file", "shx_file", "prj_file", "sld_file", "xml_file")
 
     def clean(self):
         requires_datastore = () if ogc_server_settings.DATASTORE else ('.csv','.kml')

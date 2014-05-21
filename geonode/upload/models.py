@@ -30,7 +30,6 @@ from gsimporter import NotFound
 from os import path
 
 
-
 class UploadManager(models.Manager):
     def __init__(self):
         models.Manager.__init__(self)

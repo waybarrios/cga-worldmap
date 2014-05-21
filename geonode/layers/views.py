@@ -121,6 +121,7 @@ def layer_upload(request, template='upload/layer_upload.html'):
                         charset = form.cleaned_data["charset"],
                         abstract = form.cleaned_data["abstract"],
                         title = form.cleaned_data["layer_title"],
+                        keywords = form.cleaned_data["keywords"],
                         )
 
             except Exception, e:

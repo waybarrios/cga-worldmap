@@ -509,10 +509,8 @@ define(function (require, exports) {
         $('#' + this.name + '\\:geogit_toggle').on('change', this.doGeoGitToggle);
 
         // Add values to the geogit store dropdown and hide.
-        if (geogit_enabled) {
-            this.setupGeogitDropdown($('#' + this.main.name.slice(0, -4) + '\\:geogit_store'));
-            $("#s2id_" + this.name + "\\:geogit_store").hide();	
-        }
+        this.setupGeogitDropdown($('#' + this.main.name.slice(0, -4) + '\\:geogit_store'));
+        $("#s2id_" + this.name + "\\:geogit_store").hide()
 
         return li;
     };
