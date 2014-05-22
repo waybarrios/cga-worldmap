@@ -2484,9 +2484,7 @@ def ajax_increment_layer_stats(request):
                 layerStats.uniques += 1
             layerStats.save()
 
-    return HttpResponse(
-                            status=200
-    )
+    return HttpResponse(status=200)
 
 def _create_new_user(user_email, map_layer_title, map_layer_url, map_layer_owner_id):
     random_password = User.objects.make_random_password()

@@ -64,3 +64,11 @@ unidecode==0.04.14
 pyproj
 django-haystack
 pyelasticsearch
+
+django_nose
+mock
+coverage
+paste
+PasteDeploy
+pastescript
+dj.paste
