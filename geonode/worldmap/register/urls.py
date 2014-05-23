@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 import account.views
 from geonode.worldmap.register.views import SignupView, registercompleteOrganizationUser, forgot_username
 
