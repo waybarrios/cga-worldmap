@@ -1,14 +1,13 @@
-from django.conf.urls import patterns, url, include
-from geonode.worldmap.register.views import SignupView, registercompleteOrganizationUser, forgotUsername
-from geonode.worldmap.register.forms import UserRegistrationForm
+from django.conf.urls.defaults import *
+import account.views
+from geonode.worldmap.register.views import SignupView, registercompleteOrganizationUser, forgot_username
+
 
 urlpatterns = patterns('',
                        url(r"^signup/$", SignupView.as_view(), name="account_signup"),
-                       url(r'^forgotname/$',
-                           forgotUsername, name="account_forgotname"),
+                       url(r'^forgotname',forgot_username,name='forgot_username'),
                        url(r'^registercomplete/$',
                            registercompleteOrganizationUser,
                            name='registration_complete'),
                        (r'', include('account.urls')),
                        )
-

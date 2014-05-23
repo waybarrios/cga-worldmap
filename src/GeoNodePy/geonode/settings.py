@@ -130,7 +130,7 @@ INSTALLED_APPS = (
     'geonode.maps',
     'geonode.proxy',
     'geonode.profile',
-    'geonode.register',
+    'geonode.worldmap.register',
     'geonode.mapnotes',
     'geonode.capabilities',
     'geonode.queue',
@@ -473,7 +473,7 @@ CUSTOM_GROUP_NAME = 'Organization Users'
 
 #If you want to redirect members of your organization to a separate authentication system when registering, change the following settings
 USE_CUSTOM_ORG_AUTHORIZATION = False
-CUSTOM_ORG_AUTH_TEXT = 'Are you affiliated with XXXX?'
+settings.CUSTOM_AUTH["text"] = 'Are you affiliated with XXXX?'
 #Automatically add users with the following email address suffix to the custom group, if created via layer/map permissions
 CUSTOM_GROUP_EMAIL_SUFFIX = ''
 #URL to redirect to if user indicates they are a member of your organization

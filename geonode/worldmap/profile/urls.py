@@ -27,9 +27,10 @@ from django.conf.urls import patterns, url, include
 from geonode.worldmap.profile import views
 
 
-urlpatterns = patterns('',
-                       url(r'^edit/$',
-                           views.edit_profile,
-                           name='profiles_edit_profile'),
+urlpatterns = patterns('geonode.worldmap.profile.views',
+                       url(r'^edit/$', 'edit_profile', name='profiles_edit_profile'),
+                       url(r"^(?P<username>[^/]*)/$", 'profile_detail', name="profile_detail"),
                        (r'', include('geonode.people.urls')),
                        )
+
+

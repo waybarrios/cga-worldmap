@@ -17,7 +17,7 @@ from geonode.maps.models import Map, MapLayer
 from geonode.layers.models import Layer, Attribute
 from geonode.layers.views import layer_upload as geonode_upload
 from geonode.worldmap.gazetteer.utils import update_gazetteer, queue_gazetteer_update
-from geonode.worldmap.profile.forms import ContactProfileForm, LayerContactForm
+from geonode.worldmap.profile.forms import ContactProfileForm
 from geonode.worldmap.layers.forms import LayerCreateForm, LayerCategoryForm, GEOMETRY_CHOICES, GazetteerAttributeForm
 from geonode.worldmap.stats.models import LayerStats
 from geonode.geoserver.helpers import get_sld_for
@@ -243,7 +243,7 @@ def layer_contacts(request, layername):
     metadata_author = layer.metadata_author
 
     if request.method == "GET":
-        contact_form = LayerContactForm(prefix="layer")
+        contact_form = ContactProfileForm(prefix="layer")
         if poc.user is None:
             poc_form = ContactProfileForm(instance=poc, prefix="poc")
         else:
@@ -258,7 +258,7 @@ def layer_contacts(request, layername):
             author_form = ContactProfileForm(prefix="author")
             author_form.hidden=True
     elif request.method == "POST":
-        contact_form = LayerContactForm(request.POST, prefix="layer")
+        contact_form = ContactProfileForm(request.POST, prefix="layer")
         if contact_form.is_valid():
             new_poc = contact_form.cleaned_data['poc']
             new_author = contact_form.cleaned_data['metadata_author']

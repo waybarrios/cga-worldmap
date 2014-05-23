@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
+import datetime
 
 from django.contrib.auth.backends import ModelBackend
 from django.conf import settings
@@ -28,7 +29,7 @@ from geonode.security.models import GenericObjectRoleMapping, Permission, \
 if "geonode.contrib.groups" in settings.INSTALLED_APPS:
     from geonode.security.models import GroupObjectRoleMapping
     from geonode.contrib.groups.models import Group
-from geonode.security.enumerations import ANONYMOUS_USERS, AUTHENTICATED_USERS
+from geonode.security.enumerations import ANONYMOUS_USERS, AUTHENTICATED_USERS, CUSTOM_GROUP_USERS
 
 
 class GranularBackend(ModelBackend):
@@ -116,6 +117,12 @@ class GranularBackend(ModelBackend):
         obj_perms.update(self._get_generic_obj_perms(generic_roles, obj))
         
         ct = ContentType.objects.get_for_model(obj)
+
+        if settings.CUSTOM_AUTH["enabled"]:
+            profile = user_obj.get_profile()
+            if profile and profile.is_org_member and profile.member_expiration_dt >= datetime.today().date():
+                generic_roles.append(CUSTOM_GROUP_USERS)
+
         if not user_obj.is_anonymous():
             for rm in UserObjectRoleMapping.objects.select_related('role', 'role__permissions', 'role__permissions__content_type').filter(object_id=obj.id, object_ct=ct, user=user_obj).all():
                 for perm in rm.role.permissions.all():
@@ -141,12 +148,18 @@ class GranularBackend(ModelBackend):
         
         obj_ids = set()
         generic_roles = [ANONYMOUS_USERS]
+
         if isinstance(acl_obj, User):
             if not acl_obj.is_anonymous():
                 generic_roles.append(AUTHENTICATED_USERS)
                 obj_ids.update([x[0] for x in UserObjectRoleMapping.objects.filter(user=acl_obj,
                                                                                    role__permissions=perm,
                                                                                    object_ct=ct).values_list('object_id')])
+
+                if settings.CUSTOM_AUTH["enabled"]:
+                    profile = acl_obj.get_profile()
+                    if profile and profile.is_org_member:
+                        generic_roles.append(CUSTOM_GROUP_USERS)
 
                 if "geonode.contrib.groups" in settings.INSTALLED_APPS:
                     # If the user is a member of any groups, see if the groups have permission to the object.

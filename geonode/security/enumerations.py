@@ -24,11 +24,13 @@ from django.conf import settings
 # implicitly defined 'generic' groups of users
 ANONYMOUS_USERS = 'anonymous'
 AUTHENTICATED_USERS = 'authenticated'
+CUSTOM_GROUP_USERS = 'customgroup'
 
 
 GENERIC_GROUP_NAMES = {
     ANONYMOUS_USERS: _('Anonymous Users'),
-    AUTHENTICATED_USERS: _('Registered Users')
+    AUTHENTICATED_USERS: _('Registered Users'),
+    CUSTOM_GROUP_USERS: settings.CUSTOM_AUTH["name"]
 }
 
 
