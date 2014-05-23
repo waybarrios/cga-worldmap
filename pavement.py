@@ -499,7 +499,7 @@ def start_geoserver(options):
     info("Jetty is starting up, please wait...")
     waitfor(settings.GEOSERVER_BASE_URL)
     info("Development GeoServer/GeoNetwork is running")
-    sh('python manage.py updatelayers') 
+    #sh('python manage.py updatelayers') 
   
 
 
