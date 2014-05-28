@@ -62,8 +62,10 @@ unidecode==0.04.14
 #ArcGIS REST services
 -e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest
 pyproj
-django-haystack
-pyelasticsearch
+
+#ElasticSearch
+#django-haystack
+#pyelasticsearch
 
 django_nose
 mock

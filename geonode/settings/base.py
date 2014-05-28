@@ -134,7 +134,7 @@ INSTALLED_APPS = (
     'djcelery',
     'kombu.transport.django',
     'piston',
-    'haystack',
+    #'haystack',
     'pagination',
     'friendlytagloader',
 
@@ -150,7 +150,7 @@ INSTALLED_APPS = (
     'geonode.certification',
     'geonode.hoods',
     'geonode.contrib.services',
-    'geonode.search',
+    #'geonode.search',
     'geonode.dvn',
 )
 LOGGING = {
