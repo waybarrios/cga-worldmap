@@ -2482,19 +2482,21 @@ def post_save_layer(instance, sender, **kwargs):
             instance._populate_from_gs()
 
 def post_update_index(instance, sender, **kwargs):
-    ct = ContentType.objects.get_for_id(instance.content_type.id)
-    obj = ct.get_object_for_this_type(pk=instance.object_id)
-    connections['default'].get_unified_index().get_index(ct.model_class()).update_object(obj)
+    if settings.HAYSTACK_SEARCH:
+        ct = ContentType.objects.get_for_id(instance.content_type.id)
+        obj = ct.get_object_for_this_type(pk=instance.object_id)
+        connections['default'].get_unified_index().get_index(ct.model_class()).update_object(obj)
 
 def post_save_stats(instance, sender, **kwargs):
     if type(instance) == LayerStats:
         obj = instance.layer
     else:
         obj = instance.map
-    try:
-        connections['default'].get_unified_index().get_index(type(obj)).update_object(obj)
-    except Exception, e:
-        logger.error("Error updating haystack with new stats: %s" % str(e))
+    if settings.HAYSTACK_SEARCH:
+        try:
+            connections['default'].get_unified_index().get_index(type(obj)).update_object(obj)
+        except Exception, e:
+            logger.error("Error updating haystack with new stats: %s" % str(e))
 
 signals.pre_delete.connect(delete_layer, sender=Layer)
 signals.post_save.connect(post_save_layer, sender=Layer)
