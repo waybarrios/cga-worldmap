@@ -20,7 +20,7 @@ from geonode.utils import resolve_object, ogc_server_settings
 from geonode.layers.models import Layer
 from geonode.worldmap.profile.forms import ContactProfileForm
 from geonode.maps.models import MapSnapshot
-from geonode.maps.encode import num_encode, num_decode
+from geonode.encode import num_encode, num_decode
 from geonode.worldmap.stats.models import MapStats
 from geonode.worldmap.security.views import _perms_info_email_json
 from geonode.utils import layer_from_viewer_config
@@ -72,7 +72,7 @@ def map_detail(request, mapid, template='maps/map_detail.html'):
     map_obj.popular_count += 1
     map_obj.save()
 
-    config = map_obj.viewer_json()
+    config = map_obj.viewer_json(request.user)
     config = json.dumps(config)
     layers = MapLayer.objects.filter(map=map_obj.id)
     return render_to_response(template, RequestContext(request, {
@@ -130,7 +130,7 @@ def ajax_map_permissions(request, mapid, use_email=False):
             mimetype='text/plain'
         )
 
-    spec = json.loads(request.raw_post_data)
+    spec = json.loads(request.body)
     map_obj.set_permissions(map_obj, spec, use_email)
 
 def ajax_map_permissions_by_email(request, mapid):
@@ -180,11 +180,11 @@ def snapshot_config(snapshot, map_obj, user):
 
     #Set up the proper layer configuration
     def snaplayer_config(layer, sources, user):
-        cfg = layer.layer_config()
+        cfg = layer.layer_config(user)
         src_cfg = layer.source_config()
         source = snapsource_lookup(src_cfg, sources)
         if source: cfg["source"] = source
-        if src_cfg.get("ptype", "gxp_wmscsource") == "gxp_wmscsource"  or src_cfg.get("ptype", "gxp_gnsource") == "gxp_gnsource" : cfg["buffer"] = 0
+        if src_cfg.get("ptype", "gxp_wmscsource") == "gxp_wmscsource"  or src_cfg.get("ptype", "gxp_geonodecataloguesource") == "gxp_geonodecataloguesource" : cfg["buffer"] = 0
         return cfg
 
 
@@ -223,7 +223,7 @@ def snapshot_create(request):
     """
     Create a permalinked map
     """
-    conf = request.raw_post_data
+    conf = request.body
 
     if isinstance(conf, basestring):
         config = json.loads(conf)

@@ -8,13 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"> -->
     <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
     {% block head %}
-      <link href="{{ STATIC_URL }}geonode/css/base.css" rel="stylesheet" />
-      <link href="{{ STATIC_URL }}worldmap/css/base.css" rel="stylesheet" />
-      <link href="{{ STATIC_URL }}worldmap/css/site.css" rel="stylesheet" />
-      {% if urlsuffix %}
-          <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/site.css" media="screen" />
-          <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/dropdown.css" media="screen" />
-      {% endif %}
       <link href="{{ STATIC_URL }}geonode/css/ext-compatibility.css" rel="stylesheet" />
       {% if DEBUG_STATIC %}
       <link href="{{ STATIC_URL }}lib/css/jquery.dataTables.css" rel="stylesheet" />
@@ -23,6 +16,14 @@
       <link href="{{ STATIC_URL }}lib/css/jquery-ui.css" rel="stylesheet"/>
       {% else %}
       <link href="{{ STATIC_URL }}lib/css/assets.min.css" rel="stylesheet"/>
+      {% endif %}
+      <link href="{{ STATIC_URL }}geonode/css/base.css" rel="stylesheet" />
+      <link href="{{ STATIC_URL }}worldmap/css/base.css" rel="stylesheet" />
+      <link href="{{ STATIC_URL }}worldmap/css/site.css" rel="stylesheet" />
+
+      {% if urlsuffix %}
+          <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/site.css" media="screen" />
+          <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{urlsuffix}}/dropdown.css" media="screen" />
       {% endif %}
       {% block extra_head %}
       {% endblock extra_head %}
@@ -217,7 +218,9 @@
             </li>
           </ul>
             {% if REGISTRATION_OPEN %}
-            <li><a href="{% url "account_signup" %}">{% trans "Register" %}</a></li>
+                <ul class="nav navbar-nav">
+                    <li id="nav_register"><a href="{% url "account_signup" %}">{% trans "Register" %}</a></li>
+                </ul>
             {% endif %}
           </ul>
         </div><!--/.nav-collapse -->

@@ -580,7 +580,7 @@ DEFAULT_MAP_ZOOM = 0
 
 MAP_BASELAYERS = [{
     "source": {
-        "ptype": "gxp_geonodecataloguesource",
+        "ptype": "gxp_wmscsource",
         "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
         "restUrl": "/gs/rest"
      },

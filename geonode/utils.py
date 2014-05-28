@@ -509,7 +509,7 @@ def layer_from_viewer_config(model, layer, source, ordering):
 
 class GXPMapBase(object):
 
-    def viewer_json(self, *added_layers):
+    def viewer_json(self, user, *added_layers):
         """
         Convert this map to a nested dictionary structure matching the JSON
         configuration for GXP Viewers.
@@ -552,8 +552,8 @@ class GXPMapBase(object):
                 if v == source: return k
             return None
 
-        def layer_config(l):
-            cfg = l.layer_config()
+        def layer_config(l,user):
+            cfg = l.layer_config(user=user)
             src_cfg = l.source_config()
             source = source_lookup(src_cfg)
             if source: cfg["source"] = source
@@ -587,7 +587,7 @@ class GXPMapBase(object):
             'defaultSourceType': "gxp_geonodecataloguesource",
             'sources': sources,
             'map': {
-                'layers': [layer_config(l) for l in layers],
+                'layers': [layer_config(l,user=user) for l in layers],
                 'center': [self.center_x, self.center_y],
                 'projection': self.projection,
                 'zoom': self.zoom
@@ -633,7 +633,7 @@ class GXPLayerBase(object):
 
         return cfg
 
-    def layer_config(self):
+    def layer_config(self,user=None):
         """
         Generate a dict that can be serialized to a GXP layer configuration
         suitable for loading this layer.
@@ -700,7 +700,7 @@ def default_map_config():
         )
 
     DEFAULT_BASE_LAYERS = [_baselayer(lyr, idx) for idx, lyr in enumerate(settings.MAP_BASELAYERS)]
-    DEFAULT_MAP_CONFIG = _default_map.viewer_json(*DEFAULT_BASE_LAYERS)
+    DEFAULT_MAP_CONFIG = _default_map.viewer_json(None, *DEFAULT_BASE_LAYERS)
 
     return DEFAULT_MAP_CONFIG, DEFAULT_BASE_LAYERS
 

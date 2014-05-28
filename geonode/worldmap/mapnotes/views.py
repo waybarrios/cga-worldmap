@@ -55,7 +55,7 @@ def annotations(request, mapid, id=None):
                 return HttpResponse(status=403)
         elif request.method != "GET":
             if request.user.id == obj.owner_id:
-                features = geoj.decode(request.raw_post_data)
+                features = geoj.decode(request.body)
                 obj = applyGeometry(obj, features[0])
             else:
                 return HttpResponse(status=403)
@@ -65,7 +65,7 @@ def annotations(request, mapid, id=None):
         features = MapNote.objects.filter(map=Map.objects.get(pk=mapid),geometry__intersects=Envelope(bbox).wkt)
     else:
         if request.user.id is not None:
-            features = geoj.decode(request.raw_post_data)
+            features = geoj.decode(request.body)
             created_features = []
             for feature in features:
                 obj = MapNote(map=Map.objects.get(id=mapid), owner=request.user)

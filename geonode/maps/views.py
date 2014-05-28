@@ -113,7 +113,7 @@ def map_detail(request, mapid, template='maps/map_detail.html'):
     map_obj.popular_count += 1
     map_obj.save()
 
-    config = map_obj.viewer_json()
+    config = map_obj.viewer_json(request.user)
     config = json.dumps(config)
     layers = MapLayer.objects.filter(map=map_obj.id)
     return render_to_response(template, RequestContext(request, {
@@ -233,7 +233,7 @@ def map_embed(request, mapid=None, template='maps/map_embed.html'):
         config = default_map_config()[0]
     else:
         map_obj = _resolve_map(request, mapid, 'maps.view_map')
-        config = map_obj.viewer_json()
+        config = map_obj.viewer_json(request.user)
     return render_to_response(template, RequestContext(request, {
         'config': json.dumps(config)
     }))
@@ -249,7 +249,7 @@ def map_view(request, mapid, template='maps/map_view.html'):
     """
     map_obj = _resolve_map(request, mapid, 'maps.view_map', _PERMISSION_MSG_VIEW)
 
-    config = map_obj.viewer_json()
+    config = map_obj.viewer_json(request.user)
     return render_to_response(template, RequestContext(request, {
         'config': json.dumps(config),
         'map': map_obj
@@ -258,13 +258,13 @@ def map_view(request, mapid, template='maps/map_view.html'):
 
 def map_view_js(request, mapid):
     map_obj = _resolve_map(request, mapid, 'maps.view_map')
-    config = map_obj.viewer_json()
+    config = map_obj.viewer_json(request.user)
     return HttpResponse(json.dumps(config), mimetype="application/javascript")
 
 def map_json(request, mapid):
     if request.method == 'GET':
         map_obj = _resolve_map(request, mapid, 'maps.view_map')
-        return HttpResponse(json.dumps(map_obj.viewer_json()))
+        return HttpResponse(json.dumps(map_obj.viewer_json(request.user)))
     elif request.method == 'PUT':
         if not request.user.is_authenticated():
             return HttpResponse(
@@ -275,8 +275,8 @@ def map_json(request, mapid):
         map_obj = _resolve_map(request, mapid, 'maps.change_map')
         try:
             map_obj.update_from_viewer(request.body)
-            MapSnapshot.objects.create(config=clean_config(request.raw_post_data),map=map_obj,user=request.user)
-            return HttpResponse(json.dumps(map_obj.viewer_json()))
+            MapSnapshot.objects.create(config=clean_config(request.body),map=map_obj,user=request.user)
+            return HttpResponse(json.dumps(map_obj.viewer_json(request.user)))
         except ValueError, e:
             return HttpResponse(
                 "The server could not understand the request." + str(e),
@@ -318,7 +318,7 @@ def new_map_json(request):
         map_obj.set_default_permissions()
         try:
             map_obj.update_from_viewer(request.body)
-            MapSnapshot.objects.create(config=clean_config(request.raw_post_data),map=map_obj,user=request.user)
+            MapSnapshot.objects.create(config=clean_config(request.body),map=map_obj,user=request.user)
         except ValueError, e:
             return HttpResponse(str(e), status=400)
         else:
@@ -348,7 +348,7 @@ def new_map_config(request):
         map_obj.abstract = DEFAULT_ABSTRACT
         map_obj.title = DEFAULT_TITLE
         if request.user.is_authenticated(): map_obj.owner = request.user
-        config = map_obj.viewer_json()
+        config = map_obj.viewer_json(request.user)
         del config['id']
     else:
         if request.method == 'GET':

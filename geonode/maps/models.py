@@ -45,6 +45,7 @@ from geonode.utils import GXPMapBase
 from geonode.utils import GXPLayerBase
 from geonode.utils import layer_from_viewer_config
 from geonode.utils import default_map_config
+from geonode.encode import XssCleaner, despam, num_encode
 
 from agon_ratings.models import OverallRating
 
@@ -191,7 +192,7 @@ class Map(ResourceBase, GXPMapBase):
                     MapLayer, layer, source_for(layer), ordering
             ))
 
-        self.set_bounds_from_layers(self.local_layers)
+        #self.set_bounds_from_layers(self.local_layers)
 
         ## Start WorldMap customizations ##
         self.urlsuffix = escape(conf['about']['urlsuffix'])
@@ -289,7 +290,7 @@ class Map(ResourceBase, GXPMapBase):
                 except ObjectDoesNotExist:
                     raise GeoNodeError('Could not find layer with name %s' % layer)
 
-            if not user.has_perm('maps.view_layer', obj=layer):
+            if not user.has_perm('layers.view_layer', obj=layer):
                 # invisible layer, skip inclusion or raise Exception?
                 raise GeoNodeError('User %s tried to create a map with layer %s without having premissions' % (user, layer))
             MapLayer.objects.create(
@@ -336,7 +337,7 @@ class Map(ResourceBase, GXPMapBase):
                     results.append(x)
             return results
 
-        config = GXPMapBase.viewer_json(self, *added_layers)
+        config = GXPMapBase.viewer_json(self, user, *added_layers)
         sejumps = self.jump_set.all()
         config['about']['urlsuffix'] = self.urlsuffix
         config['about']['introtext'] = self.content
@@ -476,7 +477,7 @@ class MapLayer(models.Model, GXPLayerBase):
     local = models.BooleanField(default=False)
     # True if this layer is served by the local geoserver
 
-    def layer_config(self):
+    def layer_config(self, user):
         cfg = GXPLayerBase.layer_config(self)
         # if this is a local layer, get the attribute configuration that
         # determines display order & attribute labels
@@ -486,6 +487,7 @@ class MapLayer(models.Model, GXPLayerBase):
                 attribute_cfg = layer.attribute_config()
                 if "getFeatureInfo" in attribute_cfg:
                     cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
+                cfg['disabled'] =  user is not None and not user.has_perm('layers.view_layer', obj=self)
             else:
                 # shows maplayer with pink tiles, 
                 # and signals that there is problem

@@ -119,7 +119,7 @@ class GranularBackend(ModelBackend):
         ct = ContentType.objects.get_for_model(obj)
 
         if settings.CUSTOM_AUTH["enabled"]:
-            profile = user_obj.get_profile()
+            profile = user_obj.get_profile() if not user_obj.is_anonymous() else None
             if profile and profile.is_org_member and profile.member_expiration_dt >= datetime.today().date():
                 generic_roles.append(CUSTOM_GROUP_USERS)
 

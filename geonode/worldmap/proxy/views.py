@@ -98,7 +98,7 @@ def geoserver_rest_proxy(request, proxy_path, downstream_path):
 
     response, content = http.request(
         url, request.method,
-        body=request.raw_post_data or None,
+        body=request.body or None,
         headers=headers)
         
     # we need to sync django here
@@ -365,7 +365,7 @@ def download(request, service):
 
     layer_obj = Layer.objects.get(typename=layer)
 
-    if layer_obj.downloadable and request.user.has_perm('maps.view_layer', obj=layer_obj):
+    if layer_obj.downloadable and request.user.has_perm('layers.view_layer', obj=layer_obj):
 
         layerstats,created = LayerStats.objects.get_or_create(layer=layer_obj)
         layerstats.downloads += 1

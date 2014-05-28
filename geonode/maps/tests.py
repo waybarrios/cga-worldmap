@@ -184,7 +184,7 @@ community."
         self.assertEquals(cfg['about']['abstract'], 'GeoNode default map abstract')
         self.assertEquals(cfg['about']['title'], 'GeoNode Default Map')
         def is_wms_layer(x):
-            return cfg['sources'][x['source']]['ptype'] == 'gxp_wmscsource'
+            return cfg['sources'][x['source']]['ptype'] =='gxp_wmscsource'
         layernames = [x['name'] for x in cfg['map']['layers'] if is_wms_layer(x)]
         self.assertEquals(layernames, ['geonode:CA',])
 

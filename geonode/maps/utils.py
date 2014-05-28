@@ -19,7 +19,7 @@
 
 import json
 
-def _layer_json(layers, sources):
+def _layer_json(layers, sources, user=None):
     """
     return a list of layer config for the provided layer
     """
@@ -51,11 +51,11 @@ def _layer_json(layers, sources):
             if v == source: return k
         return None
 
-    def layer_config(l):
-        cfg = l.layer_config()
+    def layer_config(l,user):
+        cfg = l.layer_config(user)
         src_cfg = l.source_config()
         source = source_lookup(src_cfg)
         if source: cfg["source"] = source
         return cfg
     
-    return [layer_config(l) for l in layers]
+    return [layer_config(l,user) for l in layers]

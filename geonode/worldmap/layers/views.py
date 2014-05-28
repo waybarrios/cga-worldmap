@@ -25,7 +25,7 @@ from django.utils import simplejson as json
 from geonode.layers.views import _resolve_layer, _PERMISSION_MSG_METADATA
 from django.forms.models import inlineformset_factory
 from geonode.worldmap.layers.forms import WorldMapLayerForm
-from geonode.maps.encode import XssCleaner, despam
+from geonode.encode import XssCleaner, despam
 from django.core.cache import cache
 from geonode.upload.models import Upload
 from geonode.worldmap.gazetteer.forms import GazetteerForm
@@ -44,7 +44,7 @@ def addLayerJSON(request):
             layer = Layer.objects.get(typename=layername)
             if not request.user.has_perm("maps.view_layer", obj=layer):
                 return HttpResponse(status=401)
-            sfJSON = {'layer': layer.layer_config()}
+            sfJSON = {'layer': layer.layer_config(request.user)}
             logger.debug('sfJSON is [%s]', str(sfJSON))
             return HttpResponse(json.dumps(sfJSON))
         except Exception, e:
@@ -450,7 +450,7 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
                                            name = layer.typename,
                                            group = layer.category.title if layer.category else 'General',
                                            layer_params = '{"selected":true, "title": "' + layer.title + '"}',
-                                           source_params = '{"ptype": "gxp_gnsource"}',
+                                           source_params = '{"ptype": "gxp_wmscsource"}',
                                            ows_url = settings.GEOSERVER_BASE_URL + "wms",
                                            visibility = True,
                                            stack_order = MapLayer.objects.filter(id=mapid).count()
