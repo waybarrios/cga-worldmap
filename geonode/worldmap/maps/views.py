@@ -24,9 +24,32 @@ from geonode.encode import num_encode, num_decode
 from geonode.worldmap.stats.models import MapStats
 from geonode.worldmap.security.views import _perms_info_email_json
 from geonode.utils import layer_from_viewer_config
-
+from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger("geonode.worldmap.maps.views")
+
+@csrf_exempt
+def addLayerJSON(request):
+    logger.debug("Enter addLayerJSON")
+    layername = request.POST.get('layername', False)
+    logger.debug("layername is [%s]", layername)
+
+    if layername:
+        try:
+            layer = Layer.objects.get(typename=layername)
+            if not request.user.has_perm("layers.view_layer", obj=layer):
+                return HttpResponse(status=401)
+            maplayer = MapLayer(name=layer.typename, local=True)
+            sfJSON = {'layer': maplayer.layer_config(request.user)}
+            logger.debug('sfJSON is [%s]', str(sfJSON))
+            return HttpResponse(json.dumps(sfJSON))
+        except Exception, e:
+            logger.debug("Could not find matching layer: [%s]", str(e))
+            return HttpResponse(str(e), status=500)
+
+    else:
+        return HttpResponse(status=500)
+
 
 def _resolve_map_custom(request, id, fieldname, permission='maps.change_map',
                  msg=_PERMISSION_MSG_GENERIC, **kwargs):
@@ -184,7 +207,7 @@ def snapshot_config(snapshot, map_obj, user):
         src_cfg = layer.source_config()
         source = snapsource_lookup(src_cfg, sources)
         if source: cfg["source"] = source
-        if src_cfg.get("ptype", "gxp_wmscsource") == "gxp_wmscsource"  or src_cfg.get("ptype", "gxp_geonodecataloguesource") == "gxp_geonodecataloguesource" : cfg["buffer"] = 0
+        if src_cfg.get("ptype", "gxp_wmscsource") == "gxp_wmscsource"  or src_cfg.get("ptype", "gxp_gnsource") == "gxp_gnsource" : cfg["buffer"] = 0
         return cfg
 
 

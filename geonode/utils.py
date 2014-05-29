@@ -553,7 +553,7 @@ class GXPMapBase(object):
             return None
 
         def layer_config(l,user):
-            cfg = l.layer_config(user=user)
+            cfg = l.layer_config(user)
             src_cfg = l.source_config()
             source = source_lookup(src_cfg)
             if source: cfg["source"] = source
@@ -584,10 +584,10 @@ class GXPMapBase(object):
                 'title':    self.title,
                 'abstract': self.abstract
             },
-            'defaultSourceType': "gxp_geonodecataloguesource",
+            'defaultSourceType': "gxp_gnsource",
             'sources': sources,
             'map': {
-                'layers': [layer_config(l,user=user) for l in layers],
+                'layers': [layer_config(l,user) for l in layers],
                 'center': [self.center_x, self.center_y],
                 'projection': self.projection,
                 'zoom': self.zoom
@@ -627,13 +627,13 @@ class GXPLayerBase(object):
         try:
             cfg = json.loads(self.source_params)
         except Exception:
-            cfg = dict(ptype="gxp_wmscsource", restUrl="/gs/rest")
+            cfg = dict(ptype="gxp_gnsource", restUrl="/gs/rest")
 
         if self.ows_url: cfg["url"] = self.ows_url
 
         return cfg
 
-    def layer_config(self,user=None):
+    def layer_config(self,user):
         """
         Generate a dict that can be serialized to a GXP layer configuration
         suitable for loading this layer.
@@ -657,6 +657,7 @@ class GXPLayerBase(object):
         cfg["fixed"] = self.fixed
         if self.group: cfg["group"] = self.group
         cfg["visibility"] = self.visibility
+        cfg["queryable"] = True
 
         return cfg
 

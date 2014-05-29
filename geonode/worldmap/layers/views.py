@@ -34,30 +34,9 @@ logger = logging.getLogger("geonode.worldmap.maps.views")
 
 _ASYNC_UPLOAD = ogc_server_settings.DATASTORE == True
 
-def addLayerJSON(request):
-    logger.debug("Enter addLayerJSON")
-    layername = request.POST.get('layername', False)
-    logger.debug("layername is [%s]", layername)
-
-    if layername:
-        try:
-            layer = Layer.objects.get(typename=layername)
-            if not request.user.has_perm("maps.view_layer", obj=layer):
-                return HttpResponse(status=401)
-            sfJSON = {'layer': layer.layer_config(request.user)}
-            logger.debug('sfJSON is [%s]', str(sfJSON))
-            return HttpResponse(json.dumps(sfJSON))
-        except Exception, e:
-            logger.debug("Could not find matching layer: [%s]", str(e))
-            return HttpResponse(str(e), status=500)
-
-    else:
-        return HttpResponse(status=500)
-
-
 def ajax_layer_edit_check(request, layername):
     layer = get_object_or_404(Layer, typename=layername);
-    editable = request.user.has_perm("maps.change_layer", obj=layer)
+    editable = request.user.has_perm("layers.change_layer", obj=layer)
     return HttpResponse(
         str(editable),
         status=200 if editable else 403,
@@ -449,8 +428,12 @@ def layer_metadata(request, layername, template='layers/layer_metadata.html'):
                 maplayer = MapLayer.objects.create(map=Map.objects.get(id=mapid),
                                            name = layer.typename,
                                            group = layer.category.title if layer.category else 'General',
-                                           layer_params = '{"selected":true, "title": "' + layer.title + '"}',
-                                           source_params = '{"ptype": "gxp_wmscsource"}',
+                                           layer_params =  json.dumps({
+                                                             "selected": True,
+                                                             "title": layer.title,
+                                                             "queryable": True
+                                           }),
+                                           source_params = '{"ptype": "gxp_gnsource"}',
                                            ows_url = settings.GEOSERVER_BASE_URL + "wms",
                                            visibility = True,
                                            stack_order = MapLayer.objects.filter(id=mapid).count()

@@ -387,6 +387,7 @@ def new_map_config(request):
                     map = map_obj,
                     name = layer.typename,
                     ows_url = layer.get_ows_url(),
+                    local = True,
                     layer_params=json.dumps( layer.attribute_config()),
                     visibility = True
                 ))
@@ -421,7 +422,7 @@ def new_map_config(request):
                 map_obj.zoom = math.ceil(min(width_zoom, height_zoom))
 
 
-            config = map_obj.viewer_json(*(DEFAULT_BASE_LAYERS + layers))
+            config = map_obj.viewer_json(request.user, *(DEFAULT_BASE_LAYERS + layers))
             config['fromLayer'] = True
         else:
             config = DEFAULT_MAP_CONFIG

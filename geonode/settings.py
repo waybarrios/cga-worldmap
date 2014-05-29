@@ -580,7 +580,7 @@ DEFAULT_MAP_ZOOM = 0
 
 MAP_BASELAYERS = [{
     "source": {
-        "ptype": "gxp_wmscsource",
+        "ptype": "gxp_gnsource",
         "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
         "restUrl": "/gs/rest"
      },
@@ -668,36 +668,6 @@ MAP_BASELAYERS = [{
 # Uploader backend (rest or importer)
 
 UPLOADER_BACKEND_URL = 'rest'
-
-#Import uploaded shapefiles into a database such as PostGIS?
-DB_DATASTORE = False
-
-#
-#Database datastore connection settings
-DB_DATASTORE_DATABASE = ''
-DB_DATASTORE_USER = ''
-DB_DATASTORE_PASSWORD = ''
-DB_DATASTORE_HOST = ''
-DB_DATASTORE_PORT = ''
-DB_DATASTORE_TYPE = ''
-DB_DATASTORE_NAME = ''
-DB_DATASTORE_ENGINE = 'django.contrib.gis.db.backends.postgis'
-
-#The name of the store in Geoserver
-DB_DATASTORE_NAME = ''
-
-if 'geonode.geoserver' in INSTALLED_APPS:
-    LOCAL_GEOSERVER = {
-        "source": {
-            "ptype": "gxp_wmscsource",
-            "url": OGC_SERVER['default']['PUBLIC_LOCATION'] + "wms",
-            "restUrl": "/gs/rest"
-        }
-    }
-    baselayers = MAP_BASELAYERS
-    MAP_BASELAYERS = [LOCAL_GEOSERVER]
-    MAP_BASELAYERS.extend(baselayers)
-
 
 
 SOCIAL_BUTTONS = True

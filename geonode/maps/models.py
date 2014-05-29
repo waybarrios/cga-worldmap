@@ -324,7 +324,7 @@ class Map(ResourceBase, GXPMapBase):
         snapshots = MapSnapshot.objects.exclude(user=None).filter(map__id=self.map.id)
         return [snapshot for snapshot in snapshots]
 
-    def viewer_json(self, user=None, *added_layers):
+    def viewer_json(self, user, *added_layers):
         def uniqifydict(seq, item):
             """
             get a list of unique dictionary elements based on a certain  item (ie 'group').
@@ -478,7 +478,7 @@ class MapLayer(models.Model, GXPLayerBase):
     # True if this layer is served by the local geoserver
 
     def layer_config(self, user):
-        cfg = GXPLayerBase.layer_config(self)
+        cfg = GXPLayerBase.layer_config(self, user)
         # if this is a local layer, get the attribute configuration that
         # determines display order & attribute labels
         if self.local:
@@ -487,7 +487,13 @@ class MapLayer(models.Model, GXPLayerBase):
                 attribute_cfg = layer.attribute_config()
                 if "getFeatureInfo" in attribute_cfg:
                     cfg["getFeatureInfo"] = attribute_cfg["getFeatureInfo"]
-                cfg['disabled'] =  user is not None and not user.has_perm('layers.view_layer', obj=self)
+                cfg['disabled'] =  user is not None and not user.has_perm('layers.view_layer', obj=layer)
+                cfg['queryable'] = layer.is_vector()
+                cfg['llbbox'] = layer.bbox_string
+                cfg['abstract'] = layer.abstract
+                cfg["group"] = layer.category.gn_description
+                cfg["url"] = layer.ows_url
+                cfg["title"] = layer.title
             else:
                 # shows maplayer with pink tiles, 
                 # and signals that there is problem
