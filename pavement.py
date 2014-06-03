@@ -68,8 +68,8 @@ def install_deps(options):
     else:
         info('Installing from requirements file. '\
              'Use "paver bundle_deps" to create an install bundle')
-        pip_install("-r requirements/base.txt")
-        pip_install('-e .')
+        pip_install("--download-cache /tmp -r requirements/base.txt")
+        pip_install('--download-cache /tmp -e .')
 
 
 @task
@@ -78,7 +78,7 @@ def bundle_deps(options):
     Create a pybundle of all python dependencies.  If created, this
     will be the default for installing python deps.
     """
-    pip_bundle("-r requirements/base.txt %s" % bundle)
+    pip_bundle("--download-cache /tmp -r requirements/base.txt %s" % bundle)
 
 
 @task
@@ -290,7 +290,7 @@ def package_webapp(options):
     req_file.write_text(deploy_req_txt)    
     
     sh('python setup.py egg_info sdist')
-    pip_bundle("-r %s package/worldmap-webapp.pybundle" % (req_file))
+    pip_bundle("--download-cache /tmp -r %s package/worldmap-webapp.pybundle" % (req_file))
 
 
 @task
@@ -505,7 +505,7 @@ def start_geoserver(options):
 
 @task
 def test(options):
-    pip_install("-r requirements/test.txt")
+    pip_install("--download-cache /tmp -r requirements/test.txt")
     sh("python manage.py test")
 
 
