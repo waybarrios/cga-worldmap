@@ -40,7 +40,10 @@ deploy_req_txt = """
 bundle = path('package/worldmap.pybundle')
 dlname = 'worldmap.bundle'
 
-geoserver_target = path('src/geoserver-geonode-ext/target/geoserver.war')
+geoserver_target = path('webapps/geoserver.war')
+geoserver_zip="geoserver.war"
+geoserver_war_url = "http://worldmap.harvard.edu/media/geoserver/"
+
 gs_data = "./webapps/gs-data"
 gs_data_url="http://worldmap.harvard.edu/media/geoserver/geonode-geoserver-data.zip"
 
@@ -48,6 +51,7 @@ package_outdir = "./package"
 
 def geonode_client_target(): return package_outdir / "geonode-client.zip"
 geonode_client_target_war = path('webapps/geonode-client.war')
+
 
 
 
@@ -121,11 +125,32 @@ def setup_gs_data(options):
 
 
 @task
-@needs(['setup_gs_data'])
 def setup_geoserver(options):
-    """Prepare a testing instance of GeoServer."""
-    with pushd('src/geoserver-geonode-ext'):
-        sh("mvn clean install")
+    """Fetch the geonetwork.war and intermap.war to use with GeoServer for testing."""
+    war_zip_file = geoserver_zip
+    src_url = str(geoserver_war_url + war_zip_file)
+    info("geoserver url: %s" %src_url)
+    # where to download the war files. If changed change also
+    # src/geoserver-geonode-ext/jetty.xml accordingly
+
+    webapps = path("./webapps")
+    if not webapps.exists():
+        webapps.mkdir()
+
+    dst_url = webapps / war_zip_file
+    dst_war = webapps / "geoserver.war"
+    deployed_url = webapps / "geoserver"
+
+    if getattr(options, 'clean', False):
+        deployed_url.rmtree()
+
+    if not dst_war.exists():
+        info("getting geoserver.war")
+        grab(src_url, dst_url)
+        zip_extractall(zipfile.ZipFile(dst_url), webapps)
+    if not deployed_url.exists():
+        zip_extractall(zipfile.ZipFile(dst_war), deployed_url)
+
 
 @task
 def setup_geonetwork(options):
@@ -477,8 +502,8 @@ def start_geoserver(options):
     if settings.GEOSERVER_BASE_URL != url:
         print 'your GEOSERVER_BASE_URL does not match %s' % url
         sys.exit(1)
-	
-	
+
+
     jettylog = open("jetty.log", "w")
     with pushd("src/geoserver-geonode-ext"):
         os.environ["MAVEN_OPTS"] = " ".join([
@@ -499,7 +524,7 @@ def start_geoserver(options):
     info("Jetty is starting up, please wait...")
     waitfor(settings.GEOSERVER_BASE_URL)
     info("Development GeoServer/GeoNetwork is running")
-    #sh('python manage.py updatelayers') 
+    #sh('python manage.py updatelayers')
   
 
 

@@ -123,14 +123,14 @@
     <dependency>
         <groupId>org.opengeo.geoserver</groupId>
         <artifactId>importer</artifactId>
-        <version>2.3-SNAPSHOT</version>
+        <version>2.4-SNAPSHOT</version>
         <scope>runtime</scope>
     </dependency>
 
     <dependency>
         <groupId>org.opengeo.data.csv</groupId>
         <artifactId>csv</artifactId>
-        <version>2.3-SNAPSHOT</version>
+        <version>2.4-SNAPSHOT</version>
         <scope>runtime</scope>
     </dependency>
 
@@ -143,7 +143,7 @@
     <dependency>
         <groupId>org.opengeo.geoserver</groupId>
         <artifactId>printng</artifactId>
-        <version>2.3-SNAPSHOT</version>
+        <version>2.4-SNAPSHOT</version>
         <scope>runtime</scope>
     </dependency>
 
@@ -243,7 +243,7 @@
   </dependencies>
   <properties>
     <geotools.version>9-SNAPSHOT</geotools.version>
-    <geoserver.version>2.3-SNAPSHOT</geoserver.version>
+    <geoserver.version>2.4-SNAPSHOT</geoserver.version>
     <jetty.version>6.1.8</jetty.version>
     <maven.test.search.classdir>true</maven.test.search.classdir>
   </properties>
@@ -310,15 +310,13 @@
           <stopPort>8890</stopPort>
           <stopKey>geonode-stop</stopKey>
           <scanIntervalSeconds>30</scanIntervalSeconds>
-          <contextPath>/geoserver</contextPath>
           <systemProperties>
             <systemProperty>
               <name>GEOSERVER_DATA_DIR</name>
               <value>../../gs-data/</value>
             </systemProperty>
           </systemProperties>
-          
-          <webApp>${project.build.directory}/geoserver</webApp>
+
 
           <!-- configure the container                 -->
           <jettyConfig>jetty.xml</jettyConfig>
@@ -345,22 +343,7 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-war-plugin</artifactId>
-        <configuration>
-          <warName>geoserver</warName> 
-          <webappDirectory>${project.build.directory}/geoserver</webappDirectory> -->
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>war</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+
     </plugins>
   </build>
 </project>
