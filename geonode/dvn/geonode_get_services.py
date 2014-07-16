@@ -19,6 +19,24 @@ from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 from geonode.dvn.forms import SLDHelperForm
 
 
+def make_geoserver_get_request(get_request_url_str):
+    """
+    Convenience function used to make GET requests to the geoserver
+    """
+    if not get_request_url_str:
+        return (None, None)
+
+    # Prepare geo server request
+    http = httplib2.Http()
+    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
+    headers = dict()
+
+    response, content = http.request(get_request_url_str\
+                                      , 'GET'\
+                                      )
+    return (response, content)
+
+
 def get_sld_rules(params):
     """
     Given the parameters defined in the SLDHelperForm:
@@ -33,6 +51,9 @@ def get_sld_rules(params):
     
     d = json.loads(json_response_str)
     xml_rules = d.get('data', {}).get('style_rules', None)
+    
+    Example of url sent to Geoserver:
+    http://localhost:8080/geoserver/rest/sldservice/geonode:income_2so/classify.xml?reverse=&attribute=B19013_Med&ramp=Gray&endColor=%23A50F15&intervals=5&startColor=%23FEE5D9&method=equalInterval
     """
     
     if not type(params) == dict:
@@ -49,16 +70,8 @@ def get_sld_rules(params):
     print sld_rules_url
     print '-' *40
 
-    # Prepare geo server request
-    http = httplib2.Http()
-    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
-    headers = dict()
-
-    response, content = http.request(sld_rules_url\
-                                        , 'GET'\
-                                        #, body=request.raw_post_data or None\
-                                        #, headers=headers\
-                                        )
+    response, content = make_geoserver_get_request(sld_rules_url)
+    
     # New rules not created -- possible bad data
     if content is not None and content == '<list/>':
         return MessageHelperJSON.get_json_msg(success=False, msg='Error in creating style rules for layer. Bad parameters.')
@@ -73,7 +86,7 @@ def get_sld_rules(params):
     # Wrap the XML rules in JSON and send them back
     return MessageHelperJSON.get_json_msg(success=True, msg='', data_dict={ 'style_rules' : content })
     
-   
+
 
 def get_layer_features_definition(layer_name):
     """Given a layer name, return the feature definition in JSON format
@@ -88,6 +101,10 @@ def get_layer_features_definition(layer_name):
     Example of failed JSON message:
     
     {"success": false, "message": "Definition not found for layer: \"income34x5\""}
+    
+    Example of url sent to Geoserver, where layer_name is "income_2so"
+    http://localhost:8080/geoserver/rest/sldservice/geonode:income_2so/attributes.xml
+    
     """
     if not layer_name:
         MessageHelperJSON.get_json_msg(success=False, msg="The layer name was not specified")
@@ -99,18 +116,10 @@ def get_layer_features_definition(layer_name):
     # Create geoserver query url
     query_url = 'rest/sldservice/geonode:%s/attributes.xml' % layer_name
     layer_defn_url = urljoin(settings.GEOSERVER_BASE_URL, query_url)
+    print (layer_defn_url)
+    response, content = make_geoserver_get_request(layer_defn_url)
 
-    print layer_defn_url
-    # Prepare geo server request
-    http = httplib2.Http()
-    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
-    headers = dict()
-
-    response, content = http.request(layer_defn_url\
-                                       , 'GET'\
-                                       #, body=request.raw_post_data or None\
-                                       #, headers=headers\
-                                       )
+  
    # Layer definition not found!
     if content is not None and content == '<list/>':
         return MessageHelperJSON.get_json_msg(success=False, msg="Layer not found for name: \"%s\"" % layer_name)
@@ -129,17 +138,44 @@ def get_layer_features_definition(layer_name):
     return MessageHelperJSON.get_json_msg(success=True, msg='', data_dict=field_list)
 
 
+def get_styles_for_layer(layer_name):
+    """Given a layer_name, return the available layer styles
+    
+    Example of url sent to Geoserver where layer name is "income_2so"
+    http://localhost:8080/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetStyles&LAYERS=income_2so
+    
+    """
+    if not layer_name:
+           MessageHelperJSON.get_json_msg(success=False, msg="The layer name was not specified")
+
+    # Does this layer exist
+    if Layer.objects.filter(name=layer_name).count() == 0:
+        MessageHelperJSON.get_json_msg(success=False, msg="The layer name, \"%s\" was not found in the system." % layer_name)
+
+    # Create geoserver query url
+    query_url = 'wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetStyles&LAYERS=%s' % (layer_name)
+    get_styles_url = urljoin(settings.GEOSERVER_BASE_URL, query_url)
+    print get_styles_url
+    response, content = make_geoserver_get_request(get_styles_url)
+                                  
+    print response
+    print content
+
 
 
 if __name__=='__main__':
+    test_layer_name = 'income_2so'
     if 0:
-        print get_layer_features_definition('boston_social_disorder_pbl')
+        print get_layer_features_definition(test_layer_name)
         #http://localhost:8080/geoserver/rest/sldservice/geonode:boston_social_disorder_pbl/attributes.xml
         #http://localhost:8080/geoserver/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?reverse=&attribute=Violence_4&ramp=Gray&endColor=%23A50F15&intervals=5&startColor=%23FEE5D9&method=equalInterval
         
     if 1:
-        d = dict(layer_name='boston_social_disorder_pbl'\
-                , attribute='Violence_4'\
+        get_styles_for_layer(test_layer_name)
+        
+    if 0:
+        d = dict(layer_name=test_layer_name\
+                , attribute='B19013_Med'\
                 ,method='equalInterval'\
                 ,intervals=5\
                 ,ramp='Gray'\

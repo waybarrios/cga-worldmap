@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from dv_utils import MessageHelperJSON
 from dataverse_auth import has_proper_auth
-from geonode.dvn.geonode_services import get_layer_features_definition
+from geonode.dvn.geonode_get_services import get_layer_features_definition
 from geonode.dvn.forms import SLDHelperForm
 
 #from proxy.views import geoserver_rest_proxy
@@ -50,4 +50,7 @@ def get_sld_rules(request, params):
             field_name, err_list = err_tuple
             for err in err_list:
                 print field_name, err
-                
+
+
+
+
