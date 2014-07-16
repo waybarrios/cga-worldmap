@@ -75,3 +75,7 @@ PasteDeploy
 pastescript
 dj.paste
 
+
+# Dataverse related
+# for SLD functions
+xmltodict>=0.9.0
