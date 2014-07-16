@@ -1,0 +1,156 @@
+if __name__=='__main__':
+    import os, sys
+    DJANGO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(DJANGO_ROOT)
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'geonode.settings.local'
+
+
+import httplib2
+try:
+    from urlparse import urljoin
+except:
+    from urllib.parse import urljoin        # python 3.x
+import xmltodict
+
+
+from django.conf import settings
+from geonode.maps.models import Layer
+from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
+from geonode.dvn.forms import SLDHelperForm
+
+
+def get_sld_rules(params):
+    """
+    Given the parameters defined in the SLDHelperForm:
+        (1) Format the parameters as a GeoServer REST request
+        (2) Make the request and retrieve the new XML rules
+        
+    :params dict: see the SLD HelperForm
+    :returns: JSON message with data or error message
+    
+    Example of successful response:
+    {"success": true, "data": {"style_rules": "<Rules><Rule><Title> &gt; -2.7786 AND &lt;= 2.4966</Title><Filter><And><PropertyIsGreaterThanOrEqualTo><PropertyName>Violence_4</PropertyName><Literal>-2.7786</Literal></PropertyIsGreaterThanOrEqualTo><PropertyIsLessThanOrEqualTo><PropertyName>Violence_4</PropertyName><Literal>2.4966</Literal></PropertyIsLessThanOrEqualTo></And></Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#424242</CssParameter></Fill><Stroke/></PolygonSymbolizer></Rule><Rule><Title> &gt; 2.4966 AND &lt;= 7.7718</Title><Filter><And><PropertyIsGreaterThan><PropertyName>Violence_4</PropertyName><Literal>2.4966</Literal></PropertyIsGreaterThan><PropertyIsLessThanOrEqualTo><PropertyName>Violence_4</PropertyName><Literal>7.7718</Literal></PropertyIsLessThanOrEqualTo></And></Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#676767</CssParameter></Fill><Stroke/></PolygonSymbolizer></Rule></Rules>"}}
+    
+    d = json.loads(json_response_str)
+    xml_rules = d.get('data', {}).get('style_rules', None)
+    """
+    
+    if not type(params) == dict:
+        return None
+    
+    f = SLDHelperForm(params)
+    if not f.is_valid():
+        err_list = f.get_error_list()
+        MessageHelperJSON.get_json_msg(success=False, msg='The following errors were encounted:', data=err_list)
+    
+    # Create geoserver query url
+    sld_rules_url = urljoin(settings.GEOSERVER_BASE_URL, f.get_url_params_str())
+    print '-' *40
+    print sld_rules_url
+    print '-' *40
+
+    # Prepare geo server request
+    http = httplib2.Http()
+    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
+    headers = dict()
+
+    response, content = http.request(sld_rules_url\
+                                        , 'GET'\
+                                        #, body=request.raw_post_data or None\
+                                        #, headers=headers\
+                                        )
+    # New rules not created -- possible bad data
+    if content is not None and content == '<list/>':
+        return MessageHelperJSON.get_json_msg(success=False, msg='Error in creating style rules for layer. Bad parameters.')
+
+    # Remove whitespace from XML
+    content = remove_whitespace_from_xml(content)
+
+    # Were rules created?
+    if not content.startswith('<Rules>'):
+        return MessageHelperJSON.get_json_msg(success=False, msg='Not able to create style rules for layer')
+        
+    # Wrap the XML rules in JSON and send them back
+    return MessageHelperJSON.get_json_msg(success=True, msg='', data_dict={ 'style_rules' : content })
+    
+   
+
+def get_layer_features_definition(layer_name):
+    """Given a layer name, return the feature definition in JSON format
+    
+    :param layer_name: str
+    :returns: JSON message with 'success' - true or false; and either 'message' or 'data'
+    
+    Example of successful JSON message:
+    
+    { "success": true", data": [{"name": "STATE", "type": "String"}, {"name": "Nbhd", "type": "String"}, {"name": "CT_ID_1", "type": "String"}, {"name": "UniqueID", "type": "Double"}, {"name": "NSA_ID_1", "type": "String"}, {"name": "B19013_Med", "type": "Double"}, {"name": "HOODS_PD_I", "type": "Double"}, {"name": "PERIMETER", "type": "Double"}, {"name": "COUNTY", "type": "String"}, {"name": "NSA_NAME", "type": "String"}, {"name": "Quality_of", "type": "Double"}, {"name": "DRY_PCT", "type": "Double"}, {"name": "DRY_ACRES", "type": "Double"}, {"name": "TRACT", "type": "String"}, {"name": "OBJECTID", "type": "Long"}, {"name": "BLK_COUNT", "type": "Integer"}, {"name": "AREA", "type": "Double"}, {"name": "NbhdCRM", "type": "String"}, {"name": "DRY_SQMI", "type": "Double"}, {"name": "the_geom", "type": "MultiPolygon"}, {"name": "SHAPE_LEN", "type": "Double"}, {"name": "LOGRECNO", "type": "String"}, {"name": "DRY_SQKM", "type": "Double"}, {"name": "UniqueID_1", "type": "Integer"}, {"name": "SHAPE_AREA", "type": "Double"}, {"name": "WALKABILIT", "type": "Double"}, {"name": "CT_ID", "type": "String"}, {"name": "Nbhd_1", "type": "String"}]}
+    
+    Example of failed JSON message:
+    
+    {"success": false, "message": "Definition not found for layer: \"income34x5\""}
+    """
+    if not layer_name:
+        MessageHelperJSON.get_json_msg(success=False, msg="The layer name was not specified")
+    
+    # Does this layer exist
+    if Layer.objects.filter(name=layer_name).count() == 0:
+        MessageHelperJSON.get_json_msg(success=False, msg="The layer name, \"%s\" was not found in the system." % layer_name)
+        
+    # Create geoserver query url
+    query_url = 'rest/sldservice/geonode:%s/attributes.xml' % layer_name
+    layer_defn_url = urljoin(settings.GEOSERVER_BASE_URL, query_url)
+
+    print layer_defn_url
+    # Prepare geo server request
+    http = httplib2.Http()
+    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
+    headers = dict()
+
+    response, content = http.request(layer_defn_url\
+                                       , 'GET'\
+                                       #, body=request.raw_post_data or None\
+                                       #, headers=headers\
+                                       )
+   # Layer definition not found!
+    if content is not None and content == '<list/>':
+        return MessageHelperJSON.get_json_msg(success=False, msg="Layer not found for name: \"%s\"" % layer_name)
+              
+    try:
+        dict_content = xmltodict.parse(content)
+    except:
+        return MessageHelperJSON.get_json_msg(success=False, msg="Not able to convert field names for layer: \"%s\"" % layer_name)
+
+
+    field_list = dict_content.get('Attributes', {}).get('Attribute', None)
+    if field_list is None:
+        return MessageHelperJSON.get_json_msg(success=False, msg="Field names not found for layer: \"%s\"" % layer_name)
+
+
+    return MessageHelperJSON.get_json_msg(success=True, msg='', data_dict=field_list)
+
+
+
+
+if __name__=='__main__':
+    if 0:
+        print get_layer_features_definition('boston_social_disorder_pbl')
+        #http://localhost:8080/geoserver/rest/sldservice/geonode:boston_social_disorder_pbl/attributes.xml
+        #http://localhost:8080/geoserver/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?reverse=&attribute=Violence_4&ramp=Gray&endColor=%23A50F15&intervals=5&startColor=%23FEE5D9&method=equalInterval
+        
+    if 1:
+        d = dict(layer_name='boston_social_disorder_pbl'\
+                , attribute='Violence_4'\
+                ,method='equalInterval'\
+                ,intervals=5\
+                ,ramp='Gray'\
+                ,startColor='#FEE5D9'\
+                ,endColor='#A50F15'\
+                ,reverse=''\
+            )
+        import json
+        sld_rules = get_sld_rules(d)
+        print sld_rules
+        d2 = json.loads(sld_rules)
+        print '-' * 80
+        print d2.get('data', {}).get('style_rules', None)
+        #print d2['data']['style_rules']#.keys()
