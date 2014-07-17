@@ -22,10 +22,10 @@
                     </Filter>
                     <PolygonSymbolizer>
                         <Fill>
-                            <CssParameter name="fill">#ffcc00</CssParameter>
+                            <CssParameter name="fill">#fff</CssParameter>
                         </Fill>
                         <Stroke>
-                            <CssParameter name="stroke">#000</CssParameter>
+                            <CssParameter name="stroke">#fff</CssParameter>
                             <CssParameter name="stroke-width">0.7</CssParameter>
                         </Stroke>
                     </PolygonSymbolizer>
@@ -46,10 +46,10 @@
                     </Filter>
                     <PolygonSymbolizer>
                         <Fill>
-                            <CssParameter name="fill">#66CD00</CssParameter>
+                            <CssParameter name="fill">#6a2982</CssParameter>
                         </Fill>
                         <Stroke>
-                            <CssParameter name="stroke">#ff0000</CssParameter>
+                            <CssParameter name="stroke">#ffcc00</CssParameter>
                             <CssParameter name="stroke-width">0.7</CssParameter>
                         </Stroke>
                     </PolygonSymbolizer>
