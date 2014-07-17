@@ -60,7 +60,8 @@ class SLDHelperForm(forms.Form):
         if not hex_color_val:
             return False
     
-        pattern = '^#?(?:[0-9a-fA-F]{3}){1,2}$'
+        # hex color pattern
+        pattern = '^#(?:[0-9a-fA-F]{3}){1,2}$'
         if re.match(pattern, hex_color_val):
             return True
         return False
