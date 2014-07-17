@@ -5,24 +5,37 @@ if __name__=='__main__':
     sys.path.append(DJANGO_ROOT)
     os.environ['DJANGO_SETTINGS_MODULE'] = 'geonode.settings.local'
 
+import logging
 import random
 import string
 
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 from lxml import etree
 
+logger = logging.getLogger("geonode.dvn.sld_rule_formatter")
+
 """
 Class to help create an SLD with Rules
 """
-class SLDRuleHelper:
+class SLDRuleFormatter:
+    
+    RULES_START_TAG = '<Rules>'
+    RULES_END_TAG = '</Rules>'
     
     def __init__(self, layer_name, sld_name=None):
         self.layer_name = layer_name
         self.sld_name = sld_name
-
+        self.err_found = False
+        self.err_msgs = []
+        
         if self.sld_name is None:
             self.sld_name = self.generate_sld_name()
 
+    def add_err_msg(self, msg):
+        self.err_found = True
+        self.err_msgs.append(msg)
+        logger.warn(msg)
+        
     def id_generator(self, size=7, chars=string.ascii_lowercase + string.digits):
         return ''.join(random.choice(chars) for _ in range(size))
         
@@ -34,7 +47,7 @@ class SLDRuleHelper:
 
     def format_rules_xml(self, rules_xml):
         """
-        Given a XML in <Rules>...</Rules> tags, extract the content (with tags) and return it
+        Given a XML in <Rules>...</Rules> tags, remove the outer tags
         
         <Rules>
             <Rule>....</Rule>
@@ -43,25 +56,8 @@ class SLDRuleHelper:
         if not rules_xml:
             return None
         
-        try:
-            t = etree.XML(rules_xml)
-        except:
-            # failed to parse rules
-            return None
-        
-        try:
-            e = t.xpath('//Rules')[0]
-        except IndexError:
-            # failed to find <Rules> tag
-            return None
-        
-        try:
-            inner_rules_xml = (e.text + ''.join(map(etree.tostring, e))).strip()
-        except:
-            # nothing inside
-            return None
-            
-        return inner_rules_xml
+        # Formerly parsed XML tree, etc, but this seemed a bit easier
+        return rules_xml.replace(self.RULES_START_TAG, '').replace(self.RULES_END_TAG, '')
         
         
         
@@ -80,9 +76,7 @@ class SLDRuleHelper:
                 <sld:Name>geonode:%s</sld:Name>
                 <sld:UserStyle>
                     <sld:Name>%s</sld:Name>
-                    <sld:FeatureTypeStyle>
-                        %s
-                    </sld:FeatureTypeStyle>
+                    <sld:FeatureTypeStyle>%s</sld:FeatureTypeStyle>
                 </sld:UserStyle>
             </sld:NamedLayer>
         </sld:StyledLayerDescriptor>""" % (self.layer_name, self.sld_name, rules_xml_formatted)
@@ -205,6 +199,6 @@ class SLDRuleHelper:
         </Rules>"""
 
 if __name__=='__main__':
-    sld_helper = SLDRuleHelper('layer-name')
-    print sld_helper.get_sld_xml(sld_helper.get_test_rules())
+    sld_formatter = SLDRuleFormatter('layer-name')
+    print sld_formatter.get_sld_xml(sld_formatter.get_test_rules())
        

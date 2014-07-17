@@ -1,3 +1,6 @@
+# REPLACED with sld_maker.py
+
+'''
 if __name__=='__main__':
     import os, sys
     DJANGO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,8 +19,7 @@ import xmltodict
 from django.conf import settings
 from geonode.maps.models import Layer
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
-from geonode.dvn.forms import SLDHelperForm
-from geonode.dvn.sld_helper import SLDRuleHelper
+from geonode.dvn.sld_rule_formatter import SLDRuleFormatter
 from geonode.dvn.dv_utils import remove_whitespace_from_xml
 METHOD_POST = 'POST'
 METHOD_PUT = 'PUT'
@@ -88,12 +90,12 @@ def associate_new_style_with_layer(layer_name, style_name):
     
 def create_new_style(layer_name, sld_xml=None):
     
-    sld_helper = SLDRuleHelper(layer_name)
+    sld_formatter = SLDRuleFormatter(layer_name)
     
     # Test 1: Add new rules to SLD template
     #test_rules_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_rules', 'test_rules_01.xml')
     #test_rules_xml = open(test_rules_fname, 'r').read()
-    #xml_data = sld_helper.get_sld_xml(test_rules_xml)
+    #xml_data = sld_formatter.get_sld_xml(test_rules_xml)
 
     # Test 2: Straight read from a new file
     # straight read from known file to test if post request works
@@ -117,9 +119,10 @@ def create_new_style(layer_name, sld_xml=None):
     
     print 'content', content
     
-    print 'new style name', sld_helper.sld_name
+    print 'new style name', sld_formatter.sld_name
     
 
 if __name__=='__main__':
     create_new_style('income_2so')
     associate_new_style_with_layer('income_2so', 'income_2so_388wd0c')
+'''

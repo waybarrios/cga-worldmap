@@ -15,11 +15,28 @@ from django.conf import settings
 
 from geonode.maps.models import Layer
 
-logger = logging.getLogger("geonode.dvn.sld_test")
+logger = logging.getLogger("geonode.dvn.sld_maker")
 
 
 class StyleLayerMaker:
+    
     """Given Style Rules, create SLD XML and add it to a layer
+    
+    Basic usage:
+
+    # Init object with an existing layer name
+    style_layer_maker = StyleLayerMaker('income_2so')      
+
+    # Use some SLD info in XML format
+    sld_xml_content = open('test_rules.xml', 'r').read()    # 'test_rules.xml' contains a SLD info in XML format
+
+    # Add sld_xml_content to the layer as the default style
+    success = style_layer_maker.add_sld_xml_to_layer(sld_xml_content)        
+    
+    # If operation failed, check error messages
+    if not success:
+        if style_layer_maker.err_found:
+            print ('\n'.join(err_msgs))
     
     """
     def __init__(self, layer_name):
@@ -27,6 +44,7 @@ class StyleLayerMaker:
         self.layer_name = layer_name
         self.err_found = False
         self.err_msgs = []
+        
     
     def add_err_msg(self, msg):
         self.err_found = True
@@ -59,17 +77,36 @@ class StyleLayerMaker:
             stylename = self.layer_name + self.get_random_suffix()
     
         # (4) Add the xml style to the catalog, with the new name
-        gs_catalog_obj.create_style(stylename, sld_xml_str)
-
-        layer_obj.default_style = self.gs_catalog_obj.get_style(stylename)
-        gs_catalog_obj.save(layer_obj)
+        try:
+            self.gs_catalog_obj.create_style(stylename, sld_xml_str)
+        except:
+            self.add_err_msg('Failed to add style to the catalog: %s' % stylename)
+            return False
+        
+        # (5) Pull the style object back from the catalog
+        new_style_obj = self.gs_catalog_obj.get_style(stylename)
+        if new_style_obj is None:
+            self.add_err_msg('Failed to find recently added style in the catalog: %s' % stylename)
+            return False
+        
+        # (6) Set the new style as the default for the layer
+        layer_obj.default_style = new_style_obj
+    
+        # Save it!
+        try:
+            self.gs_catalog_obj.save(layer_obj)
+        except:
+            self.add_err_msg('Failed to save new default style with layer' % (stylename))
+            return False
 
         print ('layer %s saved with style %s' % (self.layer_name, stylename))
-    
+        return True
+            
     
     def get_random_suffix(self, num_chars=4):
         
         return  "_".join([choice('qwertyuiopasdfghjklzxcvbnm0123456789') for i in range(num_chars)])
+        
         
     def get_style_from_name(self, style_name):
         """
@@ -179,8 +216,9 @@ class StyleLayerMaker:
   
         
 if __name__=='__main__':
-    slm = StyleLayerMaker('income_2so')
     
+    
+    slm = StyleLayerMaker('income_2so')
     sld_xml_content = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_rules', 'test_rules_03.xml'), 'r').read()
     slm.add_sld_xml_to_layer(sld_xml_content)
 

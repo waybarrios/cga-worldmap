@@ -6,7 +6,7 @@ from django.conf import settings
 from dv_utils import MessageHelperJSON
 from dataverse_auth import has_proper_auth
 from geonode.dvn.geonode_get_services import get_layer_features_definition
-from geonode.dvn.forms import SLDHelperForm
+from geonode.dvn.sld_helper_form import SLDHelperForm
 
 #from proxy.views import geoserver_rest_proxy
 
@@ -29,7 +29,7 @@ def view_layer_feature_defn(request, layer_name):
 
 def get_sld_rules(request, params):
     #http://localhost:8000/gs/rest/layers/geonode:boston_social_disorder_pbl.json
-    d = dict(layer_name='boston_social_disorder_pbl'\
+    params = dict(layer_name='boston_social_disorder_pbl'\
                 , attribute='Violence_4'\
                 ,method='equalInterval'\
                 ,intervals=5\

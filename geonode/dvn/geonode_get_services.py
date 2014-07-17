@@ -16,7 +16,7 @@ import xmltodict
 from django.conf import settings
 from geonode.maps.models import Layer
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
-from geonode.dvn.forms import SLDHelperForm
+from geonode.dvn.sld_helper_form import SLDHelperForm
 
 
 def make_geoserver_get_request(get_request_url_str):
