@@ -21,10 +21,10 @@ def run_test():
     d = dict(layer_name=layer_name\
                 , attribute='B19013_Med'\
                 ,method='jenks'\
-                ,intervals=9\
-                ,ramp='Gray'\
-                ,startColor='#FEE5D9'\
-                ,endColor='#A50F15'\
+                ,intervals=17\
+                ,ramp='Red'\
+                ,startColor='#ffffff'\
+                ,endColor='#ffcc00'\
                 ,reverse=''\
             )
     resp_json = get_sld_rules(d)

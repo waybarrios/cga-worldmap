@@ -1,5 +1,8 @@
 # REPLACED with sld_maker.py
 
+class LayerStyler:
+    def __init__(self, post_info):
+        pass
 '''
 if __name__=='__main__':
     import os, sys

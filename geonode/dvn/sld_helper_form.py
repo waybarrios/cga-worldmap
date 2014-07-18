@@ -138,7 +138,7 @@ class SLDHelperForm(forms.Form):
 
 if __name__=='__main__':
     d = dict(layer_name='boston_social_disorder_pbl'\
-                , attribute='Violence_4'\
+                , attribute='Income'\
                 ,method='equalInterval'\
                 ,intervals=5\
                 ,ramp='Gray'\
