@@ -51,8 +51,12 @@ def create_new_layer_style(request):
         json_msg = MessageHelperJSON.get_json_msg(success=False, msg="No style parameters were sent")    
         return HttpResponse(content=json_msg, content_type="application/json")
     
-    ls = LayerStyler(request.POST)
-    success = ls.style_layer()
+    ls = LayerStyler(d)
+    worked = ls.style_layer()
+    if not worked:
+        print ('\n'.join(ls.err_msgs))
+    else:
+        print ('Yes!')
     
     json_msg = ls.get_json_message()    # Will determine success/failure and appropriate params
     

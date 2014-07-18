@@ -122,12 +122,12 @@ class SLDHelperForm(forms.Form):
         if not self.errors:
             return None
             
-        err_list = []
+        fmt_err_list = []
         for err_tuple in self.errors.items():
             field_name, err_list = err_tuple
             for err in err_list:
-                err_list.append('%s: %s' % (field_name, err))
-        return err_list
+                fmt_err_list.append('%s: %s' % (field_name, err))
+        return fmt_err_list
 
 
     #def clean_ramp(self):

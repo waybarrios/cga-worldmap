@@ -12,11 +12,15 @@ except:
     from urllib.parse import urljoin        # python 3.x
 import xmltodict
 
+import logging
 
 from django.conf import settings
+
 from geonode.maps.models import Layer
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 from geonode.dvn.sld_helper_form import SLDHelperForm
+
+logger = logging.getLogger("geonode.dvn.geonode_get_services")
 
 
 def make_geoserver_get_request(get_request_url_str):
@@ -61,9 +65,9 @@ def get_sld_rules(params):
     
     f = SLDHelperForm(params)
     if not f.is_valid():
-        err_list = f.get_error_list()
-        MessageHelperJSON.get_json_msg(success=False, msg='The following errors were encounted:', data=err_list)
-    
+        print ('form failed')
+        return MessageHelperJSON.get_json_msg(success=False, msg='The following errors were encounted:', data_dict=f.get_error_list())
+        
     # Create geoserver query url
     sld_rules_url = urljoin(settings.GEOSERVER_BASE_URL, f.get_url_params_str())
     print '-' *40
