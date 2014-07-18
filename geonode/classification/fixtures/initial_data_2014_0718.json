@@ -43,7 +43,7 @@
     "model": "classification.classificationmethod", 
     "fields": {
         "value_name": "jenks", 
-        "display_name": "Jenks", 
+        "display_name": "Jenks Natural Breaks", 
         "created": "2014-07-18T13:01:11.838", 
         "modified": "2014-07-18T13:01:11.838", 
         "active": true, 

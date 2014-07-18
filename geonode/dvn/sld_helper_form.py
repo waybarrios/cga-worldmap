@@ -9,6 +9,7 @@ if __name__=='__main__':
     
 from django import forms
 from geonode.maps.models import Layer
+from geonode.classification.models import ClassificationMethod, ColorRamp
 
 """
 http://localhost:8000/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?attribute=STATE&method=uniqueInterval&intervals=5&ramp=Custom&startColor=%23f7fbff&endColor=%2308306b&reverse=
@@ -22,22 +23,23 @@ http://localhost:8000/gs/rest/sldservice/geonode:boston_social_disorder_pbl/clas
 	&endColor=%23A50F15
 	&reverse=
 """
+
+CLASSIFY_METHOD_CHOICES = [ (x.value_name, x.display_name) for x in ClassificationMethod.objects.filter(active=True) ]
+COLOR_RAMP_CHOICES = [ (x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True) ]
+
 class SLDHelperForm(forms.Form):
     
     SLD_ATTRIBUTES = ['attribute', 'method', 'intervals', 'ramp', 'startColor', 'endColor', 'reverse']
 
-    VALID_METHODS = ['uniqueInterval',  'equalInterval', 'quantile', 'jenks']
-    VALID_COLOR_RAMP_VALS =  ['Blue', 'Red', 'Orange', 'Jet', 'Gray', 'Random', 'Custom']
-
     layer_name = forms.CharField(max_length=255)
     attribute = forms.CharField(max_length=100)
-    method = forms.CharField(max_length=50)
+    method = forms.ChoiceField(choices=CLASSIFY_METHOD_CHOICES)
     intervals = forms.IntegerField(required=False)
-    ramp = forms.CharField(max_length=40)
+    ramp = forms.ChoiceField(choices=COLOR_RAMP_CHOICES)
     reverse = forms.BooleanField(initial=False, required=False)
 
-    startColor =forms.CharField(max_length=7)   # irregular naming convention used to match the outgoing url string
-    endColor =forms.CharField(max_length=7)     # irregular naming convention used to match the outgoing url string
+    startColor =forms.CharField(max_length=7, required=False)   # irregular naming convention used to match the outgoing url string
+    endColor =forms.CharField(max_length=7, required=False)      # irregular naming convention used to match the outgoing url string
 
 
     def get_url_params_str(self):
@@ -81,25 +83,26 @@ class SLDHelperForm(forms.Form):
         
     def clean_startColor(self):        
         c = self.cleaned_data.get('startColor', None)
-        if not self.is_valid_hex_color_val(c):
-            raise forms.ValidationError("This is not a valid start color: %s" % c)
-        return c
+        if self.is_valid_hex_color_val(c) or c == '':
+            return c
+        raise forms.ValidationError("This is not a valid end color: %s" % c)
 
 
     def clean_endColor(self):        
-        c = self.cleaned_data.get('endColor', None)
-        if not self.is_valid_hex_color_val(c):
-            raise forms.ValidationError("This is not a valid end color: %s" % c)
-        return c
+        c = self.cleaned_data.get('endColor', '')
+        if self.is_valid_hex_color_val(c) or c == '':
+            return c
+        raise forms.ValidationError("This is not a valid end color: %s" % c)
         
 
-    def clean_method(self):
+    """def clean_method(self):
         method = self.cleaned_data.get('method', None)
         
         if not method in self.VALID_METHODS:
             raise forms.ValidationError("This is not a valid method: %s" % method)
         return method
-
+    """
+    
     def clean_reverse(self):
         reverse = self.cleaned_data.get('reverse', None)
 
@@ -127,12 +130,12 @@ class SLDHelperForm(forms.Form):
         return err_list
 
 
-    def clean_ramp(self):
-        ramp = self.cleaned_data.get('ramp', None)
-
-        if not ramp in self.VALID_COLOR_RAMP_VALS:
-            raise forms.ValidationError("This is not a valid color ramp: %s" % ramp)
-        return ramp
+    #def clean_ramp(self):
+    #    ramp = self.cleaned_data.get('ramp', None)
+    #
+    #    if not ramp in self.VALID_COLOR_RAMP_VALS:
+    #        raise forms.ValidationError("This is not a valid color ramp: %s" % ramp)
+    #   return ramp
 
     
 
@@ -148,6 +151,7 @@ if __name__=='__main__':
             )
             
     f = SLDHelperForm(d)
+
     if f.is_valid():
         print 'valid'
         print f.cleaned_data

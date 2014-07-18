@@ -71,14 +71,16 @@ def get_sld_rules(params):
     print '-' *40
 
     response, content = make_geoserver_get_request(sld_rules_url)
-    
+    print response
     # New rules not created -- possible bad data
     if content is not None and content == '<list/>':
         return MessageHelperJSON.get_json_msg(success=False, msg='Error in creating style rules for layer. Bad parameters.')
 
     # Remove whitespace from XML
     content = remove_whitespace_from_xml(content)
-
+    if content is None:
+        return MessageHelperJSON.get_json_msg(success=False, msg='Failed to remove whitespace from XML')
+        
     # Were rules created?
     if not content.startswith('<Rules>'):
         return MessageHelperJSON.get_json_msg(success=False, msg='Not able to create style rules for layer')

@@ -15,20 +15,22 @@ from geonode_get_services import get_sld_rules
 def run_test():
     
     # (1) We have the layer name
-    layer_name = 'income_2so'
+    layer_name = 'boston_census_r5j'
+    
+    #  http://localhost:8000/gs/rest/sldservice/geonode:boston_census_r5j/classify.xml?attribute=TWORACES&method=jenks&intervals=5&ramp=Custom&startColor=%23fff5f0&endColor=%2367000d&reverse=
     
     # (2) Make classficiation rules via geoserver's rest service
     d = dict(layer_name=layer_name\
-                , attribute='B19013_Med'\
+                , attribute='TWORACES'\
                 ,method='jenks'\
-                ,intervals=17\
-                ,ramp='Red'\
-                ,startColor='#ffffff'\
-                ,endColor='#ffcc00'\
+                ,intervals=5\
+                ,ramp='Custom'\
+                ,startColor='#fff5f0'\
+                ,endColor='#67000d'\
                 ,reverse=''\
             )
     resp_json = get_sld_rules(d)
-    #print(resp_json)
+    print(resp_json)
     resp_dict = json.loads(resp_json)
     if not resp_dict.get('success', False):
         print ('Failed to make rules')
