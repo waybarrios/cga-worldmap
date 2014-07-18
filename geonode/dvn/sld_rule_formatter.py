@@ -113,48 +113,6 @@ class SLDRuleFormatter:
             </PolygonSymbolizer>
           </Rule>
           <Rule>
-            <Title> &gt; 2.4966 AND &lt;= 7.7718</Title>
-            <Filter>
-              <And>
-                <PropertyIsGreaterThan>
-                  <PropertyName>Violence_4</PropertyName>
-                  <Literal>2.4966</Literal>
-                </PropertyIsGreaterThan>
-                <PropertyIsLessThanOrEqualTo>
-                  <PropertyName>Violence_4</PropertyName>
-                  <Literal>7.7718</Literal>
-                </PropertyIsLessThanOrEqualTo>
-              </And>
-            </Filter>
-            <PolygonSymbolizer>
-              <Fill>
-                <CssParameter name="fill">#676767</CssParameter>
-              </Fill>
-              <Stroke/>
-            </PolygonSymbolizer>
-          </Rule>
-          <Rule>
-            <Title> &gt; 7.7718 AND &lt;= 13.047</Title>
-            <Filter>
-              <And>
-                <PropertyIsGreaterThan>
-                  <PropertyName>Violence_4</PropertyName>
-                  <Literal>7.7718</Literal>
-                </PropertyIsGreaterThan>
-                <PropertyIsLessThanOrEqualTo>
-                  <PropertyName>Violence_4</PropertyName>
-                  <Literal>13.047</Literal>
-                </PropertyIsLessThanOrEqualTo>
-              </And>
-            </Filter>
-            <PolygonSymbolizer>
-              <Fill>
-                <CssParameter name="fill">#8B8B8B</CssParameter>
-              </Fill>
-              <Stroke/>
-            </PolygonSymbolizer>
-          </Rule>
-          <Rule>
             <Title> &gt; 13.047 AND &lt;= 18.3222</Title>
             <Filter>
               <And>
@@ -171,27 +129,6 @@ class SLDRuleFormatter:
             <PolygonSymbolizer>
               <Fill>
                 <CssParameter name="fill">#B0B0B0</CssParameter>
-              </Fill>
-              <Stroke/>
-            </PolygonSymbolizer>
-          </Rule>
-          <Rule>
-            <Title> &gt; 18.3222 AND &lt;= 23.5975</Title>
-            <Filter>
-              <And>
-                <PropertyIsGreaterThan>
-                  <PropertyName>Violence_4</PropertyName>
-                  <Literal>18.3222</Literal>
-                </PropertyIsGreaterThan>
-                <PropertyIsLessThanOrEqualTo>
-                  <PropertyName>Violence_4</PropertyName>
-                  <Literal>23.5975</Literal>
-                </PropertyIsLessThanOrEqualTo>
-              </And>
-            </Filter>
-            <PolygonSymbolizer>
-              <Fill>
-                <CssParameter name="fill">#D4D4D4</CssParameter>
               </Fill>
               <Stroke/>
             </PolygonSymbolizer>

@@ -12,6 +12,7 @@ from sld_maker import StyleLayerMaker
 from sld_rule_formatter import SLDRuleFormatter
 from geonode_get_services import get_sld_rules
 
+
 def run_test():
     
     # (1) We have the layer name

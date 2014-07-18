@@ -4,6 +4,8 @@ import json
 import logging
 import sys
 
+from django.conf import settings
+
 from geonode.dvn.sld_helper_form import SLDHelperForm
 from geonode.dvn.sld_maker import StyleLayerMaker
 from geonode.dvn.sld_rule_formatter import SLDRuleFormatter
@@ -27,18 +29,27 @@ class LayerStyler:
     
     def style_layer(self):
         
+        # (1) Check params and create rules
+        #
         sld_rule_data = self.set_layer_name_and_get_rule_data()
         if sld_rule_data is None:
             return False
         
+        # (2) Format rules into full SLD
+        #
         formatted_sld = self.format_rules_into_full_sld(sld_rule_data)
         if formatted_sld is None:
             return False
-            
+        
+        # (3) Add new SLD to Layer
+        #
         return self.add_new_sld_to_layer(formatted_sld)
     
     
     def add_new_sld_to_layer(self, formatted_sld):
+        """ 
+        (3) Add new SLD to Layer
+        """
         if not formatted_sld:
             self.add_err_msg('Formatted SLD data is not available')
             return False
@@ -55,7 +66,9 @@ class LayerStyler:
         
         
     def format_rules_into_full_sld(self, sld_rule_data):
-        
+        """ 
+        (2) Format rules into full SLD
+        """
         if not sld_rule_data:
             self.add_err_msg('Rule data is not available')
             return None
@@ -78,7 +91,8 @@ class LayerStyler:
         
     
     def set_layer_name_and_get_rule_data(self):
-        """(1) Evaluate params and create SLD rules
+        """
+        (1) Check params and create rules
         """
         if self.styling_params is None:
             return None
@@ -94,7 +108,7 @@ class LayerStyler:
                 self.add_err_msg(err_msg)
             return None
 
-        # (1a) Pull layer name, should never fail b/c params have been evaluated in (1)
+        # (1a) Pull layer name from initial params, should never fail b/c params have been evaluated in (1)
         #
         self.layer_name = self.styling_params.get('layer_name', None)
         if self.layer_name is None:
@@ -108,8 +122,20 @@ class LayerStyler:
         
         return sld_rule_data
         
+        
     def get_json_message(self):
-        #
+        if not self.err_found:
+            """
+            
+            return HttpResponse(status=200, content=json.dumps({
+                "success": True,
+                "layer_name": saved_layer.typename,
+                "layer_link": "%sdata/%s" % (settings.SITEURL, saved_layer.service_typename),
+                "embed_map_link": "%smaps/embed/?layer=%s" % (settings.SITEURL, saved_layer.service_typename),
+                "worldmap_username": user.username
+            })
+            """
+            pass
         pass
         
   

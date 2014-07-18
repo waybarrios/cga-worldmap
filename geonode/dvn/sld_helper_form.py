@@ -12,8 +12,6 @@ from geonode.maps.models import Layer
 from geonode.classification.models import ClassificationMethod, ColorRamp
 
 """
-http://localhost:8000/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?attribute=STATE&method=uniqueInterval&intervals=5&ramp=Custom&startColor=%23f7fbff&endColor=%2308306b&reverse=
-
  http://localhost:8000/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?
     attribute=Violence_4
 	&method=equalInterval
@@ -28,9 +26,9 @@ CLASSIFY_METHOD_CHOICES = [ (x.value_name, x.display_name) for x in Classificati
 COLOR_RAMP_CHOICES = [ (x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True) ]
 
 class SLDHelperForm(forms.Form):
-    
-    SLD_ATTRIBUTES = ['attribute', 'method', 'intervals', 'ramp', 'startColor', 'endColor', 'reverse']
-
+    """
+    Evaluate classification parameters to be used for a new layer style
+    """
     layer_name = forms.CharField(max_length=255)
     attribute = forms.CharField(max_length=100)
     method = forms.ChoiceField(choices=CLASSIFY_METHOD_CHOICES)
@@ -43,7 +41,7 @@ class SLDHelperForm(forms.Form):
 
 
     def get_url_params_str(self):
-        """Build most of the url for the sldservice
+        """Build the url for the sldservice
         
         # /rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?attribute=Violence_4&method=equalInterval&intervals=5&ramp=Gray&startColor=%23FEE5D9&endColor=%23A50F15&reverse=
         """
