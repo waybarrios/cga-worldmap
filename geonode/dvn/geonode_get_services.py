@@ -20,27 +20,11 @@ from geonode.maps.models import Layer
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 from geonode.dvn.sld_helper_form import SLDHelperForm
 
+from geonode.dvn.geoserver_rest_url_helper import get_retrieve_sld_rules_url, get_layer_features_definition_url
+
+from geonode.dvn.geoserver_rest_util import make_geoserver_get_request
 logger = logging.getLogger("geonode.dvn.geonode_get_services")
 
-
-
-
-def make_geoserver_get_request(get_request_url_str):
-    """
-    Convenience function used to make GET requests to the geoserver
-    """
-    if not get_request_url_str:
-        return (None, None)
-
-    # Prepare geo server request
-    http = httplib2.Http()
-    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
-    headers = dict()
-
-    response, content = http.request(get_request_url_str\
-                                      , 'GET'\
-                                      )
-    return (response, content)
 
 
 def get_sld_rules(params):
@@ -64,14 +48,14 @@ def get_sld_rules(params):
     
     if not type(params) == dict:
         return None
-    
+
     f = SLDHelperForm(params)
     if not f.is_valid():
         print ('form failed')
         return MessageHelperJSON.get_json_msg(success=False, msg='The following errors were encounted:', data_dict=f.get_error_list())
-        
+    
     # Create geoserver query url
-    sld_rules_url = urljoin(settings.GEOSERVER_BASE_URL, f.get_url_params_str())
+    sld_rules_url = get_retrieve_sld_rules_url(f.get_url_params_dict())
     print '-' *40
     print sld_rules_url
     print '-' *40
@@ -122,8 +106,8 @@ def get_layer_features_definition(layer_name):
         MessageHelperJSON.get_json_msg(success=False, msg="The layer name, \"%s\" was not found in the system." % layer_name)
         
     # Create geoserver query url
-    query_url = 'rest/sldservice/geonode:%s/attributes.xml' % layer_name
-    layer_defn_url = urljoin(settings.GEOSERVER_BASE_URL, query_url)
+    #query_url = 'rest/sldservice/geonode:%s/attributes.xml' % layer_name
+    layer_defn_url =get_layer_features_definition_url(layer_name)
     print (layer_defn_url)
     response, content = make_geoserver_get_request(layer_defn_url)
 

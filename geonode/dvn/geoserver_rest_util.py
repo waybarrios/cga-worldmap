@@ -20,19 +20,24 @@ logger = logging.getLogger("geonode.dvn.geonode_post_services")
 
 
 def make_geoserver_json_put_request(request_url_str, json_data_str):
-
+    """
+    Make a geoserver PUT request, sending JSON data
+    """
     content_type = 'application/json; charset=UTF-8'
     return make_geoserver_put_request(request_url_str, json_data_str, content_type)
+    
 
-def make_geo_server_put_sld_request(request_url_str, xml_data):
-
+def make_geoserver_put_sld_request(request_url_str, xml_data):
+    """
+    Make a geoserver PUT request, sending SLD data in XML format
+    """
     content_type = 'application/vnd.ogc.sld+xml; charset=UTF-8'
     return make_geoserver_put_request(request_url_str, xml_data, content_type)
     
 
 def make_geoserver_put_request(request_url_str, data, content_type):
     """
-    Convenience function used to make GET requests to the geoserver
+    Convenience function used to make PUT requests to the geoserver
     """
     if not request_url_str:
         return (None, None)
@@ -49,4 +54,24 @@ def make_geoserver_put_request(request_url_str, data, content_type):
                                      , headers=headers\
                                      )
     return (response, content)
+
+
+
+def make_geoserver_get_request(get_request_url_str):
+    """
+    Convenience function used to make GET requests to the geoserver
+    """
+    if not get_request_url_str:
+        return (None, None)
+
+    # Prepare geo server request
+    http = httplib2.Http()
+    http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
+    headers = dict()
+
+    response, content = http.request(get_request_url_str\
+                                      , 'GET'\
+                                      )
+    return (response, content)
+
 

@@ -1,4 +1,3 @@
-
 if __name__=='__main__':
     import os, sys
     DJANGO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -9,8 +8,11 @@ import logging
 import random
 import string
 
-from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 from lxml import etree
+
+from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
+from geonode.dvn.geoserver_rest_url_helper import WORLDMAP_WORKSPACE_NAME
+
 
 logger = logging.getLogger("geonode.dvn.formatted_style_rules")
 
@@ -66,6 +68,13 @@ class FormattedStyleRules:
         
     
     def get_xml_replacement_pairs(self, tag_name_list, prefix):
+        """
+        Format Rules returned by SLD rest service to conform to larger SLD.
+        
+        e.g. change <Rule> to <sld:Rule>
+                    <PropertyIsGreaterThanOrEqualTo> to <ogc:PropertyIsGreaterThanOrEqualTo>, etc.
+        
+        """
         if tag_name_list is None or prefix is None:
             return None
             
@@ -104,13 +113,13 @@ class FormattedStyleRules:
         xml_str = """<?xml version="1.0"?>
         <sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd">
             <sld:NamedLayer>
-                <sld:Name>geonode:%s</sld:Name>
+                <sld:Name>%s:%s</sld:Name>
                 <sld:UserStyle>
                     <sld:Name>%s</sld:Name>
                     <sld:FeatureTypeStyle>%s</sld:FeatureTypeStyle>
                 </sld:UserStyle>
             </sld:NamedLayer>
-        </sld:StyledLayerDescriptor>""" % (self.layer_name, self.sld_name, rules_xml_formatted)
+        </sld:StyledLayerDescriptor>""" % (WORLDMAP_WORKSPACE_NAME, self.layer_name, self.sld_name, rules_xml_formatted)
         
         
         self.formatted_sld_xml = remove_whitespace_from_xml(xml_str)

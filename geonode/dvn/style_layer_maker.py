@@ -20,7 +20,8 @@ from django.conf import settings
 
 from geonode.dvn.layer_metadata import LayerMetadata
 from geonode.maps.models import Layer
-from geonode.dvn.geonode_post_services import make_geoserver_json_put_request, make_geo_server_put_sld_request
+from geonode.dvn.geoserver_rest_util import make_geoserver_json_put_request, make_geoserver_put_sld_request
+from geonode.dvn.geoserver_rest_url_helper import get_set_sld_rules_to_layer_url, get_set_default_style_url
 
 
 logger = logging.getLogger("geonode.dvn.style_layer_maker")
@@ -100,13 +101,14 @@ class StyleLayerMaker:
 
         # (2) Set the new SLD to the layer via a put
         #http://localhost:8000/gs/rest/styles/social_disorder_nydj_k_i_v.xml
-        geoserver_sld_url = urljoin(settings.GEOSERVER_BASE_URL, 'rest/styles/%s.xml' % self.layer_name)
+        geoserver_sld_url = get_set_sld_rules_to_layer_url(self.layer_name)
+        #urljoin(settings.GEOSERVER_BASE_URL, 'rest/styles/%s.xml' % self.layer_name)
         print ('=' * 40)
         print(geoserver_sld_url)
         print ('-' * 40)
         print(formatted_sld_object.formatted_sld_xml)
         print ('-' * 40)
-        (response, content) = make_geo_server_put_sld_request(geoserver_sld_url, formatted_sld_object.formatted_sld_xml)
+        (response, content) = make_geoserver_put_sld_request(geoserver_sld_url, formatted_sld_object.formatted_sld_xml)
         print ('response: ', response)
         print ('content: ', content)
         if response is None or content is None:
@@ -118,7 +120,7 @@ class StyleLayerMaker:
         # (3) Set the new style as the default for the layer
         #     Send a PUT to the catalog to set the default style
         json_str = """{"layer":{"defaultStyle":{"name":"%s"},"styles":{},"enabled":true}}""" % formatted_sld_object.sld_name
-        geoserver_json_url = urljoin(settings.GEOSERVER_BASE_URL, 'rest/layers/geonode:%s' % self.layer_name)
+        geoserver_json_url = get_set_default_style_url(self.layer_name)
         print ('-' * 40)
         print ('-' * 40)
         print('geoserver_json_url', geoserver_json_url)

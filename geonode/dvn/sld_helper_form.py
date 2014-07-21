@@ -25,6 +25,10 @@ from geonode.classification.models import ClassificationMethod, ColorRamp
 CLASSIFY_METHOD_CHOICES = [ (x.value_name, x.display_name) for x in ClassificationMethod.objects.filter(active=True) ]
 COLOR_RAMP_CHOICES = [ (x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True) ]
 
+LAYER_PARAM_NAME = 'layer_name'
+REQUIRED_PARAM_NAMES = [LAYER_PARAM_NAME, 'attribute', 'method', 'intervals', 'ramp', 'reverse', 'start_color', 'end_color']
+
+
 class SLDHelperForm(forms.Form):
     """
     Evaluate classification parameters to be used for a new layer style
@@ -40,8 +44,9 @@ class SLDHelperForm(forms.Form):
     endColor =forms.CharField(max_length=7, required=False)      # irregular naming convention used to match the outgoing url string
 
 
-    def get_url_params_str(self):
-        """Build the url for the sldservice
+    def get_url_params_dict(self):
+        """
+        Parameters used to build the url for the SLD Service
         
         # /rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?attribute=Violence_4&method=equalInterval&intervals=5&ramp=Gray&startColor=%23FEE5D9&endColor=%23A50F15&reverse=
         """
@@ -49,12 +54,9 @@ class SLDHelperForm(forms.Form):
             return None
         
         params = self.cleaned_data.copy()
-        params.pop('layer_name')    # not needed for url query string
-        encoded_params = urllib.urlencode(params)
         
-        url = 'rest/sldservice/geonode:%s/classify.xml?%s' % (self.cleaned_data.get('layer_name', None), encoded_params)
+        return params
 
-        return url 
 
     def is_valid_hex_color_val(self, hex_color_val):
         if not hex_color_val:

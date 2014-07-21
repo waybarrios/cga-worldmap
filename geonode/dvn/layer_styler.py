@@ -62,7 +62,6 @@ class LayerStyler:
         if self.styling_params is None:
             return None
         resp_json = get_sld_rules(self.styling_params)
-
         resp_dict = self.get_json_as_dict(resp_json, 'Failed to make the SLD rules')
         
         if not resp_dict.get('success') is True:
@@ -147,13 +146,13 @@ class LayerStyler:
 
 if __name__=='__main__':
     from geonode_get_services import get_layer_features_definition
-    layer_name = 'social_disorder_deu'
+    layer_name = 'income_bfe'
     #print (get_layer_features_definition(layer_name))
     
     d = dict(layer_name=layer_name\
-                , attribute='TotalPop'\
+                , attribute='B19013_Med'\
                 ,method='quantile'\
-                ,intervals=14\
+                ,intervals=2\
                 ,ramp='Random'\
                 ,startColor='#fff5f0'\
                 ,endColor='#67000d'\
