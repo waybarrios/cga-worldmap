@@ -12,12 +12,12 @@ import string
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 from lxml import etree
 
-logger = logging.getLogger("geonode.dvn.sld_rule_formatter")
+logger = logging.getLogger("geonode.dvn.formatted_style_rules")
 
 """
 Class to help create an SLD with Rules
 """
-class SLDRuleFormatter:
+class FormattedStyleRules:
     
     RULES_START_TAG = '<Rules>'
     RULES_END_TAG = '</Rules>'
@@ -25,6 +25,7 @@ class SLDRuleFormatter:
     def __init__(self, layer_name, sld_name=None):
         self.layer_name = layer_name
         self.sld_name = sld_name
+        self.formatted_sld_xml = None
         self.err_found = False
         self.err_msgs = []
         
@@ -55,20 +56,50 @@ class SLDRuleFormatter:
         """
         if not rules_xml:
             return None
+
+        rules_xml = rules_xml.replace(self.RULES_START_TAG, '').replace(self.RULES_END_TAG, '')
         
+        rules_xml = self.apply_tag_prefixes(rules_xml) 
+        print ('rules_xml', rules_xml)
         # Formerly parsed XML tree, etc, but this seemed a bit easier
-        return rules_xml.replace(self.RULES_START_TAG, '').replace(self.RULES_END_TAG, '')
+        return rules_xml
         
+    
+    def get_xml_replacement_pairs(self, tag_name_list, prefix):
+        if tag_name_list is None or prefix is None:
+            return None
+            
+        replacement_pairs = []
+        for t in tag_name_list:
+            replacement_pairs.append( ('<%s' % t, '<%s:%s' % (prefix,t) ) )      # start tag
+            replacement_pairs.append( ('</%s>' % t, '</%s:%s>' % (prefix,t) ) )      # start tag
         
-        
-    def get_sld_xml(self, rules_xml):
+        return replacement_pairs
+    
+    def apply_tag_prefixes(self, rules_xml):
         if not rules_xml:
             return None
             
+        sld_tags = ['Rule', 'Title', 'PolygonSymbolizer', 'CssParameter', 'Fill', 'Stroke']
+        replace_pairs = self.get_xml_replacement_pairs(sld_tags, 'sld')
+        
+        ogc_tags = ['Filter', 'And', 'PropertyIsGreaterThanOrEqualTo', 'PropertyName', 'Literal', 'PropertyIsLessThanOrEqualTo', 'PropertyIsGreaterThan', 'PropertyIsLessThan', 'PropertyIsEqualTo']
+        replace_pairs += self.get_xml_replacement_pairs(ogc_tags, 'ogc')
+        
+        for val, replace_val in replace_pairs:
+            rules_xml = rules_xml.replace(val, replace_val)
+
+        return rules_xml
+        
+    def format_sld_xml(self, rules_xml):
+        if not rules_xml:
+            return None
+        
+        self.formatted_sld_xml = None
+        
         rules_xml_formatted = self.format_rules_xml(rules_xml)
         if rules_xml_formatted is None:
-            return None
-        #print 'rules_xml_formatted', rules_xml_formatted
+            return False
 
         xml_str = """<?xml version="1.0"?>
         <sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd">
@@ -81,14 +112,15 @@ class SLDRuleFormatter:
             </sld:NamedLayer>
         </sld:StyledLayerDescriptor>""" % (self.layer_name, self.sld_name, rules_xml_formatted)
         
-
-        xml_str = remove_whitespace_from_xml(xml_str)
+        
+        self.formatted_sld_xml = remove_whitespace_from_xml(xml_str)
         if xml_str is None:
-            return None
+            return False
             
-        return xml_str
+        return True
 
     def get_test_rules(self):
+        """Only used for testing"""
         
         return """<Rules>
           <Rule>
@@ -136,6 +168,6 @@ class SLDRuleFormatter:
         </Rules>"""
 
 if __name__=='__main__':
-    sld_formatter = SLDRuleFormatter('layer-name')
-    print sld_formatter.get_sld_xml(sld_formatter.get_test_rules())
+    sld_formatter = FormattedStyleRules('layer-name')
+    print sld_formatter.format_sld_xml(sld_formatter.get_test_rules())
        

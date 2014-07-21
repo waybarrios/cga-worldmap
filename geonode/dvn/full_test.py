@@ -8,8 +8,8 @@ if __name__=='__main__':
 
 import json
 
-from sld_maker import StyleLayerMaker
-from sld_rule_formatter import SLDRuleFormatter
+from style_layer_maker import StyleLayerMaker
+from formatted_style_rules import FormattedStyleRules
 from geonode_get_services import get_sld_rules
 
 
@@ -42,8 +42,8 @@ def run_test():
         print ('Failed to find rules in response')
         
     # (3) Format rules into a full SLD
-    sld_formatter = SLDRuleFormatter(layer_name)
-    formatted_rules_xml = sld_formatter.get_sld_xml(sld_rule_data)
+    sld_formatter = FormattedStyleRules(layer_name)
+    formatted_rules_xml = sld_formatter.format_sld_xml(sld_rule_data)
     if formatted_rules_xml is None:
         print ('Failed to format xml')
         if sld_formatter.err_found:

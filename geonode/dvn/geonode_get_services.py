@@ -23,6 +23,8 @@ from geonode.dvn.sld_helper_form import SLDHelperForm
 logger = logging.getLogger("geonode.dvn.geonode_get_services")
 
 
+
+
 def make_geoserver_get_request(get_request_url_str):
     """
     Convenience function used to make GET requests to the geoserver

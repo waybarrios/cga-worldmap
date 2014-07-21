@@ -10,13 +10,20 @@ from random import choice
 import re
 from xml.etree.ElementTree import XML, ParseError
 
+try:
+    from urlparse import urljoin
+except:
+    from urllib.parse import urljoin        # python 3.x
+    
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from geonode.dvn.layer_metadata import LayerMetadata
 from geonode.maps.models import Layer
+from geonode.dvn.geonode_post_services import make_geoserver_json_put_request, make_geo_server_put_sld_request
 
-logger = logging.getLogger("geonode.dvn.sld_maker")
+
+logger = logging.getLogger("geonode.dvn.style_layer_maker")
 
 
 class StyleLayerMaker:
@@ -71,15 +78,68 @@ class StyleLayerMaker:
             return None
             
         return self.layer_metadata
+        
+        
+    def add_sld_to_layer(self, formatted_sld_object):
+        
+        # update layer via 2 PUT calls to the geoserver
+        return self.add_sld_xml_to_layer_via_puts(formatted_sld_object)
          
-    
-    
-    def add_sld_xml_to_layer(self, sld_xml_str):
-        if not sld_xml_str:
+        # use direct python, but doesn't properly clear tile cache
+        #return self.add_sld_xml_to_layer(formatted_sld_object)
+
+
+    def add_sld_xml_to_layer_via_puts(self, formatted_sld_object):
+        if not formatted_sld_object:
             return False
         
         # (1) Verify the XML
-        if not self.is_xml_verified(sld_xml_str):
+        if not self.is_xml_verified(formatted_sld_object.formatted_sld_xml):
+            self.add_err_msg('The style information contains invalid XML')
+            return False
+
+        # (2) Set the new SLD to the layer via a put
+        #http://localhost:8000/gs/rest/styles/social_disorder_nydj_k_i_v.xml
+        geoserver_sld_url = urljoin(settings.GEOSERVER_BASE_URL, 'rest/styles/%s.xml' % self.layer_name)
+        print ('=' * 40)
+        print(geoserver_sld_url)
+        print ('-' * 40)
+        print(formatted_sld_object.formatted_sld_xml)
+        print ('-' * 40)
+        (response, content) = make_geo_server_put_sld_request(geoserver_sld_url, formatted_sld_object.formatted_sld_xml)
+        print ('response: ', response)
+        print ('content: ', content)
+        if response is None or content is None:
+            self.add_err_msg('Failed to set new style as the default')
+            return False
+
+        print ('*' * 40)
+        
+        # (3) Set the new style as the default for the layer
+        #     Send a PUT to the catalog to set the default style
+        json_str = """{"layer":{"defaultStyle":{"name":"%s"},"styles":{},"enabled":true}}""" % formatted_sld_object.sld_name
+        geoserver_json_url = urljoin(settings.GEOSERVER_BASE_URL, 'rest/layers/geonode:%s' % self.layer_name)
+        print ('-' * 40)
+        print ('-' * 40)
+        print('geoserver_json_url', geoserver_json_url)
+        (response, content) = make_geoserver_json_put_request(geoserver_json_url, json_str)
+        print ('response: ', response)
+        print ('content: ', content)
+        if response is None or content is None:
+            self.add_err_msg('Failed to set new style as the default')
+            return False
+
+        self.create_layer_metadata(self.layer_name)
+        print ('layer %s saved with style %s' % (self.layer_name, formatted_sld_object.sld_name))
+        return True
+        
+        
+    def add_sld_xml_to_layer(self, formatted_sld_object):
+        if not formatted_sld_object:
+            return False
+        
+        # (1) Verify the XML
+        if not self.is_xml_verified(formatted_sld_object.formatted_sld_xml):
             self.add_err_msg('The style information contains invalid XML')
             return False
 
@@ -93,21 +153,22 @@ class StyleLayerMaker:
         #self.clear_alternate_style_list(layer_obj)
         
         # (3) Create a style name
-        stylename = self.layer_name + self.get_random_suffix()
-        while self.is_style_name_in_catalog(stylename):
-            stylename = self.layer_name + self.get_random_suffix()
-    
+        #stylename = self.layer_name + self.get_random_suffix()
+        #while self.is_style_name_in_catalog(stylename):
+        #    stylename = self.layer_name + self.get_random_suffix()
+        style_name = formatted_sld_object.sld_name
         # (4) Add the xml style to the catalog, with the new name
         try:
-            self.gs_catalog_obj.create_style(stylename, sld_xml_str)
+            # sync names
+            self.gs_catalog_obj.create_style(style_name, formatted_sld_object.formatted_sld_xml)
         except:
-            self.add_err_msg('Failed to add style to the catalog: %s' % stylename)
+            self.add_err_msg('Failed to add style to the catalog: %s' % style_name)
             return False
         
         # (5) Pull the style object back from the catalog
-        new_style_obj = self.gs_catalog_obj.get_style(stylename)
+        new_style_obj = self.gs_catalog_obj.get_style(style_name)
         if new_style_obj is None:
-            self.add_err_msg('Failed to find recently added style in the catalog: %s' % stylename)
+            self.add_err_msg('Failed to find recently added style in the catalog: %s' % style_name)
             return False
         
         # (6) Set the new style as the default for the layer
@@ -117,11 +178,12 @@ class StyleLayerMaker:
         try:
             self.gs_catalog_obj.save(layer_obj)
         except:
-            self.add_err_msg('Failed to save new default style with layer' % (stylename))
+            self.add_err_msg('Failed to save new default style with layer' % (style_name))
             return False
 
+        
         self.create_layer_metadata(self.layer_name)
-        print ('layer %s saved with style %s' % (self.layer_name, stylename))
+        print ('layer %s saved with style %s' % (self.layer_name, style_name))
         return True
             
     

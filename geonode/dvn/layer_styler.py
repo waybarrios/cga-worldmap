@@ -8,8 +8,8 @@ from django.conf import settings
 
 from geonode.dvn.dv_utils import MessageHelperJSON
 from geonode.dvn.sld_helper_form import SLDHelperForm
-from geonode.dvn.sld_maker import StyleLayerMaker
-from geonode.dvn.sld_rule_formatter import SLDRuleFormatter
+from geonode.dvn.style_layer_maker import StyleLayerMaker
+from geonode.dvn.formatted_style_rules import FormattedStyleRules
 from geonode.dvn.geonode_get_services import get_sld_rules
 
 logger = logging.getLogger("geonode.dvn.layer_styler")
@@ -46,13 +46,13 @@ class LayerStyler:
         
         # (2) Format rules into full SLD
         #
-        formatted_sld = self.format_rules_into_full_sld(sld_rule_data)
-        if formatted_sld is None:
+        formatted_sld_object = self.format_rules_into_full_sld(sld_rule_data)
+        if formatted_sld_object is None:
             return False
         
         # (3) Add new SLD to Layer
         #
-        return self.add_new_sld_to_layer(formatted_sld)
+        return self.add_new_sld_to_layer(formatted_sld_object)
     
 
     def set_layer_name_and_get_rule_data(self):
@@ -61,9 +61,8 @@ class LayerStyler:
         """
         if self.styling_params is None:
             return None
-        
         resp_json = get_sld_rules(self.styling_params)
-        
+
         resp_dict = self.get_json_as_dict(resp_json, 'Failed to make the SLD rules')
         
         if not resp_dict.get('success') is True:
@@ -100,30 +99,30 @@ class LayerStyler:
             self.add_err_msg('Layer name is not available')
             return None
 
-        sld_formatter = SLDRuleFormatter(self.layer_name)
+        sld_formatter = FormattedStyleRules(self.layer_name)
 
-        formatted_sld = sld_formatter.get_sld_xml(sld_rule_data)
+        sld_formatter.format_sld_xml(sld_rule_data)
 
-        if formatted_sld is None:
+        if sld_formatter.err_found:
             self.add_err_msg('Failed to format xml')
             if sld_formatter.err_found:
-                self.add_err_msg('\n'.join(sld_formatter.err_msgs))
+                self.add_err_msg('\n'.join(formatted_sld.err_msgs))
             return None
 
-        return formatted_sld
+        return sld_formatter
         
     
-    def add_new_sld_to_layer(self, formatted_sld):
+    def add_new_sld_to_layer(self, formatted_sld_object):
         """ 
         (3) Add new SLD to Layer
         """
-        if not formatted_sld:
+        if not formatted_sld_object:
             self.add_err_msg('Formatted SLD data is not available')
             return False
         
         slm = StyleLayerMaker(layer_name)
-        succcess = slm.add_sld_xml_to_layer(formatted_sld)
-        if succcess:
+        success = slm.add_sld_to_layer(formatted_sld_object)
+        if success:
             self.layer_metadata = slm.layer_metadata
             return True
     
@@ -143,16 +142,18 @@ class LayerStyler:
         err_msg = '\n'.join(self.err_msgs)
         if not err_msg:
             err_msg = 'Failed to create layer.  Please try again'
-        return MessageHelperJSON.get_json_msg(success=Fasle, msg=err_msg)
+        return MessageHelperJSON.get_json_msg(success=False, msg=err_msg)
         
 
 if __name__=='__main__':
-    layer_name = 'boston_census_r5j'
+    from geonode_get_services import get_layer_features_definition
+    layer_name = 'social_disorder_deu'
+    #print (get_layer_features_definition(layer_name))
     
     d = dict(layer_name=layer_name\
-                , attribute='TWORACES'\
+                , attribute='TotalPop'\
                 ,method='quantile'\
-                ,intervals=4\
+                ,intervals=14\
                 ,ramp='Random'\
                 ,startColor='#fff5f0'\
                 ,endColor='#67000d'\
