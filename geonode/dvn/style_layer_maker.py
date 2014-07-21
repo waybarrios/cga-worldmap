@@ -102,41 +102,33 @@ class StyleLayerMaker:
         # (2) Set the new SLD to the layer via a put
         #http://localhost:8000/gs/rest/styles/social_disorder_nydj_k_i_v.xml
         geoserver_sld_url = get_set_sld_rules_to_layer_url(self.layer_name)
-        #urljoin(settings.GEOSERVER_BASE_URL, 'rest/styles/%s.xml' % self.layer_name)
-        print ('=' * 40)
-        print(geoserver_sld_url)
-        print ('-' * 40)
-        print(formatted_sld_object.formatted_sld_xml)
-        print ('-' * 40)
         (response, content) = make_geoserver_put_sld_request(geoserver_sld_url, formatted_sld_object.formatted_sld_xml)
-        print ('response: ', response)
-        print ('content: ', content)
-        if response is None or content is None:
+
+        if response is None or not response.status == 200:
             self.add_err_msg('Failed to set new style as the default')
             return False
-
-        print ('*' * 40)
         
         # (3) Set the new style as the default for the layer
         #     Send a PUT to the catalog to set the default style
         json_str = """{"layer":{"defaultStyle":{"name":"%s"},"styles":{},"enabled":true}}""" % formatted_sld_object.sld_name
         geoserver_json_url = get_set_default_style_url(self.layer_name)
-        print ('-' * 40)
-        print ('-' * 40)
-        print('geoserver_json_url', geoserver_json_url)
         (response, content) = make_geoserver_json_put_request(geoserver_json_url, json_str)
-        print ('response: ', response)
-        print ('content: ', content)
-        if response is None or content is None:
+
+        if response is None or not response.status in (200, 201):
             self.add_err_msg('Failed to set new style as the default')
             return False
 
         self.create_layer_metadata(self.layer_name)
+        print '-' * 40
         print ('layer %s saved with style %s' % (self.layer_name, formatted_sld_object.sld_name))
         return True
         
         
     def add_sld_xml_to_layer(self, formatted_sld_object):
+        """
+        NOT USING, tiles were not getting refreshed properly
+        Keeping code around in case needed in the future
+        """
         if not formatted_sld_object:
             return False
         
