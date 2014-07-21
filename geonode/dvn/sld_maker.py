@@ -13,6 +13,7 @@ from xml.etree.ElementTree import XML, ParseError
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
+from geonode.dvn.layer_metadata import LayerMetadata
 from geonode.maps.models import Layer
 
 logger = logging.getLogger("geonode.dvn.sld_maker")
@@ -42,8 +43,10 @@ class StyleLayerMaker:
     def __init__(self, layer_name):
         self.gs_catalog_obj = Layer.objects.gs_catalog
         self.layer_name = layer_name
+
         self.err_found = False
         self.err_msgs = []
+        self.layer_metadata = None      # LayerMetadata object
         
     
     def add_err_msg(self, msg):
@@ -51,6 +54,24 @@ class StyleLayerMaker:
         self.err_msgs.append(msg)
         
         logger.warn(msg)
+    
+    
+    def create_layer_metadata(self, layer_name):
+        
+        if layer_name is None:
+            self.layer_metadata = None
+            return
+        
+        self.layer_metadata = LayerMetadata(**dict(geonode_layer_name=layer_name))
+         
+    
+    def get_layer_metadata(self):
+        """Return a LayerMetadata object, if it exists"""
+        if self.layer_metadata:
+            return None
+            
+        return self.layer_metadata
+         
     
     
     def add_sld_xml_to_layer(self, sld_xml_str):
@@ -99,6 +120,7 @@ class StyleLayerMaker:
             self.add_err_msg('Failed to save new default style with layer' % (stylename))
             return False
 
+        self.create_layer_metadata(self.layer_name)
         print ('layer %s saved with style %s' % (self.layer_name, stylename))
         return True
             

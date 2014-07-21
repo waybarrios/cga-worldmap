@@ -5,8 +5,10 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 
-from dv_utils import MessageHelperJSON
-from dataverse_auth import has_proper_auth
+from geonode.dvn.layer_metadata import LayerMetadata
+
+from geonode.dvn.dv_utils import MessageHelperJSON
+from geonode.dvn.dataverse_auth import has_proper_auth
 from geonode.dvn.geonode_get_services import get_layer_features_definition
 from geonode.dvn.sld_helper_form import SLDHelperForm
 from geonode.dvn.layer_styler import LayerStyler
