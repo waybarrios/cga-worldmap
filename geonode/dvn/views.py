@@ -65,14 +65,9 @@ def dvn_import(request):
                                title = title,
                                keywords = keywords.split()
                 )
-            
-                layer_metadata_obj = LayerMetadata(**{"layer_name": saved_layer.typename\
-                                        , "layer_link": "%sdata/%s" % (settings.SITEURL, saved_layer.service_typename)\
-                                        , "embed_map_link": "%smaps/embed/?layer=%s" % (settings.SITEURL\
-                                                                                    , saved_layer.service_typename)\
-                                        , "worldmap_username": user.username\
-                                    })
-                print 'dict for message', layer_metadata_obj.get_metadata_dict()
+
+                layer_metadata_obj = LayerMetadata(**{ 'geonode_layer_object' : saved_layer})
+
                 json_msg = MessageHelperJSON.get_json_msg(success=True, msg='worked', data_dict=layer_metadata_obj.get_metadata_dict())
                 print '-' * 40
                 print 'json_msg', json_msg

@@ -156,13 +156,13 @@ def get_styles_for_layer(layer_name):
 
 
 if __name__=='__main__':
-    test_layer_name = 'income_2so'
-    if 0:
+    test_layer_name = 'social_disorder_in_boston_2_zip_7x3'
+    if 1:
         print get_layer_features_definition(test_layer_name)
         #http://localhost:8080/geoserver/rest/sldservice/geonode:boston_social_disorder_pbl/attributes.xml
         #http://localhost:8080/geoserver/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?reverse=&attribute=Violence_4&ramp=Gray&endColor=%23A50F15&intervals=5&startColor=%23FEE5D9&method=equalInterval
         
-    if 1:
+    if 0:
         get_styles_for_layer(test_layer_name)
         
     if 0:
