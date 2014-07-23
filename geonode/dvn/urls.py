@@ -7,4 +7,7 @@ urlpatterns = patterns('geonode.dvn.views',
 
 urlpatterns += patterns('geonode.dvn.views_sld',
        url(r'^describe-features/(?P<layer_name>[^/]*)/$', 'view_layer_feature_defn', name='view_layer_feature_defn'),
+
+       url(r'^classify-layer/$', 'view_create_new_layer_style', name='view_create_new_layer_style'),
+       
 )

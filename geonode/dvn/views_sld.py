@@ -12,6 +12,7 @@ from geonode.dvn.dataverse_auth import has_proper_auth
 from geonode.dvn.geonode_get_services import get_layer_features_definition
 from geonode.dvn.sld_helper_form import SLDHelperForm
 from geonode.dvn.layer_styler import LayerStyler
+from geonode.dvn.layer_metadata import LayerMetadata
 
 #from proxy.views import geoserver_rest_proxy
 
@@ -25,15 +26,39 @@ def view_layer_feature_defn(request, layer_name):
     
     example: http://localhost:8000/dvn/describe-features/income_4x5/
     """    
-    #if not has_proper_auth(request):
-    #    json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
-    #    return HttpResponse(content=json_msg, content_type="application/json")
+    if not has_proper_auth(request):
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
+        return HttpResponse(content=json_msg, content_type="application/json")
         
     json_msg = get_layer_features_definition(layer_name)
     return HttpResponse(content=json_msg, content_type="application/json")
 
+
 @csrf_exempt
-def create_new_layer_style(request):
+def view_layer_classify_params(request, layer_name):
+    """
+    Given a layer name, return attributes needed to run a GeoConnect classification form.
+    
+    This includes:
+        - attributes
+        - formulas
+        - colors
+    on Geo a desciption of the field names in values.
+    This will be in XML format.
+
+    example: http://localhost:8000/dvn/describe-features/income_4x5/
+    """    
+    if not has_proper_auth(request):
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
+        return HttpResponse(content=json_msg, content_type="application/json")
+    
+    json_msg = get_layer_features_definition(layer_name)
+    return HttpResponse(content=json_msg, content_type="application/json")
+            
+    
+
+@csrf_exempt
+def view_create_new_layer_style(request):
     """
     Send in a POST request with parameters that conform to the attributes in the sld_helper_form.SLDHelperForm
     
@@ -45,16 +70,30 @@ def create_new_layer_style(request):
     :returns: JSON message with either an error or data containing links to the update classification layer
     
     """
-    #if not has_proper_auth(request):
-    #    json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
-    #    return HttpResponse(content=json_msg, content_type="application/json")
-    
+    if not has_proper_auth(request):
+        print 'bad auth'
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
+        return HttpResponse(content=json_msg, content_type="application/json")
+    print 'good auth'
     if not request.POST:
+        print 'not a post'
         json_msg = MessageHelperJSON.get_json_msg(success=False, msg="No style parameters were sent")    
         return HttpResponse(content=json_msg, content_type="application/json")
-    
+    print 'have a post!'
+    print(request.POST)
     ls = LayerStyler(request.POST)
-    json_msg = ls.get_json_message()    # Will determine success/failure and appropriate params
+    ls.style_layer()
+    print 'post style'
+    if ls.has_err:
+        print 'has an error!'
+    else:
+        print 'not bad'
+    #d = {}
+    #d['attribute_info'] = ls.get_attribute_metadata()
+    #d['classify_methods'] = [ (x.value_name, x.display_name) for x in ClassificationMethod.objects.filter(active=True) ]
+    #COLOR_RAMP_CHOICES = [ (x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True) ]
     
+    json_msg = ls.get_json_message()    # Will determine success/failure and appropriate params
+    print(json_msg)
     return HttpResponse(content=json_msg, content_type="application/json")
 
