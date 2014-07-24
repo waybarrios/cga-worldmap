@@ -86,6 +86,7 @@ def view_create_new_layer_style(request):
     print 'post style'
     if ls.has_err:
         print 'has an error!'
+        print '\n'.join(ls.err_msgs)
     else:
         print 'not bad'
     #d = {}
@@ -94,6 +95,6 @@ def view_create_new_layer_style(request):
     #COLOR_RAMP_CHOICES = [ (x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True) ]
     
     json_msg = ls.get_json_message()    # Will determine success/failure and appropriate params
-    print(json_msg)
+    #print(json_msg)
     return HttpResponse(content=json_msg, content_type="application/json")
 

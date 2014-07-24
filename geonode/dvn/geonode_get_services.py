@@ -15,6 +15,7 @@ import xmltodict
 import logging
 
 from django.conf import settings
+from django.http.request import QueryDict
 
 from geonode.maps.models import Layer
 from geonode.dvn.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
@@ -45,8 +46,8 @@ def get_sld_rules(params):
     Example of url sent to Geoserver:
     http://localhost:8080/geoserver/rest/sldservice/geonode:income_2so/classify.xml?reverse=&attribute=B19013_Med&ramp=Gray&endColor=%23A50F15&intervals=5&startColor=%23FEE5D9&method=equalInterval
     """
-    
-    if not type(params) == dict:
+    print('get_sld_rules.sld type: %s, params: %s' % (type(params), params))
+    if not type(params) in (QueryDict, dict):
         return None
 
     f = SLDHelperForm(params)

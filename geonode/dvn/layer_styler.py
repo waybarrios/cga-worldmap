@@ -119,7 +119,7 @@ class LayerStyler:
             self.add_err_msg('Formatted SLD data is not available')
             return False
         
-        slm = StyleLayerMaker(layer_name)
+        slm = StyleLayerMaker(self.layer_name)
         success = slm.add_sld_to_layer(formatted_sld_object)
         if success:
             self.layer_metadata = slm.layer_metadata
