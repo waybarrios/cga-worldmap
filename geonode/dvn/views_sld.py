@@ -75,8 +75,8 @@ def view_create_new_layer_style(request):
         return HttpResponse(status=401, content=json_msg, content_type="application/json")
 
     if not request.POST:
-        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="POST request only")    
-        return HttpResponse(status=400, content=json_msg, content_type="application/json")
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="use a POST request")    
+        return HttpResponse(status=405, content=json_msg, content_type="application/json")
 
     ls = LayerStyler(request.POST)
     ls.style_layer()

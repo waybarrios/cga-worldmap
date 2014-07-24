@@ -62,7 +62,7 @@ class FormattedStyleRules:
         rules_xml = rules_xml.replace(self.RULES_START_TAG, '').replace(self.RULES_END_TAG, '')
         
         rules_xml = self.apply_tag_prefixes(rules_xml) 
-        print ('rules_xml', rules_xml)
+        #print ('rules_xml', rules_xml)
         # Formerly parsed XML tree, etc, but this seemed a bit easier
         return rules_xml
         
