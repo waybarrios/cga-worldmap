@@ -27,8 +27,8 @@ def view_layer_feature_defn(request, layer_name):
     example: http://localhost:8000/dvn/describe-features/income_4x5/
     """    
     if not has_proper_auth(request):
-        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
-        return HttpResponse(content=json_msg, content_type="application/json")
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Authentication failed.")
+        return HttpResponse(status=401, content=json_msg, content_type="application/json")
         
     json_msg = get_layer_features_definition(layer_name)
     return HttpResponse(content=json_msg, content_type="application/json")
@@ -49,8 +49,8 @@ def view_layer_classify_params(request, layer_name):
     example: http://localhost:8000/dvn/describe-features/income_4x5/
     """    
     if not has_proper_auth(request):
-        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
-        return HttpResponse(content=json_msg, content_type="application/json")
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Authentication failed.")
+        return HttpResponse(status=401, content=json_msg, content_type="application/json")
     
     json_msg = get_layer_features_definition(layer_name)
     return HttpResponse(content=json_msg, content_type="application/json")
@@ -71,30 +71,24 @@ def view_create_new_layer_style(request):
     
     """
     if not has_proper_auth(request):
-        print 'bad auth'
-        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Not permitted")    
-        return HttpResponse(content=json_msg, content_type="application/json")
-    print 'good auth'
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Authentication failed.")
+        return HttpResponse(status=401, content=json_msg, content_type="application/json")
+
     if not request.POST:
-        print 'not a post'
-        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="No style parameters were sent")    
-        return HttpResponse(content=json_msg, content_type="application/json")
-    print 'have a post!'
-    print(request.POST)
+        json_msg = MessageHelperJSON.get_json_msg(success=False, msg="POST request only")    
+        return HttpResponse(status=400, content=json_msg, content_type="application/json")
+
     ls = LayerStyler(request.POST)
     ls.style_layer()
+
     print 'post style'
-    if ls.has_err:
+    if ls.err_found:
         print 'has an error!'
         print '\n'.join(ls.err_msgs)
     else:
         print 'not bad'
-    #d = {}
-    #d['attribute_info'] = ls.get_attribute_metadata()
-    #d['classify_methods'] = [ (x.value_name, x.display_name) for x in ClassificationMethod.objects.filter(active=True) ]
-    #COLOR_RAMP_CHOICES = [ (x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True) ]
-    
+
     json_msg = ls.get_json_message()    # Will determine success/failure and appropriate params
-    #print(json_msg)
+    
     return HttpResponse(content=json_msg, content_type="application/json")
 

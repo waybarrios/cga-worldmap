@@ -8,14 +8,12 @@ def has_proper_auth(request):
     Future: IP + DV_TOKEN
     Future: oauth
     """
-    print ('has_proper_auth?')
     if not request:
         return false
     
     # Find the token
     if request.POST:
         dv_token = request.POST.get(TOKEN_KEY_NAME, None)
-        print request.POST
     elif request.GET:
         dv_token = request.GET.get(TOKEN_KEY_NAME, None)
     else:

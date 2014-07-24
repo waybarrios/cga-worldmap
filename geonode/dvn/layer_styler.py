@@ -133,14 +133,18 @@ class LayerStyler:
 
     def get_json_message(self):
 
-        if self.layer_metadata:
+        if self.layer_metadata is not None:
             metadata_dict = self.layer_metadata.get_metadata_dict()
             if metadata_dict:
                 return MessageHelperJSON.get_json_msg(success=True, msg='', data_dict=metadata_dict)
+            else:
+                logger.error('LayerStyler. Failed to retrieve metadata dict for layer [%s]' % (self.layer_name))
+                return MessageHelperJSON.get_json_msg(success=False, msg='Fail to create metadata dict')
 
         err_msg = '\n'.join(self.err_msgs)
         if not err_msg:
             err_msg = 'Failed to create layer.  Please try again'
+
         return MessageHelperJSON.get_json_msg(success=False, msg=err_msg)
         
 

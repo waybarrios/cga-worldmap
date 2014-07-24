@@ -21,8 +21,6 @@ logger = logging.getLogger("geonode.dvn.views")
 def dvn_import(request):
     print 'dvn_import'
     if not has_proper_auth(request):
-        print 'auth fail'
-        
         json_msg = MessageHelperJSON.get_json_msg(success=False, msg="Authentication failed.")
         return HttpResponse(status=401, content=json_msg, content_type="application/json")
     
