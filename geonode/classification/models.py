@@ -32,8 +32,8 @@ class ClassificationMethod(TimeStampedModel):
 class ColorRamp(TimeStampedModel):
     """Used for the GeoConnect style classification tools 
     """
-    display_name = models.CharField(max_length=255)
-    value_name = models.CharField(max_length=100, unique=True, help_text='Parameter value in the the geoserver api calls')
+    display_name = models.CharField(max_length=255, unique=True)
+    value_name = models.CharField(max_length=100, help_text='Parameter value in the the geoserver api calls')
     sort_order = models.IntegerField(default=10, help_text='display order for user')
     start_color = models.CharField(max_length=30, blank=True, help_text='hex color with "#", as in "#ffcc00"')
     end_color = models.CharField(max_length=30, blank=True, help_text='hex color with "#", as in "#ffcc00"')
