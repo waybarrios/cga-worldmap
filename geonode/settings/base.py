@@ -69,6 +69,10 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, "site_media", "media")
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = "/site_media/media/"
 
+
+STATICFILES_FINDERS = ('django.contrib.staticfiles.finders.FileSystemFinder',
+ 'django.contrib.staticfiles.finders.AppDirectoriesFinder')
+
 # Absolute path to the directory that holds static files like app media.
 # Example: "/home/media/media.lawrence.com/apps/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "static_root")
@@ -79,7 +83,7 @@ STATIC_URL = "/static/"
 
 # Additional directories which hold static files
 STATICFILES_DIRS = [
-    os.path.join(PROJECT_ROOT, "static"),
+    os.path.join(PROJECT_ROOT, "static")
 ]
 
 # Note that Django automatically includes the "templates" dir in all the
@@ -134,7 +138,7 @@ INSTALLED_APPS = (
     'djcelery',
     'kombu.transport.django',
     'piston',
-    #'haystack',
+    'haystack',
     'pagination',
     'friendlytagloader',
 
@@ -150,7 +154,7 @@ INSTALLED_APPS = (
     'geonode.certification',
     'geonode.hoods',
     'geonode.contrib.services',
-    #'geonode.search',
+    'geonode.search',
     'geonode.dvn',
 )
 LOGGING = {
@@ -427,7 +431,7 @@ MAP_BASELAYERS = [
 
 
 #GEONODE_CLIENT_LOCATION = "http://localhost:9090/"
-GEONODE_CLIENT_LOCATION = "/static/geonode/"
+GEONODE_CLIENT_LOCATION = STATIC_URL + "geonode/"
 
 
 # GeoNode vector data backend configuration.
@@ -538,7 +542,7 @@ CSRF_COOKIE_HTTPONLY = True
 
 OGP_URL = ""
 
-HAYSTACK_SEARCH = False
+HAYSTACK_SEARCH = True
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',

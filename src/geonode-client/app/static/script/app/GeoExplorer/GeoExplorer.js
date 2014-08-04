@@ -2218,9 +2218,8 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
         this.searchTable = new GeoNode.SearchTable({
             renderTo: 'search_results',
             trackSelection: true,
-            permalinkURL: '/data/search',
-            searchURL: '/data/search/api',
-            layerDetailURL: '/data/search/detail',
+            permalinkURL: '/search/api/data',
+            searchURL: '/search/api/data',
             constraints: [this.bbox],
             searchParams: {'limit':10, 'bbox': llbounds.toBBOX()},
             searchOnLoad: false
