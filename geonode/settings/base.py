@@ -542,7 +542,7 @@ CSRF_COOKIE_HTTPONLY = True
 
 OGP_URL = ""
 
-HAYSTACK_SEARCH = True
+HAYSTACK_SEARCH = False
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',

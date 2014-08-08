@@ -37,20 +37,18 @@
 
         <div class="col-lg-12">
             <div class="row" id="contain-slider">
-                <div class="span4">
+                <div class="span4"><!--
                     <div class="selections">
                         <h4>
                             {% trans "Your selections" %}
                             <a href="." id="clear-search" class="pull-right">Clear all</a>
                         </h4>
-                    </div>
+                    </div> -->
                     <div id="slide-pane">
                         <a href="#" class="toggle toggle-pane"><i class="icon-chevron-left"></i></a>
                         {% include "search/_text_filter.html" %}
                         {% include "search/_type_filters.html" %}
-                        {%  if settings.HAYSTACK_SEARCH %}
-                            {% include "search/_extent_filter.html" %}
-                        {%  endif %}
+                        {% include "search/_extent_filter.html" %}
                         {% include "search/_general_filters.html" %}
                     </div>
                 </div>

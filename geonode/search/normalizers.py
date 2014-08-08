@@ -141,6 +141,11 @@ class Normalizer:
 
 
 class MapNormalizer(Normalizer):
+    def __init__(self,o,data = None, user=None):
+        self.o = o
+        self.data = data
+        self.dict = None
+        self.user = user
     def last_modified(self):
         return self.o.last_modified
     def populate(self, doc, exclude):
