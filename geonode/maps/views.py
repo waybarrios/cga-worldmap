@@ -1851,7 +1851,8 @@ def _build_search_result(doc):
                 pass
 
     # construct the link to the geonetwork metadata record (not self-indexed)
-    md_link = settings.GEONETWORK_BASE_URL + "srv/en/csw?" + urlencode({
+    if settings.USE_GEONETWORK:
+        md_link = settings.GEONETWORK_BASE_URL + "srv/en/csw?" + urlencode({
             "request": "GetRecordById",
             "service": "CSW",
             "version": "2.0.2",
@@ -1859,7 +1860,7 @@ def _build_search_result(doc):
             "ElementSetName": "full",
             "id": rec.identifier
         })
-    result['metadata_links'] = [("text/xml", "TC211", md_link)]
+        result['metadata_links'] = [("text/xml", "TC211", md_link)]
 
     return result
 

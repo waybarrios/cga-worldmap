@@ -610,13 +610,14 @@ def check_geonode_is_up():
                _('Please make sure you have started GeoNode.')) % settings.GEOSERVER_BASE_URL)
         raise GeoNodeException(msg)
 
-    try:
-        Layer.objects.gn_catalog.login()
-    except:
-        msg = ((_('Cannot connect to the GeoNetwork at ') + '%s\n' +
-            _('Please make sure you have started GeoNetwork.'))
-            % settings.GEONETWORK_BASE_URL)
-        raise GeoNodeException(msg)
+    if settings.USE_GEONETWORK:
+        try:
+            Layer.objects.gn_catalog.login()
+        except:
+            msg = ((_('Cannot connect to the GeoNetwork at ') + '%s\n' +
+                _('Please make sure you have started GeoNetwork.'))
+                % settings.GEONETWORK_BASE_URL)
+            raise GeoNodeException(msg)
 
 def file_upload(filename, user=None, title=None, skip=True, overwrite=False, keywords=(), charset='ISO-8859-1'):
     """Saves a layer in GeoNode asking as little information as possible.
