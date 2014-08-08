@@ -153,7 +153,7 @@ INSTALLED_APPS = (
     'geonode.queue',
     'geonode.certification',
     'geonode.hoods',
-    'geonode.contrib.services',
+    'geonode.services',
     'geonode.search',
     'geonode.dvn',
 )
@@ -551,8 +551,9 @@ HAYSTACK_CONNECTIONS = {
         },
     }
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-HAYSTACK_SEARCH_RESULTS_PER_PAGE = 20
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = 2000000
 DEFAULT_SEARCH_SIZE = 20
-
+CACHE_TIME = 600
+USE_GEONETWORK = False
 DVN_TOKEN = "JdPGVSga9yM8gt74ZpLp"
 

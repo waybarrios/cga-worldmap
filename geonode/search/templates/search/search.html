@@ -1,7 +1,6 @@
 {% extends "site_base.html" %}
 {% load i18n %}
 {% load staticfiles %}
-
 {% load url from future %}
 
 {% block head %}
@@ -30,7 +29,6 @@
         </div>
 
         <div class="col-lg-12 filter">
-            Search:<input type="text" id="wordsearch">
             {% include "search/_sort_filters.html" %}
         </div>
 
@@ -48,24 +46,16 @@
                     </div>
                     <div id="slide-pane">
                         <a href="#" class="toggle toggle-pane"><i class="icon-chevron-left"></i></a>
+                        {% include "search/_text_filter.html" %}
                         {% include "search/_type_filters.html" %}
-
+                        {%  if settings.HAYSTACK_SEARCH %}
+                            {% include "search/_extent_filter.html" %}
+                        {%  endif %}
                         {% include "search/_general_filters.html" %}
                     </div>
                 </div>
-                <div class="tab-content span6 paginate paginate-auto" id="search-content">
+                <div class="tab-content span8 paginate paginate-auto" id="search-content">
                     {% include 'search/search_content.html' %}
-                </div>
-                <div class="tab-content" id="map-content">
-
-                    <div class="control-group">
-                        <div id="search_map" class="search-map" style="width:100%;"></div>
-                        <div class="controls hidden" >
-                            <input type="text" id="extent" class="trigger-extent" name="extent" />
-                        </div>
-                    </div>
-
-
                 </div>
             </div>
         </div>
@@ -75,7 +65,6 @@
 {%  block footer %} {{ block.super }} {%  endblock %}
 
 {% block extra_script %}
-
     <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.dataTables.js"></script>
     <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.timeago.js"></script>
     <script src="{{ STATIC_URL }}geonode/externals/lib/js/jquery.ajaxprogress.js"></script>
@@ -137,34 +126,15 @@
             }
         });
 
-
-        function resizeMap() {
-            var canvasheight=$('#contain-slider').css('height');
-            $('#search_map').css("height", canvasheight);
-        }
-
-        $().ready(function () {
-            resizeMap();
-        })
-
-        $(window).resize(function () {
-            resizeMap();
-        });
-
     </script>
 
     {% with include_spatial='true' %}
         {% include 'search_scripts.html' %}
     {% endwith %}
-
-
-
 {% endblock extra_script %}
 
 
 
-<script type="text/javascript" src="{% url "django.views.i18n.javascript_catalog" %}"></script>
-<script type="text/javascript" src="{% url "lang" %}"></script>
 <style type="text/css">
     .select2-drop{
         color: black;

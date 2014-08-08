@@ -851,8 +851,8 @@ class LayerManager(models.Manager):
                 else:
                     status = 'updated'
 
-
-                layer.save_to_geonetwork()
+                if settings.USE_GEONETWORK:
+                    layer.save_to_geonetwork()
 
                 #Create layer attributes if they don't already exist
                 try:
@@ -905,7 +905,8 @@ class LayerManager(models.Manager):
 
         if created:
             layer.set_default_permissions()
-            layer.save_to_geonetwork()
+            if settings.USE_GEONETWORK:
+                layer.save_to_geonetwork()
         try:
             if layer.attribute_names is not None:
                 for field, ftype in layer.attribute_names.iteritems():
@@ -1187,9 +1188,10 @@ class Layer(models.Model, PermissionLevelMixin):
         return links
 
     def verify(self):
-        """Makes sure the state of the layer is consistent in GeoServer and GeoNetwork.
+        """Makes sure the state of the layer is consistent in GeoNetwork.
         """
-
+        if not settings.USE_GEONETWORK:
+            return True
         # Check the layer is in the GeoNetwork catalog and points back to get_absolute_url
         if(_csw is None): # Might need to re-cache, nothing equivalent to _wms.contents?
             get_csw()
@@ -1756,8 +1758,9 @@ class Layer(models.Model, PermissionLevelMixin):
         Layer.objects.filter(id=self.id).update(bbox=self.bbox,llbbox=self.llbbox,geographic_bounding_box=self.geographic_bounding_box )
 
         #Update geonetwork record with latest extent
-        logger.info("Save new bounds to geonetwork")
-        self.save_to_geonetwork()
+        if settings.USE_GEONETWORK:
+            logger.info("Save new bounds to geonetwork")
+            self.save_to_geonetwork()
 
 class LayerAttributeManager(models.Manager):
     """Helper class to access filtered attributes

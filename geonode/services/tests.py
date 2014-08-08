@@ -29,7 +29,7 @@ from .models import Service
 
 
 class ServicesTests(TestCase):
-    """Tests geonode.contrib.services app/module
+    """Tests geonode.services app/module
     """
 
     def setUp(self):

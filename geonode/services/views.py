@@ -47,10 +47,10 @@ from urlparse import urlsplit, urlunsplit
 
 
 #from geonode.utils import OGC_Servers_Handler
-from geonode.contrib.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
+from geonode.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
 from geonode.maps.views import _perms_info, bbox_to_wkt
 from geonode.core.models import AUTHENTICATED_USERS, ANONYMOUS_USERS
-from geonode.contrib.services.forms import CreateServiceForm, ServiceLayerFormSet, ServiceForm
+from geonode.services.forms import CreateServiceForm, ServiceLayerFormSet, ServiceForm
 from geonode.utils import slugify
 import re
 from geonode.maps.utils import llbbox_to_mercator, mercator_to_llbbox, project_to_wgs84
@@ -463,7 +463,8 @@ def _register_cascaded_layers(service, owner=None):
                         if cascaded_layer is not None and cascaded_layer.bbox is None:
                             cascaded_layer._populate_from_gs(gs_resource=resource)
                         cascaded_layer.set_default_permissions()
-                        cascaded_layer.save_to_geonetwork()
+                        if settings.USE_GEONETWORK:
+                            cascaded_layer.save_to_geonetwork()
 
                         service_layer, created = ServiceLayer.objects.get_or_create(
                             service=service,
@@ -626,7 +627,8 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
                 saved_layer.set_default_permissions()
                 saved_layer.keywords.add(*keywords)
                 saved_layer.set_layer_attributes()
-                saved_layer.save_to_geonetwork()
+                if settings.USE_GEONETWORK:
+                    saved_layer.save_to_geonetwork()
 
                 service_layer, created = ServiceLayer.objects.get_or_create(
                     service=service,
@@ -832,7 +834,8 @@ def _register_arcgis_layers(service, arc=None):
         if created:
             saved_layer.set_default_permissions()
             saved_layer.save()
-            saved_layer.save_to_geonetwork()
+            if settings.USE_GEONETWORK:
+                saved_layer.save_to_geonetwork()
 
             service_layer, created = ServiceLayer.objects.get_or_create(
                 service=service,
@@ -1064,7 +1067,8 @@ def process_ogp_results(ogp, result_json, owner=None):
                 )
                 saved_layer.set_default_permissions()
                 saved_layer.save()
-                saved_layer.save_to_geonetwork()
+                if settings.USE_GEONETWORK:
+                    saved_layer.save_to_geonetwork()
                 service_layer, created = ServiceLayer.objects.get_or_create(service=service,typename=typename,
                                                                             defaults=dict(
                                                                                 title=doc["LayerDisplayName"]

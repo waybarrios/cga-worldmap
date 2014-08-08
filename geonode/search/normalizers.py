@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #########################################################################
-
+from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -46,7 +46,7 @@ def _bbox(obj):
     except AttributeError:
         pass
         # unknown extent, just give something that works
-    extent = idx.extent.extent if idx else map(str,(obj.bbox_x0, obj.bbox_y0, obj.bbox_x1, obj.bbox_y1))
+    extent = idx.extent.extent if idx else obj.llbbox
     return dict(minx=extent[0], miny=extent[1], maxx=extent[2], maxy=extent[3])
 
 
@@ -82,23 +82,25 @@ def _annotate(normalizers):
         n.rating = float(ratings.get(n.o.id, 0))
 
 
-def apply_normalizers(results):
+def apply_normalizers(results, request):
     '''build the appropriate normalizers for the query set(s) and annotate'''
     normalized = []
 
     mapping = [
         ('maps', MapNormalizer),
         ('layers', LayerNormalizer),
-        ('documents', DocumentNormalizer),
-        ('users', OwnerNormalizer)
     ]
-    if "geonode.contrib.groups" in settings.INSTALLED_APPS:
-        mapping.append(('groups', GroupNormalizer))
 
     for k,n in mapping:
         r = results.get(k, None)
         if not r: continue
-        normalizers = map(n, r)
+        normalizers = []
+        for item in r:
+            if k == "maps":
+                normalizers.append(MapNormalizer(item, user=request.user))
+            elif k == "layers":
+                normalizers.append(LayerNormalizer(item, user=request.user))
+
         _annotate(normalizers)
         extension.process_results(normalizers)
         normalized.extend(normalizers)
@@ -162,6 +164,11 @@ class MapNormalizer(Normalizer):
 
 
 class LayerNormalizer(Normalizer):
+    def __init__(self,o,data = None, user=None):
+        self.o = o
+        self.data = data
+        self.dict = None
+        self.user = user
     def last_modified(self):
         return self.o.date
     def populate(self, doc, exclude):
@@ -182,7 +189,20 @@ class LayerNormalizer(Normalizer):
         doc['keywords'] = layer.keyword_list()
         doc['title'] = layer.title
         doc['detail'] = layer.get_absolute_url()
-
+        doc['uuid'] = layer.uuid
+        doc['service_typename'] = layer.service_typename
+        doc['_local'] = layer.local
+        if layer.local:
+            doc['_permissions'] = {
+                'view': self.user.has_perm('maps.view_layer', obj=layer),
+                'change': self.user.has_perm('maps.change_layer', obj=layer),
+                'delete': self.user.has_perm('maps.delete_layer', obj=layer),
+                'change_permissions': self.user.has_perm('maps.change_layer_permissions', obj=layer),
+            }
+        else:
+            doc['_permissions'] = {
+                'view': self.user.has_perm('maps.view_layer', obj=layer),
+            }
 
         owner = layer.owner
         if owner:

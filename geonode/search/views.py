@@ -33,11 +33,9 @@ from geonode.maps.models import Layer, LayerCategory
 from geonode.maps.models import Map
 from geonode.maps.models import Contact
 from geonode.search.util import resolve_extension
-from geonode.search.normalizers import MapNormalizer, LayerNormalizer, OwnerNormalizer, GroupNormalizer
-from geonode.search.query import query_from_request
-
-
-
+from geonode.search.normalizers import apply_normalizers, MapNormalizer, LayerNormalizer, OwnerNormalizer, GroupNormalizer
+from geonode.search.query import query_from_request, BadQuery
+from geonode.search.search import combined_search_results
 from datetime import datetime
 from time import time
 import json
@@ -65,34 +63,52 @@ _viewer_config = _create_viewer_config()
 def search_page(request, template='search/search.html', **kw):
     initial_query = request.REQUEST.get('q','')
 
-    query = query_from_request(request, kw)
-    search_response, results = haystack_search_api(request, format="html", **kw)
-    facets = search_response['facets']
+    if settings.HAYSTACK_SEARCH and "haystack" in settings.INSTALLED_APPS:
+        query = query_from_request(request, kw)
+        search_response, results = haystack_search_api(request, format="html", **kw)
+        facets = search_response['facets']
 
-    categories = {}
-    counts = search_response["categories"]
-    topics = LayerCategory.objects.all()
-    for topic in topics:
-        if topic.name in counts:
-            categories[topic] = counts[topic.name]
-        else:
-            categories[topic] = 0
+        categories = {}
+        counts = search_response["categories"]
+        topics = LayerCategory.objects.all()
+        for topic in topics:
+            if topic.name in counts:
+                categories[topic] = counts[topic.name]
+            else:
+                categories[topic] = 0
 
-    total = search_response['total']
+        total = search_response['total']
 
-    tags = {}
+        tags = {}
 
-    # get the keywords and their count
-    keywords = search_response["keywords"]
-    for keyword in keywords:
-        try:
-            tagged_item = TaggedItem.objects.filter(tag__name=keyword)[0]
-            tags[tagged_item.tag.slug] = tags.get(tagged_item.tag.slug,{})
-            tags[tagged_item.tag.slug]['slug'] = tagged_item.tag.name
-            tags[tagged_item.tag.slug]['name'] = tagged_item.tag.name
-            tags[tagged_item.tag.slug]['count'] = keywords[keyword]
-        except Exception, e:
-            logger.error("Could not find TaggedItem for keyword %s" % keyword)
+        # get the keywords and their count
+        keywords = search_response["keywords"]
+        for keyword in keywords:
+            try:
+                tagged_item = TaggedItem.objects.filter(tag__name=keyword)[0]
+                tags[tagged_item.tag.slug] = tags.get(tagged_item.tag.slug,{})
+                tags[tagged_item.tag.slug]['slug'] = tagged_item.tag.name
+                tags[tagged_item.tag.slug]['name'] = tagged_item.tag.name
+                tags[tagged_item.tag.slug]['count'] = keywords[keyword]
+            except Exception, e:
+                logger.error("Could not find TaggedItem for keyword %s" % keyword)
+
+    else:
+        results, facets, query = search_api(request, format='html', **kw)
+        categories = {}
+        tags = {}
+
+        # get the keywords and their count
+        for item in results:
+            for tagged_item in item.o.tagged_items.all():
+                tags[tagged_item.tag.slug] = tags.get(tagged_item.tag.slug,{})
+                tags[tagged_item.tag.slug]['slug'] = tagged_item.tag.slug
+                tags[tagged_item.tag.slug]['name'] = tagged_item.tag.name
+                tags[tagged_item.tag.slug]['count'] = tags[tagged_item.tag.slug].get('count',0) + 1
+
+        total = 0
+        for val in facets.values(): total+=val
+        total -= facets['raster'] + facets['vector']
 
     return render_to_response(template, RequestContext(request, {'object_list': results, 'total': total, "categories": categories,
                                                                  'facets': facets, 'query': json.dumps(query.get_query_response()), 'tags': tags,
@@ -115,7 +131,7 @@ def _get_search_context():
         'layers' : Layer.objects.count(),
         'vector' : Layer.objects.filter(storeType='dataStore').count(),
         'raster' : Layer.objects.filter(storeType='coverageStore').count(),
-        'users' : Contact.objects.count(),
+        'remote' : Layer.objects.filter(storeType='remoteStore').count()
         }
     if "geonode.contrib.groups" in settings.INSTALLED_APPS:
         counts['groups'] = Group.objects.count()
@@ -152,13 +168,52 @@ def _get_all_keywords():
 
 
 def search_api(request, format='json', **kwargs):
-    return haystack_search_api(request, format=format, **kwargs)
+    if settings.HAYSTACK_SEARCH and "haystack" in settings.INSTALLED_APPS:
+        return haystack_search_api(request, format=format, **kwargs)
+
+    if request.method not in ('GET','POST'):
+        return HttpResponse(status=405)
+    debug = logger.isEnabledFor(logging.DEBUG)
+    if debug:
+        connection.queries = []
+    ts = time()
+    try:
+        query = query_from_request(request, kwargs)
+        items, facets = _search(query,request)
+        ts1 = time() - ts
+        if debug:
+            ts = time()
+        if format != 'html':
+            results = _search_json(query, items, facets, ts1)
+            if debug:
+                ts2 = time() - ts
+                logger.debug('generated combined search results in %s, %s',ts1,ts2)
+                logger.debug('with %s db queries',len(connection.queries))
+        if format == 'html':
+            return items, facets, query
+        else:
+            return results
+
+    except Exception, ex:
+        if not isinstance(ex, BadQuery):
+            logger.exception("error during search")
+            raise ex
+        return HttpResponse(json.dumps({
+            'success' : False,
+            'errors' : [str(ex)]
+        }), status=400)
 
 def _search_json(query, items, facets, time):
     total = len(items)
 
     if query.limit is not None and query.limit > 0:
         items = items[query.start:query.start + query.limit]
+
+    # unique item id for ext store (this could be done client side)
+    iid = query.start
+    for r in items:
+        r.iid = iid
+        iid += 1
 
     exclude = query.params.get('exclude')
     exclude = set(exclude.split(',')) if exclude else ()
@@ -177,6 +232,44 @@ def _search_json(query, items, facets, time):
 
 def cache_key(query,filters):
     return str(reduce(operator.xor,map(hash,filters.items())) ^ hash(query))
+
+def _search(query,request):
+    # to support super fast paging results, cache the intermediates
+    results = None
+    cache_time = settings.CACHE_TIME
+    if query.cache:
+        key = query.cache_key()
+        results = cache.get(key)
+        if results:
+            # put it back again - this basically extends the lease
+            cache.add(key, results, cache_time)
+
+    if not results:
+        results = combined_search_results(query)
+        facets = results['facets']
+        results = apply_normalizers(results,request)
+        if query.cache:
+            dumped = zlib.compress(pickle.dumps((results, facets)))
+            logger.debug("cached search results %s", len(dumped))
+            cache.set(key, dumped, cache_time)
+
+    else:
+        results, facets = pickle.loads(zlib.decompress(results))
+
+    # @todo - sorting should be done in the backend as it can optimize if
+    # the query is restricted to one model. has implications for caching...
+    if query.sort != None:
+        if query.sort == 'title':
+            keyfunc = lambda r: r.title().lower()
+        elif query.sort == 'last_modified':
+            old = datetime(1,1,1)
+            keyfunc = lambda r: r.last_modified() or old
+        else:
+            keyfunc = lambda r: getattr(r, query.sort)()
+
+        results.sort(key=keyfunc, reverse=not query.order)
+
+    return results, facets
 
 
 def author_list(req):
@@ -204,21 +297,24 @@ def haystack_search_api(request, format="json", **kwargs):
     from haystack.query import SearchQuerySet, SQ
 
     # Retrieve Query Params
-    id = request.REQUEST.get("id", None)
-    query = request.REQUEST.get('q',None)
-    category = request.REQUEST.get("category", None)
-    limit = int(request.REQUEST.get("limit", getattr(settings, "HAYSTACK_SEARCH_RESULTS_PER_PAGE", 20)))
-    startIndex = int(request.REQUEST.get("startIndex", 0))
-    sort = request.REQUEST.get("sort", "relevance")
-    type_facets = request.REQUEST.get("type", None)
-    format = request.REQUEST.get("format", format)
-    date_start = request.REQUEST.get("start_date", None)
-    date_end = request.REQUEST.get("end_date", None)
-    keyword = request.REQUEST.get("kw", None)
-    service = request.REQUEST.get("service", None)
-    local = request.REQUEST.get("local", None)
+    params = dict(request.REQUEST)
+    params.update(kwargs)
 
-    default_facet_types = [("map",0), ("layer",0), ("user",0), ("vector",0), ("raster",0)]
+    id = params.get("id", None)
+    query = params.get('q',None)
+    category = params.get("category", None)
+    limit = int(params.get("limit", getattr(settings, "HAYSTACK_SEARCH_RESULTS_PER_PAGE", 20)))
+    startIndex = int(params.get("startIndex", 0))
+    sort = params.get("sort", "relevance")
+    type_facets = params.get("type", None)
+    format = params.get("format", format)
+    date_start = params.get("start_date", None)
+    date_end = params.get("end_date", None)
+    keyword = params.get("kw", None)
+    service = params.get("service", None)
+    local = params.get("local", None)
+
+    default_facet_types = [("map",0), ("layer",0), ("vector",0), ("raster",0), ("remote",0)]
 
     # Geospatial Elements
     bbox = request.REQUEST.get("extent", None)
@@ -235,14 +331,14 @@ def haystack_search_api(request, format="json", **kwargs):
 
 
     # Filter by Type and subtype
+    types = ["map", "layer"]
     if type_facets is not None:
-        type_facets = type_facets.replace("owner","user").split(",")
-        subtype_facets = ["vector", "raster"]
+        type_facets = type_facets.split(",")
+        subtype_facets = ["vector", "raster", "remote"]
         types = []
         subtypes = []
-
         for type in type_facets:
-            if type in ["map", "layer", "user"]:
+            if type in ["map", "layer"]:
                 # Type is one of our Major Types (not a sub type)
                 types.append(type)
             elif type in subtype_facets:
@@ -253,8 +349,8 @@ def haystack_search_api(request, format="json", **kwargs):
                 if sub_type not in subtypes:
                     sqs = sqs.exclude(subtype='%s' % sub_type)
 
-        if len(types) > 0:
-            sqs = sqs.narrow("type:%s" % ','.join(map(str, types)))
+    if len(types) > 0:
+        sqs = sqs.narrow("type:%s" % ','.join(map(str, types)))
 
     # Filter by Query Params
     # haystack bug? if boosted fields aren't included in the
@@ -410,7 +506,7 @@ def haystack_search_api(request, format="json", **kwargs):
         if data['type'] == "map":
             resource = MapNormalizer(Map.objects.get(pk=data['oid']))
         elif data['type'] == "layer":
-            resource = LayerNormalizer(Layer.objects.get(pk=data['oid']))
+            resource = LayerNormalizer(Layer.objects.get(pk=data['oid']), user=request.user)
         elif data['type'] == "user":
             resource = OwnerNormalizer(Contact.objects.get(pk=data['oid']))
         elif data['type'] == "group" and "geonode.contrib.groups" in settings.INSTALLED_APPS:

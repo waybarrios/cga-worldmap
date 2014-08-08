@@ -1,5 +1,4 @@
 {% load pagination_tags %}
-
 {% load i18n %}
 <div class="tab-pane active list paginate-contents" id="all" >
     <p class="search-count">Total: {{ total }}</p>
@@ -13,22 +12,6 @@
             {% elif object.o.class_name == 'Map' %}
                 {% with object.o as map %}
                     {% include "maps/_map_list_item.html" %}
-                {% endwith %}
-            {% elif object.o.class_name == 'Contact' %}
-                {% with object as contact %}
-                    {% include "profiles/_profile_list_item.html" %}
-                {% endwith %}
-            {% elif object.o.class_name == 'Group' %}
-                {% with object as group %}
-                    {% if GROUPS_APP %}
-                        {% comment %}
-        This is a bit strange, but required as the include is processed before the if
-        http://stackoverflow.com/questions/10950275/conditional-include-tag-in-django?answertab=active#tab-top
-      {% endcomment %}
-                        {% with "groups/_group_list_item.html" as groups_template %}
-                            {% include groups_template %}
-                        {% endwith %}
-                    {% endif %}
                 {% endwith %}
             {% endif %}
         {% endfor %}

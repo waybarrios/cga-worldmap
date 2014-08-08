@@ -33,7 +33,7 @@ import unicodedata
 from django.db.models import Q
 import logging
 from geonode.flexidates import FlexiDateFormField
-from geonode.contrib.services.models import Service
+from geonode.services.models import Service
 import taggit
 from geonode.maps.utils import forward_mercator
 from django.utils.html import escape
@@ -976,7 +976,8 @@ def layer_metadata(request, layername, service=None):
                     if the_layer.in_gazetteer:
                         the_layer.gazetteer_project = gazetteer_form.cleaned_data["project"]
                 the_layer.save()
-                the_layer.save_to_geonetwork()
+                if settings.USE_GEONETWORK:
+                    the_layer.save_to_geonetwork()
 
                 if settings.USE_GAZETTEER and show_gazetteer_form:
                     if settings.USE_QUEUE:
@@ -1133,7 +1134,7 @@ def layer_detail(request, layername, service=None):
             RequestContext(request, {'error_message':
                 _("You are not permitted to view this layer")})), status=401)
 
-    metadata = layer.metadata_csw()
+    metadata = layer.metadata_csw() if settings.USE_GEONETWORK else None
 
     attributes = (json.dumps(layer.attribute_config()) + ",") if layer.attribute_set.count() > 0 else ''
 

@@ -519,8 +519,8 @@ def create_django_record(user, title, keywords, abstract, gs_resource, permissio
 
     saved_layer.poc = poc_contact
     saved_layer.metadata_author = author_contact
-
-    saved_layer.save_to_geonetwork()
+    if settings.USE_GEONETWORK:
+        saved_layer.save_to_geonetwork()
 
     # Step 11. Set default permissions on the newly created layer
     # FIXME: Do this as part of the post_save hook

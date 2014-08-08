@@ -5,17 +5,17 @@ from django.db import models
 from geoserver.catalog import FailedRequestError
 from taggit.managers import TaggableManager
 from geonode.core.models import PermissionLevelMixin, ANONYMOUS_USERS, AUTHENTICATED_USERS, CUSTOM_GROUP_USERS
-from geonode.contrib.services.enumerations import SERVICE_TYPES, SERVICE_METHODS, GXP_PTYPES
+from geonode.services.enumerations import SERVICE_TYPES, SERVICE_METHODS, GXP_PTYPES
 from geonode.maps.models import Contact, Role, Layer
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import signals
 from geonode.queue.models import STATUS_VALUES
 
 
-logger = logging.getLogger("geonode.contrib.services")
+logger = logging.getLogger("geonode.services")
 
 """
-geonode.contrib.services
+geonode.services
 """
 class Service(models.Model, PermissionLevelMixin):
     """

@@ -1,0 +1,13 @@
+{% load i18n %}
+{% load base_tags %}
+
+<nav class="filter">
+    <h2><a href="#" class="toggle toggle-nav"><i class="icon-chevron-right"></i>{% trans "Text" %}</a></h2>
+    <ul class="nav open" id="q">
+            <label>Search for word(s):</label>
+            <li>
+                <input id="search_query_term" type="text" data-class="" placeholder="Search by text" />
+                <input type="button" class="active trigger-query" data-class="" value="Go">
+            </li>
+    </ul>
+</nav>

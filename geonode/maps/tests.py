@@ -768,7 +768,8 @@ community."
 
         # save to geonetwork so we know the uuid is consistent between
         # django db and geonetwork
-        layer.save_to_geonetwork()
+        if settings.USE_GEONETWORK:
+            layer.save_to_geonetwork()
 
         c = Client()
         response = c.get('/data/search/detail', {'uuid':layer.uuid})

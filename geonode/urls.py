@@ -35,7 +35,7 @@ urlpatterns = patterns('',
     url(r'^upload_terms/$',  TemplateView.as_view(template_name='maps/upload_terms.html'), name='upload_terms'),
 
     # Services views
-    (r'^services/', include('geonode.contrib.services.urls')),
+    (r'^services/', include('geonode.services.urls')),
 
      # Data views
 

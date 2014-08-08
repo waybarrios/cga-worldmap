@@ -95,6 +95,8 @@ class LayerIndex(indexes.SearchIndex, indexes.Indexable):
             return "vector"
         elif obj.storeType == "coverageStore":
             return "raster"
+        elif obj.storeType in ("remoteStore", "wmsStore"):
+            return "remote"
 
     def prepare_download_links(self,obj):
         try:

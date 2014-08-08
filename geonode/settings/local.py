@@ -13,3 +13,4 @@ DATABASES = {
 }
 
 GEONODE_CLIENT_LOCATION = "http://localhost:9090/"
+HAYSTACK_SEARCH = False

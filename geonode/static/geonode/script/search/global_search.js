@@ -18,10 +18,16 @@ $(function(){
         // traverse the active filters to build the query parameters
         $('.filter > ul').each(function(){
             var id = $(this).attr('id');
+
             $(this).find('.active').each(function(){
-                params[id].push($(this).attr('data-class'));
+                if (id !== "q"){
+                    params[id].push($(this).attr('data-class'));
+                }
             });
         });
+
+        params.q = $("#search_query_term").val();
+
 
         if(params.date_start[0] === 'yyyy-mm-dd'){
             params.date_start = [''];
