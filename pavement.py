@@ -155,35 +155,37 @@ def setup_geoserver(options):
 @task
 def setup_geonetwork(options):
     """Fetch the geonetwork.war and intermap.war to use with GeoServer for testing."""
-    war_zip_file = geonetwork_zip
-    src_url = str(geonetwork_war_url + war_zip_file)
-    info("geonetwork url: %s" %src_url)
-    # where to download the war files. If changed change also
-    # src/geoserver-geonode-ext/jetty.xml accordingly
+    from django.conf import settings
+    if settings.USE_GEONETWORK:
+        war_zip_file = geonetwork_zip
+        src_url = str(geonetwork_war_url + war_zip_file)
+        info("geonetwork url: %s" %src_url)
+        # where to download the war files. If changed change also
+        # src/geoserver-geonode-ext/jetty.xml accordingly
 
-    webapps = path("./webapps")
-    if not webapps.exists():
-        webapps.mkdir()
+        webapps = path("./webapps")
+        if not webapps.exists():
+            webapps.mkdir()
 
-    dst_url = webapps / war_zip_file
-    dst_war = webapps / "geonetwork.war"
-    deployed_url = webapps / "geonetwork"
+        dst_url = webapps / war_zip_file
+        dst_war = webapps / "geonetwork.war"
+        deployed_url = webapps / "geonetwork"
 
-    if getattr(options, 'clean', False):
-        deployed_url.rmtree()
+        if getattr(options, 'clean', False):
+            deployed_url.rmtree()
 
-    if not dst_war.exists():
-    	info("getting geonetwork.war")
-        grab(src_url, dst_url)
-        zip_extractall(zipfile.ZipFile(dst_url), webapps)
-    if not deployed_url.exists():
-        zip_extractall(zipfile.ZipFile(dst_war), deployed_url)
+        if not dst_war.exists():
+            info("getting geonetwork.war")
+            grab(src_url, dst_url)
+            zip_extractall(zipfile.ZipFile(dst_url), webapps)
+        if not deployed_url.exists():
+            zip_extractall(zipfile.ZipFile(dst_war), deployed_url)
 
-    src_url = intermap_war_url
-    dst_url = webapps / "intermap.war"
+        src_url = intermap_war_url
+        dst_url = webapps / "intermap.war"
 
-    if not dst_url.exists():
-        grab(src_url, dst_url)
+        if not dst_url.exists():
+            grab(src_url, dst_url)
 
 @task
 @needs([
@@ -299,7 +301,9 @@ def package_geoserver(options):
 @needs('package_dir', 'setup_geonetwork')
 def package_geonetwork(options):
     """Package GeoNetwork WAR file for deployment."""
-    geonetwork_target.copy(package_outdir)
+    from django.conf import settings
+    if settings.USE_GEONETWORK:
+        geonetwork_target.copy(package_outdir)
 
 
 @task
