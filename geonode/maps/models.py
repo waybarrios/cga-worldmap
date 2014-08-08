@@ -1547,14 +1547,16 @@ class Layer(models.Model, PermissionLevelMixin):
         if self.resource is None:
             return
         if hasattr(self, "_resource_cache"):
-            gn = Layer.objects.gn_catalog
+
             self.resource.title = self.title
             self.resource.abstract = self.abstract
             self.resource.name= self.name
-            self.resource.metadata_links = [('text/xml', 'TC211', gn.url_for_uuid(self.uuid))]
             self.resource.keywords = self.keyword_list()
+            if settings.USE_GEONETWORK:
+                gn = Layer.objects.gn_catalog
+                self.resource.metadata_links = [('text/xml', 'TC211', gn.url_for_uuid(self.uuid))]
+                gn.logout()
             Layer.objects.gs_catalog.save(self._resource_cache)
-            gn.logout()
         if self.poc and self.poc.user:
             self.publishing.attribution = str(self.poc.user)
             profile = Contact.objects.get(user=self.poc.user)
