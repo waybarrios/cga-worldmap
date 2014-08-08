@@ -138,7 +138,7 @@ INSTALLED_APPS = (
     'djcelery',
     'kombu.transport.django',
     'piston',
-    'haystack',
+    #'haystack',
     'pagination',
     'friendlytagloader',
 
