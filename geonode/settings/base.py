@@ -155,6 +155,9 @@ INSTALLED_APPS = (
     'geonode.hoods',
     'geonode.services',
     'geonode.search',
+    
+    # GeoNode internal apps for Dataverse/GeoConnect
+    'geonode.classification',
     'geonode.dvn',
 )
 LOGGING = {

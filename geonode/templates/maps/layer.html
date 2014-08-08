@@ -267,7 +267,7 @@
     {% if layer.attribute_set %}
     <p> <strong>{% trans "Attributes" %}:</strong>
         {%  for attribute in layer.attribute_set.all %}
-        {{ attribute.attribute_label }},
+        {{ attribute.attribute_label }},a
         {% endfor %}
     </p>
     {% endif %}
