@@ -12,7 +12,7 @@ ad = { 'authentication': auth }
 placename_resource = Resource(handler=PlaceNameHandler)
 
 urlpatterns = patterns('',
-    url(r'^(?P<place_name>\d)$', placename_resource),
+    url(r'^(?P<place_name>\d)$', placename_resource, { 'emitter_format': 'json' }),
     url(r'^(?P<place_name>\d)/xml$', placename_resource, { 'emitter_format': 'xml' }),
     url(r'^(?P<place_name>\d)/json', placename_resource, { 'emitter_format': 'json' }),
 
@@ -23,7 +23,7 @@ urlpatterns = patterns('',
         '(/Layer/(?P<layer>[A-Za-z0-9_-]+))?' +
         '(/StartDate/(?P<start_date>[\d\s\/\-\:]+(\sBC|\sAD)?))?' +
         '(/EndDate/(?P<end_date>[\d\s\/\-\:]+(\sBC|\sAD)?))?' +
-        '$', placename_resource),
+        '$', placename_resource, { 'emitter_format': 'json' }),
 
     url(r'^(?P<place_name>[^/]+)' +
         '(/Service/(?P<services>[\w\,]+))?' +

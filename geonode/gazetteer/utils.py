@@ -152,7 +152,7 @@ def getGazetteerResults(place_name, map=None, layer=None, start_date=None, end_d
 
 
     for entry in matchingEntries:
-        posts.append({'placename': entry.place_name, 'coordinates': (entry.latitude, entry.longitude),
+        posts.append({'placename': entry.place_name, 'coordinates': {'lat': entry.latitude, 'lon': entry.longitude},
             'source': formatSourceLink(entry.layer_name), 'start_date': entry.start_date, 'end_date': entry.end_date,
             'gazetteer_id': entry.id})
     return posts
@@ -297,9 +297,9 @@ def getExternalServiceResults(place_name, services):
         if service == "google":
             google = getGoogleResults(place_name)
             results.extend(google)
-        elif service == "yahoo":
-            yahoo = getYahooResults(place_name)
-            results.extend(yahoo)
+        elif service == "nominatim":
+            nominatim = getNominatimResults(place_name)
+            results.extend(nominatim)
         elif service == "geonames":
             geonames = getGeonamesResults(place_name)
             results.extend(geonames)
@@ -319,13 +319,13 @@ def getGoogleResults(place_name):
         return []
 
 
-def getYahooResults(place_name):
-    g = geocoders.Yahoo(settings.YAHOO_API_KEY)
+def getNominatimResults(place_name):
+    g = geocoders.Nominatim()
     try:
-        results = g.geocode(place_name, False)
+        results = g.geocode(place_name, False,timeout=5)
         formatted_results = []
         for result in results:
-            formatted_results.append(formatExternalGeocode('Yahoo', result))
+            formatted_results.append(formatExternalGeocode('Nominatim', result))
         return formatted_results
     except:
         return []
@@ -340,7 +340,7 @@ def getConnection():
         settings.DATABASES[settings.GAZETTEER_DB_ALIAS]['HOST'] + "'")
 
 def getGeonamesResults(place_name):
-    g = geocoders.GeoNames()
+    g = geocoders.GeoNames(username=settings.GEONAMES_USER)
     try:
         results = g.geocode(place_name, False)
         formatted_results = []
@@ -352,8 +352,31 @@ def getGeonamesResults(place_name):
 
 
 def formatExternalGeocode(geocoder, geocodeResult):
-    return {'placename': geocodeResult[0], 'coordinates': geocodeResult[1], 'source': geocoder, 'start_date': 'N/A', \
+    return {'placename': geocodeResult.address, 'coordinates': {'lat': geocodeResult.latitude, 'lon': geocodeResult.longitude}, 'source': geocoder, 'start_date': 'N/A', \
             'end_date': 'N/A', 'gazetteer_id': 'N/A'}
 
 
 
+
+def update_gazetteer(layer_obj):
+    if not layer_obj.in_gazetteer:
+        delete_from_gazetteer(layer_obj.name)
+    else:
+        includedAttributes = []
+        gazetteerAttributes = layer_obj.attribute_set.filter(in_gazetteer=True)
+        for attribute in gazetteerAttributes:
+            includedAttributes.append(attribute.attribute)
+
+        startAttribute = layer_obj.attribute_set.filter(is_gaz_start_date=True)[
+            0].attribute if layer_obj.attribute_set.filter(is_gaz_start_date=True).exists() > 0 else None
+        endAttribute = layer_obj.attribute_set.filter(is_gaz_end_date=True)[0].attribute if layer_obj.attribute_set.filter(
+            is_gaz_end_date=True).exists() > 0 else None
+
+        add_to_gazetteer(layer_obj.name, includedAttributes, start_attribute=startAttribute, end_attribute=endAttribute,
+                         project=layer_obj.gazetteer_project)
+
+
+def queue_gazetteer_update(layer_obj):
+    if GazetteerUpdateJob.objects.filter(layer=layer_obj.id).exists() == 0:
+        newJob = GazetteerUpdateJob(layer=layer_obj)
+        newJob.save()

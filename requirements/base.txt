@@ -40,7 +40,7 @@ defusedxml
 #The following are for the gazetteer
 -e git+https://github.com/cga-harvard/geopy.git#egg=geopy
 geojson
-https://bitbucket.org/jespern/django-piston/get/5b3ef294fe89.zip
+-e git+https://github.com/cga-harvard/django-piston#egg=piston
 
 
 #For scheduled tasks
