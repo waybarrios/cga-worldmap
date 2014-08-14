@@ -19,13 +19,10 @@ If instead, you are interested in doing development on the WorldMap source code,
     sudo apt-get update
 
     # Essential build tools and libraries
-    sudo apt-get install -y build-essential libxml2-dev libxslt1-dev libjpeg-dev
+    sudo apt-get install -y build-essential libxml2-dev libxslt1-dev libjpeg-dev gettext git
 
-    # Python native dependencies
-    sudo apt-get install -y python-dev python-imaging python-lxml python-pyproj python-shapely python-nose python-httplib2 python-pip python-software-properties
-
-    # Setup virtualenv tools
-    sudo pip install virtualenvwrapper
+    # Python dependencies with official packages
+    sudo apt-get install -y python-dev python-imaging python-lxml python-pyproj python-shapely python-nose python-httplib2 python-pip python-software-properties python-gdal python-django
 
     # Java dependencies
     sudo apt-get install -y --force-yes openjdk-6-jdk ant maven2 --no-install-recommends
@@ -74,6 +71,113 @@ Mac OSX, or Windows, no technical support can be provided for those operating sy
 you need to use another OS besides Linux.
 
 
+    # Basic build packages
+    zypper install gcc gcc-c++ python-devel libgeos-devel libproj-devel
+
+    # Python native dependencies
+    zypper install python-pip python-virtualenv python-imaging python-lxml python-gdal
+
+    # Java dependencies
+    zypper install java-1_7_0_openjdk-devel ant maven
+
+    # Supporting tools
+    zypper install git gettext-runtime
+
+    # Create virtualenv and activate it
+    virtualenv venv --system-site-packages
+    source venv/bin/activate
+    cd venv
+
+    # Clone GeoNode
+    git clone https://github.com/GeoNode/geonode.git
+
+    # Install GeoNode in the local virtualenv
+    pip install -e geonode --use-mirrors
+
+    cd geonode
+
+    # Compile GeoServer
+    paver setup
+    
+    # Start the servers
+    paver start
+
+Windows Development Build Instructions::
+
+
+    Prerequisites:
+    # Java JDK
+    # Python 2.6+
+    # ant (bin directory must be on system PATH)
+    # maven2 (bin directory must be on system PATH)
+    # Python distutils (easy_install)
+    # git
+
+    # Install and configure from the windows command prompt
+    If you don't already have python virtualenv installed, then do it now:
+         easy_install virtualenv
+
+    # Create virtualenv and activate it
+    cd <Directory to install the virtualenv & geonode into>
+    virtualenv venv
+    venv\scripts\activate
+
+    # Install Python native dependencies
+    easy_install PIL lxml==2.3
+    # this command will look for and install binary distributions (pip install will attempt to build and fail)
+
+    # Clone GeoNode
+    git clone https://github.com/GeoNode/geonode.git
+    
+    # Install GeoNode in the local virtualenv
+    pip install -e geonode --use-mirrors
+
+    cd geonode
+
+    # Compile GeoServer
+    paver setup
+    
+    # Start the servers
+    # This WON'T work on windows without changes to pavement.py 
+    # and a windows batch script for starting jetty    
+    paver start
+
+Mac OSX Development Build Instructions::
+    
+    # you may need brew install various dependencies 
+
+    mkdir -p ~/pyenv
+    virtualenv ~/pyenv/geonode    
+    source ~/pyenv/geonode/bin/activate
+    git clone https://github.com/GeoNode/geonode
+    cd geonode
+    pip install lxml
+    pip install pyproj
+    pip install nose
+    pip install httplib2
+    pip install shapely
+    pip install pillow
+    pip install paver
+
+    # Node and tools required for static development
+    brew install node
+    npm install -g bower
+    npm install -g grunt-cli
+
+    #Install pip dependencies
+    pip install -e .
+
+    #Paver handles dependencies for Geonode, first setup (this will download and update your python dependencies - ensure you're in a virtualenv)
+    paver setup
+    paver start
+    
+    # Optional: To generate document thumbnails for PDFs and other ghostscripts file types
+    # Then download ghostscript: https://www.macupdate.com/app/mac/9980/gpl-ghostscript
+    brew install imagemagick
+    pip install Wand==0.3.5
+
+Once fully started, you should see a message indicating the address of your WorldMap instance.
+
 The default username and password are ``admin`` and ``admin``::
   
   Development GeoNode is running at http://localhost:8000/
@@ -107,6 +211,17 @@ You can eventually generate a pdf containing the whole documentation set. For th
   vendor, or packaged other than on PyPI.  When in doubt, however, just leave
   this option out.
 
+Development Roadmap
+===================
+
+Geonode's development roadmap is documented in a series of Geonode Improvement Projects (GNIPS). 
+They are documented here: https://github.com/GeoNode/geonode/wiki/GeoNode-Improvement-Proposals.
+GNIPS are considered to be large undertakings which will add a large amount of features to the project. 
+As such they are the topic of community dicussion and guidance.
+The community discusses these on the developer mailing list: https://groups.google.com/a/opengeo.org/forum/#!forum/geonode-dev
+Github issues tracks features and bugs, for new developers the tag 'easy-pick' indicates an 
+issue that should be relatively easy for new developers to understand and complete. Once you have completed an issue
+a pull request should be submitted. This will then be reviewed by the community.
 
 WorldMap Javascript Client for Map Composer
 ===========================================
@@ -115,10 +230,14 @@ WorldMap uses a custom map composer.  If you wish to modify and/or debug the Com
 source code)[https://github.com/mbertrand/geonode-suite-sdk.git].  Place both in the directory immediately above
 your worldmap git repository.  Then run one of the following commands to debug or build the client:
 
-    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=geonode/static -Dapp.name=sdk debug
+    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=../geonode/static -Dapp.name=sdk debug
 
-    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=geonode/static -Dapp.name=sdk package
+    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=../geonode/static -Dapp.name=sdk package
 
+In debug mode, you will also need to make the following change in https://github.com/cga-harvard/cga-worldmap/blob/gn20upgrade-merge/geonode/worldmap/templates/geonode/sdk_header.html#L21:
+
+    <script type="text/javascript" src="http://localhost:9080/lib/app.js"></script>
+    <!--script type="text/javascript" src="{{ STATIC_URL }}sdk/lib/app.js"></script-->
 
 
 GPL License
