@@ -31,7 +31,7 @@ from paver.easy import task, options, cmdopts, needs
 from paver.easy import path, sh, info, call_task
 from paver.easy import BuildFailure
 
-from geonode.settings import GEONODE_APPS
+from django.conf import settings
 
 try:
     from paver.path import pushd
@@ -356,7 +356,7 @@ def test(options):
     """
     Run GeoNode's Unit Test Suite
     """
-    sh("python manage.py test %s.tests --noinput" % '.tests '.join(GEONODE_APPS))
+    sh("python manage.py test %s.tests --noinput" % '.tests '.join(settings.GEONODE_APPS))
 
 
 @task

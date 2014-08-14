@@ -230,9 +230,9 @@ WorldMap uses a custom map composer.  If you wish to modify and/or debug the Com
 source code)[https://github.com/mbertrand/geonode-suite-sdk.git].  Place both in the directory immediately above
 your worldmap git repository.  Then run one of the following commands to debug or build the client:
 
-    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=geonode/static -Dapp.name=sdk debug
+    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=../geonode/static -Dapp.name=sdk debug
 
-    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=geonode/static -Dapp.name=sdk package
+    ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=../geonode/static -Dapp.name=sdk package
 
 
 
