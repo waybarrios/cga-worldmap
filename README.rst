@@ -234,9 +234,10 @@ your worldmap git repository.  Then run one of the following commands to debug o
 
     ant -f opengeosuite-4.0-sdk/build.xml -Dapp.path=../worldmap-client -Dsdk.build=../geonode/static -Dapp.name=sdk package
 
-In debug mode, you will also need to make the following change in https://github.com/cga-harvard/cga-worldmap/blob/gn20upgrade-merge/geonode/worldmap/templates/geonode/sdk_header.html#L21:
+In debug mode, you will also need to make the following change in geonode/worldmap/templates/geonode/sdk_header.html:
 
     <script type="text/javascript" src="http://localhost:9080/lib/app.js"></script>
+    
     <!--script type="text/javascript" src="{{ STATIC_URL }}sdk/lib/app.js"></script-->
 
 
