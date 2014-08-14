@@ -1,5 +1,6 @@
 ordereddict
 psycopg2
+gdal==1.9
 
 #Uncomment the following to use memcached
 #python-memcached
@@ -37,7 +38,7 @@ unidecode==0.04.14
 
 #For haystack
 django-haystack
-pyelasticsearch
+elasticsearch
 
 #ArcGIS REST services
 -e git+https://github.com/Esri/arcpy-server-util-rest.git@hg/default#egg=arcrest

@@ -86,7 +86,7 @@ def setup_geonode_sdk(options):
         z.extractall()
             
     sh("rm -rf %s/build/" % worldmap_client)
-    sh("ant -f %s/build.xml -Dapp.path=../%s -Dsdk.build=geonode/static -Dapp.name=sdk package" % (sdk_dir,worldmap_client))
+    sh("ant -f %s/build.xml -Dapp.path=../%s -Dsdk.build=../geonode/static -Dapp.name=sdk package" % (sdk_dir,worldmap_client))
 
 
 @task
