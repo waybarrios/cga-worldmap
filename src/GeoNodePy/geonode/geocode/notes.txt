@@ -1,0 +1,23 @@
+
+this directory holds a branch for the geocode work
+
+we want a separate app that provides geocoding
+
+it only works against a public layer
+
+via api, specify geocode to point or bbox or polygon
+api includes layer id, feature name, feature value
+input json to geocode passed via post
+
+next steps:
+create python environment
+update urls.py
+figure out sql to get geometry
+
+commands used:
+git checkout -b geocode
+python manage.py startapp geocode
+git add src/GeoNodePy/geonode/geocode/
+git commit 
+git push origin geocode
+git commit -m "initial commit of geocode"
