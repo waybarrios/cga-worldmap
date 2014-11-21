@@ -75,8 +75,7 @@ urlpatterns = patterns('',
     
     (r'^dataverse-layer/', include('geonode.dataverse_layer_metadata.urls')),
     (r'^dataverse/', include('geonode.dataverse_connect.urls')),
-    
-    
+    url(r'^ogpsearch/$', 'ogpsearch.views.index'),
     )
 
 urlpatterns += geonode.proxy.urls.urlpatterns
