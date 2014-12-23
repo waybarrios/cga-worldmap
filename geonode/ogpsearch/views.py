@@ -53,8 +53,8 @@ zoom_level_to_degrees = {0: 360.0,
 def ingest_maps():
     maps = Map.objects.all()
     print "number of maps from sql", len(maps)
-    if (len(maps) > 0):
-        return
+    #if (len(maps) > 0):
+    #    return
     solr = pysolr.Solr('http://localhost:8983/solr/', timeout=10)
     i = 0
     for map in maps:
@@ -106,7 +106,7 @@ def ingest_maps():
 # "{\"wms\": [\"http://geoserver01.uit.tufts.edu/wms\"],\"wfs\": \"http://geoserver01.uit.tufts.edu/wfs\"}"
 def ingest_layers():
     layers = Layer.objects.all()
-    layers = [layers[0]]  # just the first
+    #layers = [layers[0]]  # just the first
     solr = pysolr.Solr('http://localhost:8983/solr/', timeout=10)
     for layer in layers:
         print "layer:", layer.title, layer.distribution_url, layer.distribution_description, layer.store
@@ -126,7 +126,7 @@ def ingest_layers():
                 halfWidth = (maxY - minY) / 2.0
                 halfHeight = (maxX - minX) / 2.0
                 area = (halfWidth * 2) * (halfHeight * 2)
-                solr.add([{"LayerId": "Tufts.SomervilleZipcodes06",  # layer.uuid,
+                solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i),  # layer.uuid,
                            "Name": "Zipcodes Somerville MA 2006", # layer.title,
                            "LayerDisplayName": layer.title,
                            "Institution": "Tufts",  # "Harvard",
