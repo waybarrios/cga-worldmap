@@ -81,7 +81,7 @@ urlpatterns = patterns('',
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     (r'^search/?', include('geonode.search.urls')),
     (r'^dvn/?', include('geonode.dvn.urls')),
-    url(r'^ogpsearch/$', 'ogpsearch.views.index'),
+    url(r'^ogpsearch/$', 'geonode.ogpsearch.views.index'),
     )
 
 urlpatterns += geonode.proxy.urls.urlpatterns
