@@ -7,8 +7,8 @@ from django.contrib.gis.geos import *
 import pysolr
 import math
 
-from maps.models import Layer
-from maps.models import Map
+from geonode.maps.models import Layer
+from geonode.maps.models import Map
 
 # passed a string array, 
 def good_coords(coords):
@@ -107,6 +107,7 @@ def ingest_maps():
 def ingest_layers():
     layers = Layer.objects.all()
     #layers = [layers[0]]  # just the first
+    i = 1
     solr = pysolr.Solr('http://localhost:8983/solr/', timeout=10)
     for layer in layers:
         print "layer:", layer.title, layer.distribution_url, layer.distribution_description, layer.store
@@ -147,10 +148,11 @@ def ingest_layers():
                            "HalfWidth": halfWidth,
                            "HalfHeight": halfHeight,
                            "Area": area}])
+                i = i+1
 
 
 def index(request):
-    ingest_maps()
-    ingest_layers()
-    return render_to_response('ogpsearch.html', RequestContext(request))
+    # ingest_maps()
+    # ingest_layers()
+    return render_to_response('ogpsearch/ogpsearch.html', RequestContext(request))
 
