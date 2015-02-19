@@ -63,7 +63,7 @@ zoom_level_to_degrees = {0: 360.0,
             20: 0.00025,
             21: 0.000015}
 
-def solr_test():
+def ingest_solr_records():
     """test code to get Solr records them and add to SQL table"""
     # this function should be derived from services.views._register_cascaded_layers
     # and maps.utils.save and maps.models.resource
@@ -88,10 +88,10 @@ def solr_test():
     print results.hits
     docs = results.docs
     for doc in docs:
-       solr_to_worldmap_old(doc)
+       solr_to_geonode_old(doc)
 
 
-def solr_to_worldmap(doc):
+def solr_to_geonode_aux(doc):
     """create a geonode layer based on the passed solr record
     follows code in maps.views.upload_layer that deals with external layers
     """
@@ -158,7 +158,7 @@ def solr_to_worldmap(doc):
     print '  created: ', created
     print '  cascaded_layer: ', cascaded_layer
 
-def solr_to_worldmap_old(doc):
+def solr_to_geonode_aux_old(doc):
     """creates geonode layer based on Solr record
     creating a row in the Layer table isn't sufficient.  this code
     was based on local layer code in needs to look like code in maps.views.upload_layer.
@@ -267,9 +267,9 @@ def ingest_maps():
 def ingest_layers():
     """create Solr records of layer objects in sql database"""
     layers = Layer.objects.all()
-    #layers = [layers[0]]  # just the first
+    # layers = [layers[0]]  # just the first
     i = 1
-    solr = pysolr.Solr('http://localhost:8983/solr/', timeout=10)
+    solr = pysolr.Solr('http://localhost:8983/solr/ogpsearch', timeout=10)
     for layer in layers:
         print "layer:", layer.title, layer.distribution_url, layer.distribution_description, layer.store
         bbox = layer.llbbox
@@ -288,8 +288,11 @@ def ingest_layers():
                 halfWidth = (maxY - minY) / 2.0
                 halfHeight = (maxX - minX) / 2.0
                 area = (halfWidth * 2) * (halfHeight * 2)
+                #ENVELOPE(minX, maxX, maxY, minY) per https://github.com/spatial4j/spatial4j/issues/36
+                wkt = "ENVELOPE({:f},{:f},{:f},{:f})".format(minX, maxX, maxY, minY)
+                print ('wkt: ', wkt)
                 solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i),  # layer.uuid,
-                           "Name": "Zipcodes Somerville MA 2006", # layer.title,
+                           "Name": layer.title,  # "Zipcodes Somerville MA 2006", # layer.title,
                            "LayerDisplayName": layer.title,
                            "Institution": "Tufts",  # "Harvard",
                            "Publisher": "Harvard",
@@ -308,8 +311,10 @@ def ingest_layers():
                            "CenterX": centerX,
                            "HalfWidth": halfWidth,
                            "HalfHeight": halfHeight,
-                           "Area": area}])
+                           "Area": area,
+                           "bbox_rpt": wkt}])
                 i = i+1
+    print 'geonode to layers processed ', i-1
 
 
 def index(request):
@@ -318,3 +323,10 @@ def index(request):
     #solr_test()
     return render_to_response('ogpsearch/ogpsearch.html', RequestContext(request))
 
+def geonode_to_solr(request):
+    ingest_layers()
+    return render_to_response('ogpsearch/geonode_to_solr.html', RequestContext(request))
+
+def solr_to_geonode(request):
+    ingest_solr_records()
+    return render_to_response('ogpsearch/solr_to_geonode.html', RequestContext(request))

@@ -123,7 +123,10 @@ OpenGeoportal.Solr = function() {
 			 */
 			defType : "edismax",
 			fl : this.getReturnedColumns(this.SearchRequest),
-			sort : this.getSortClause()
+			sort : this.getSortClause(),
+			facet : "true",
+			"facet.heatmap" : "bbox_rpt",
+			"facet.heatmap.format" : "png"
 		// ,
 		// debug: true
 		};
@@ -539,7 +542,8 @@ OpenGeoportal.Solr = function() {
 		var params = {
 			bf : bf_array,
 			fq : [ this.getIntersectionFilter() ],
-			intx : this.getIntersectionFunction(bounds)
+			intx : this.getIntersectionFunction(bounds),
+			"facet.heatmap.geom" : '["' + bounds.minX + ' ' + bounds.minY + '" TO "' + bounds.maxX + ' ' + bounds.maxY + '"]'
 		};
 
 		return params;

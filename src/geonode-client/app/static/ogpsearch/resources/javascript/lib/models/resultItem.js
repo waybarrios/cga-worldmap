@@ -52,6 +52,31 @@ OpenGeoportal.ResultsCollection = Backbone.Collection.extend({
 					ids.push(model.get("LayerId"));
 				}
 			});
+			// temp code to pull out heatmap png from solr response and display
+			if (typeof heatmapLayer != 'undefined')
+			    {
+				console.log("removing layer");
+				OpenGeoportal.ogp.map.removeLayer(heatmapLayer);
+			    }
+			tempResponse = dataObj;
+			facetCounts = tempResponse.facet_counts;
+			facetHeatmaps = facetCounts.facet_heatmaps;
+			bbox_rpt = facetHeatmaps.bbox_rpt;
+			heatmapPng = bbox_rpt[15];
+			// create Image object to get png width and height
+			// layer creation based on
+			//   http://gis.stackexchange.com/questions/58607/displaying-a-multi-zoom-image-layer-in-open
+			img = new Image();
+			img.src = "data:image/png;base64," + heatmapPng;
+			bounds = OpenGeoportal.ogp.map.getExtent().transform(OpenGeoportal.ogp.map.projection, new OpenLayers.Projection("EPSG:4326"));
+			bounds2 = OpenGeoportal.ogp.map.getExtent();
+			heatmapLayer = new OpenLayers.Layer.Image( 'Heatmap', "data:image/png;base64," + heatmapPng,
+								  new OpenLayers.Bounds(bounds2.left,bounds2.bottom,bounds2.right,bounds2.top), 
+								  new OpenLayers.Size(img.width, img.height),
+{opacity: 0.7});
+
+			OpenGeoportal.ogp.map.addLayer(heatmapLayer);
+			console.log("added heapmap layer to map");
 
 			// solr docs holds an array of hashtables, each hashtable contains a
 			// layer
