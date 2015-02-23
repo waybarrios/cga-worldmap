@@ -160,6 +160,7 @@ INSTALLED_APPS = (
     'geonode.capabilities',
     'geonode.queue',
     'geonode.certification',
+    'geonode.contrib.datatables',
     #'geonode.hoods',
     #'geonode.gazetteer',
     #'debug_toolbar',
