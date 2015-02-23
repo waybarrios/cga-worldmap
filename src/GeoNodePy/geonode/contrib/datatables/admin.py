@@ -1,5 +1,5 @@
 from django.contrib import admin
-from geonode.layers.models import Attribute
+from geonode.maps.models import LayerAttribute
 from .models import DataTable, TableJoin, JoinTarget, JoinTargetFormatType, GeocodeType
 
 class DataTableAdmin(admin.ModelAdmin):
@@ -20,7 +20,7 @@ class JoinTargetAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'attribute':
-            kwargs["queryset"] = Attribute.objects.filter(
+            kwargs["queryset"] = LayerAttributeAttribute.objects.filter(
                 resource=request.GET.get('layer'))
         return super(JoinTargetAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs)

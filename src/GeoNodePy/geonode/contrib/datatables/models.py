@@ -1,18 +1,19 @@
 import psycopg2
 from django.db import models
 from django.db.models import signals
-from geonode.base.models import ResourceBase
-from geonode.layers.models import Attribute, AttributeManager
-from geonode.layers.models import Layer
-from django.utils.text import slugify
+#from geonode.base.models import ResourceBase
+from geonode.maps.models import LayerAttribute, LayerAttributeManager
+from geonode.maps.models import Layer
+from django.template.defaultfilters import slugify
 
 TRANSFORMATION_FUNCTIONS = []
 
-class DataTable(ResourceBase):
+class DataTable(models.Model):
 
     """
     DataTable (inherits ResourceBase fields)
     """
+    title = models.CharField('title', max_length=255)
 
     # internal fields
     table_name = models.CharField(max_length=255, unique=True)
@@ -24,7 +25,7 @@ class DataTable(ResourceBase):
     def attributes(self):
         return self.attribute_set.exclude(attribute='the_geom')
 
-    objects = AttributeManager()
+    objects = LayerAttributeManager()
 
     def __unicode__(self):
         return self.table_name
@@ -66,7 +67,7 @@ class JoinTarget(models.Model):
     """
 
     layer = models.ForeignKey(Layer)
-    attribute = models.ForeignKey(Attribute)
+    attribute = models.ForeignKey(LayerAttribute)
     geocode_type = models.ForeignKey(GeocodeType, on_delete=models.PROTECT)
     type = models.ForeignKey(JoinTargetFormatType, null=True, blank=True)
     year = models.IntegerField(null=True, blank=True)
@@ -92,8 +93,8 @@ class TableJoin(models.Model):
 
     datatable = models.ForeignKey(DataTable)
     source_layer = models.ForeignKey(Layer, related_name="source_layer")
-    table_attribute = models.ForeignKey(Attribute, related_name="table_attribute")
-    layer_attribute = models.ForeignKey(Attribute, related_name="layer_attribute")
+    table_attribute = models.ForeignKey(LayerAttribute, related_name="table_attribute")
+    layer_attribute = models.ForeignKey(LayerAttribute, related_name="layer_attribute")
     view_name = models.CharField(max_length=255, null=True, blank=True)
     view_sql = models.TextField(null=True, blank=True)
     join_layer = models.ForeignKey(Layer, related_name="join_layer", null=True, blank=True)

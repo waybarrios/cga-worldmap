@@ -10,26 +10,28 @@ from csvkit import sql
 from csvkit import table
 from csvkit import CSVKitWriter
 from csvkit.cli import CSVKitUtility
-from django.db.models import signals
+#from django.db.models import signals
 from geoserver.catalog import Catalog
 from geoserver.store import datastore_from_index
-from geonode.geoserver.helpers import ogc_server_settings
-from geonode.geoserver.signals import geoserver_pre_save
+#from geonode.geoserver.helpers import ogc_server_settings
+#from geonode.geoserver.signals import geoserver_pre_save
 
 import psycopg2
 from psycopg2.extensions import QuotedString
 
-from django.utils.text import slugify
+from django.template.defaultfilters import slugify
 from django.core.files import File
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from geonode.layers.models import Layer, Attribute
+from geonode.maps.models import Layer, LayerAttribute
 from geonode.contrib.datatables.models import DataTable, TableJoin
-from geonode.geoserver.helpers import set_attributes
+#from geonode.geoserver.helpers import set_attributes
 
-_user = settings.OGC_SERVER['default']['USER']
-_password = settings.OGC_SERVER['default']['PASSWORD']
+#_user = settings.OGC_SERVER['default']['USER']
+#_password = settings.OGC_SERVER['default']['PASSWORD']
+_user = "admin"
+_password = "admin"
 
 logger = logging.getLogger('geonode.contrib.datatables.utils')
 
@@ -54,7 +56,7 @@ def process_csv_file(instance, delimiter=",", no_header_row=False):
 
     for column in csv_table:
         column.name = slugify(unicode(column.name)).replace('-','_')
-        attribute, created = Attribute.objects.get_or_create(resource=instance, 
+        attribute, created = LayerAttribute.objects.get_or_create(layer=instance, 
             attribute=column.name, 
             attribute_label=column.name, 
             attribute_type=column.type.__name__, 
