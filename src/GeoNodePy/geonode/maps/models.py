@@ -1014,6 +1014,7 @@ class Layer(ResourceBase, PermissionLevelMixin):
 
         links = []
 
+        return links 
         if self.resource.resource_type == "featureType":
             def wfs_link(mime,extra_params,ext):
                 return settings.SITEURL + "download/wfs/" + str(self.id) + "/" + ext + "?" + urllib.urlencode({
@@ -1310,7 +1311,8 @@ class Layer(ResourceBase, PermissionLevelMixin):
     metadata_links = property(_get_metadata_links, _set_metadata_links)
 
     def _get_default_style(self):
-        return self.publishing.default_style
+        #return self.publishing.default_style
+        return None
 
     def _set_default_style(self, style):
         self.publishing.default_style = style
