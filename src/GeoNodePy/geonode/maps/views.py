@@ -1243,6 +1243,9 @@ def upload_layer(request):
                     "success": True,
                     "redirect_to": redirect_to}))
             except Exception, e:
+                import sys, traceback
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_tb(exc_traceback)
                 logger.error("Unexpected error during upload: %s : %s", name, escape(str(e)))
                 return HttpResponse(json.dumps({
                     "success": False,

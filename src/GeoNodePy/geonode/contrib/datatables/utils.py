@@ -13,7 +13,6 @@ from csvkit.cli import CSVKitUtility
 #from django.db.models import signals
 from geoserver.catalog import Catalog
 from geoserver.store import datastore_from_index
-#from geonode.geoserver.helpers import ogc_server_settings
 #from geonode.geoserver.signals import geoserver_pre_save
 
 import psycopg2
@@ -28,10 +27,8 @@ from geonode.maps.models import Layer, LayerAttribute
 from geonode.contrib.datatables.models import DataTable, TableJoin
 #from geonode.geoserver.helpers import set_attributes
 
-#_user = settings.OGC_SERVER['default']['USER']
-#_password = settings.OGC_SERVER['default']['PASSWORD']
-_user = "admin"
-_password = "admin"
+_user = settings.DATABASES['default']['USER'] 
+_password = settings.DATABASES['default']['PASSWORD']
 
 logger = logging.getLogger('geonode.contrib.datatables.utils')
 
@@ -54,13 +51,17 @@ def process_csv_file(instance, delimiter=",", no_header_row=False):
     csv_file = File(f)
     f.close()
 
-    for column in csv_table:
-        column.name = slugify(unicode(column.name)).replace('-','_')
-        attribute, created = LayerAttribute.objects.get_or_create(layer=instance, 
-            attribute=column.name, 
-            attribute_label=column.name, 
-            attribute_type=column.type.__name__, 
-            display_order=column.order)
+    try:
+        for column in csv_table:
+            column.name = slugify(unicode(column.name)).replace('-','_')
+            attribute, created = LayerAttribute.objects.get_or_create(layer=instance, 
+                attribute=column.name, 
+                attribute_label=column.name, 
+                attribute_type=column.type.__name__, 
+                display_order=column.order)
+    except:
+        instance.delete()
+        return None, str(sys.exc_info()[0])
 
     # Create Database Table
     try:
@@ -73,7 +74,7 @@ def process_csv_file(instance, delimiter=",", no_header_row=False):
         return None, str(sys.exc_info()[0])
 
     import psycopg2
-    db = ogc_server_settings.datastore_db
+    db = settings.DATABASES['default'] 
     conn = psycopg2.connect(
         "dbname='" +
         db['NAME'] +

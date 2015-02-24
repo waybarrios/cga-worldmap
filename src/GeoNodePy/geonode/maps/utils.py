@@ -523,9 +523,9 @@ def create_django_record(user, title, keywords, abstract, gs_resource, permissio
     # Step 11. Set default permissions on the newly created layer
     # FIXME: Do this as part of the post_save hook
     logger.info('>>> Step 11. Setting default permissions for [%s]', name)
-    if permissions is not None:
-        from geonode.maps.views import set_layer_permissions
-        set_layer_permissions(saved_layer, permissions, True)
+    #if permissions is not None:
+    #    from geonode.maps.views import set_layer_permissions
+    #    set_layer_permissions(saved_layer, permissions, True)
 
     # Step 12. Verify the layer was saved correctly and clean up if needed
     logger.info('>>> Step 12. Verifying the layer [%s] was created '

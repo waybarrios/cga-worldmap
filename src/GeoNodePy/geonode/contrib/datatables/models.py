@@ -1,14 +1,14 @@
 import psycopg2
 from django.db import models
 from django.db.models import signals
-#from geonode.base.models import ResourceBase
+from geonode.maps.models import ResourceBase
 from geonode.maps.models import LayerAttribute, LayerAttributeManager
 from geonode.maps.models import Layer
 from django.template.defaultfilters import slugify
 
 TRANSFORMATION_FUNCTIONS = []
 
-class DataTable(models.Model):
+class DataTable(ResourceBase):
 
     """
     DataTable (inherits ResourceBase fields)

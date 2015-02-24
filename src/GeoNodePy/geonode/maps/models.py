@@ -583,6 +583,9 @@ DEFAULT_CONTENT=_(
 class GeoNodeException(Exception):
     pass
 
+class ResourceBase(models.Model):
+    pass
+
 class Contact(models.Model):
     user = models.ForeignKey(User, blank=True, null=True)
     name = models.CharField(_('Individual Name'), max_length=255, blank=True, null=True)
@@ -885,7 +888,7 @@ class LayerCategory(models.Model):
         verbose_name_plural = 'Layer Categories'
 
 
-class Layer(models.Model, PermissionLevelMixin):
+class Layer(ResourceBase, PermissionLevelMixin):
     """
     Layer Object loosely based on ISO 19115:2003
     """
@@ -1587,7 +1590,7 @@ class LayerAttributeManager(models.Manager):
 
 class LayerAttribute(models.Model):
     objects = LayerAttributeManager()
-    layer = models.ForeignKey(Layer, blank=False, null=False, unique=False, related_name='attribute_set')
+    layer = models.ForeignKey(ResourceBase, blank=False, null=False, unique=False, related_name='attribute_set')
     attribute = models.CharField(_('Attribute Name'), max_length=255, blank=False, null=True, unique=False)
     attribute_label = models.CharField(_('Attribute Label'), max_length=255, blank=False, null=True, unique=False)
     attribute_type = models.CharField(_('Attribute Type'), max_length=50, blank=False, null=False, default='xsd:string', unique=False)
