@@ -130,9 +130,10 @@ def tablejoin_api(request):
                     }
                     return HttpResponse(json.dumps(return_dict), mimetype="application/json", status=400)
             except:
+                traceback.print_exc(sys.exc_info())
                 return_dict = {
                     'success': False,
-                    'msg': "Error Creating Join: %s" % msg 
+                    'msg': "Error Creating Join: %s" % str(sys.exc_info()[0])
                 }
                 return HttpResponse(json.dumps(return_dict), mimetype="application/json", status=400) 
         else:

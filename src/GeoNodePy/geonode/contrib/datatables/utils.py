@@ -10,10 +10,8 @@ from csvkit import sql
 from csvkit import table
 from csvkit import CSVKitWriter
 from csvkit.cli import CSVKitUtility
-#from django.db.models import signals
 from geoserver.catalog import Catalog
 from geoserver.store import datastore_from_index
-#from geonode.geoserver.signals import geoserver_pre_save
 
 import psycopg2
 from psycopg2.extensions import QuotedString
@@ -25,7 +23,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from geonode.maps.models import Layer, LayerAttribute
 from geonode.contrib.datatables.models import DataTable, TableJoin
-#from geonode.geoserver.helpers import set_attributes
 
 _user = settings.DATABASES['default']['USER'] 
 _password = settings.DATABASES['default']['PASSWORD']
@@ -93,6 +90,8 @@ def process_csv_file(instance, delimiter=",", no_header_row=False):
         cur.execute(create_table_sql)
         conn.commit()
     except Exception as e:
+        import traceback
+        traceback.print_exc(sys.exc_info())
         logger.error(
             "Error Creating table %s:%s",
             instance.name,
@@ -164,9 +163,9 @@ def create_point_col_from_lat_lon(table_name, lat_column, lon_column):
 
     # Create the Layer in GeoServer from the table 
     try:
-        cat = Catalog(settings.OGC_SERVER['default']['LOCATION'] + "rest",
-                          _user, _password)
-        workspace = cat.get_workspace(settings.DEFAULT_WORKSPACE)
+        cat = Catalog("http://localhost:8080/geoserver/rest",
+                          "admin", "geoserver")
+        workspace = cat.get_workspace("geonode")
         ds_list = cat.get_xml(workspace.datastore_url)
         datastores = [datastore_from_index(cat, workspace, n) for n in ds_list.findall("dataStore")]
         ds = None
@@ -177,12 +176,13 @@ def create_point_col_from_lat_lon(table_name, lat_column, lon_column):
         cat.save(ft)
     except Exception as e:
         tj.delete()
+        import traceback
+        traceback.print_exc(sys.exc_info())
         msg = "Error creating GeoServer layer for %s: %s" % (table_name, str(e))
         return None, msg
 
     # Create the Layer in GeoNode from the GeoServer Layer
     try:
-        signals.pre_save.disconnect(geoserver_pre_save, sender=Layer)
         layer, created = Layer.objects.get_or_create(name=table_name, defaults={
             "workspace": workspace.name,
             "store": ds.name,
@@ -196,9 +196,10 @@ def create_point_col_from_lat_lon(table_name, lat_column, lon_column):
             "bbox_y0": Decimal(ft.latlon_bbox[2]),
             "bbox_y1": Decimal(ft.latlon_bbox[3])
         })
-        signals.pre_save.connect(geoserver_pre_save, sender=Layer) 
-        set_attributes(layer, overwrite=True)
+        #set_attributes(layer, overwrite=True)
     except Exception as e:
+        import traceback
+        traceback.print_exc(sys.exc_info())
         msg = "Error creating GeoNode layer for %s: %s" % (table_name, str(e))
         return None, msg
 
@@ -211,9 +212,11 @@ def setup_join(table_name, layer_typename, table_attribute_name, layer_attribute
     try:
         dt = DataTable.objects.get(table_name=table_name)
         layer = Layer.objects.get(typename=layer_typename)
-        table_attribute = dt.attributes.get(resource=dt,attribute=table_attribute_name)
-        layer_attribute = layer.attributes.get(resource=layer, attribute=layer_attribute_name)
+        table_attribute = dt.attributes.get(layer=dt,attribute=table_attribute_name)
+        layer_attribute = layer.attributes.get(layer=layer, attribute=layer_attribute_name)
     except Exception as e:
+        import traceback
+        traceback.print_exc(sys.exc_info())
         msg = "Error: (%s) %s:%s:%s:%s" % (str(e), table_name, layer_typename, table_attribute_name, layer_attribute_name)
         return None, msg
 
@@ -231,7 +234,7 @@ def setup_join(table_name, layer_typename, table_attribute_name, layer_attribute
 
     # Create the View (and double view)
     try:
-        db = ogc_server_settings.datastore_db
+        db = settings.DATABASES['default'] 
         conn = psycopg2.connect(
             "dbname='" +
             db['NAME'] +
@@ -258,32 +261,37 @@ def setup_join(table_name, layer_typename, table_attribute_name, layer_attribute
         conn.commit()
         conn.close()
     except Exception as e:
-        conn.close()
+        if conn:
+            conn.close()
         tj.delete()
+        import traceback
+        traceback.print_exc(sys.exc_info())
         msg =  "Error Joining table %s to layer %s: %s" % (table_name, layer_typename, str(e[0]))
         return None, msg
 
     # Create the Layer in GeoServer from the view
     try:
-        cat = Catalog(settings.OGC_SERVER['default']['LOCATION'] + "rest",
-                          _user, _password)
-        workspace = cat.get_workspace(settings.DEFAULT_WORKSPACE)
+        cat = Catalog("http://localhost:8080/geoserver/rest",
+                          "admin", "geoserver")
+        workspace = cat.get_workspace('geonode')
         ds_list = cat.get_xml(workspace.datastore_url)
         datastores = [datastore_from_index(cat, workspace, n) for n in ds_list.findall("dataStore")]
         ds = None
         for datastore in datastores:
-            if datastore.name == "datastore":
+            if datastore.name == "geonode_imports":
                 ds = datastore
-        ft = cat.publish_featuretype(double_view_name, ds, layer.srid, srs=layer.srid)
+        logger.error(str(ds))
+        ft = cat.publish_featuretype(double_view_name, ds, layer.srs, srs=layer.srs)
         cat.save(ft)
     except Exception as e:
         tj.delete()
+        import traceback
+        traceback.print_exc(sys.exc_info())
         msg = "Error creating GeoServer layer for %s: %s" % (view_name, str(e))
         return None, msg
 
     # Create the Layer in GeoNode from the GeoServer Layer
     try:
-        signals.pre_save.disconnect(geoserver_pre_save, sender=Layer)
         layer, created = Layer.objects.get_or_create(name=view_name, defaults={
             "workspace": workspace.name,
             "store": ds.name,
@@ -292,17 +300,18 @@ def setup_join(table_name, layer_typename, table_attribute_name, layer_attribute
             "title": ft.title or 'No title provided',
             "abstract": ft.abstract or 'No abstract provided',
             "uuid": str(uuid.uuid4()),
-            "bbox_x0": Decimal(ft.latlon_bbox[0]),
-            "bbox_x1": Decimal(ft.latlon_bbox[1]),
-            "bbox_y0": Decimal(ft.latlon_bbox[2]),
-            "bbox_y1": Decimal(ft.latlon_bbox[3])
+            #"bbox_x0": Decimal(ft.latlon_bbox[0]),
+            #"bbox_x1": Decimal(ft.latlon_bbox[1]),
+            #"bbox_y0": Decimal(ft.latlon_bbox[2]),
+            #"bbox_y1": Decimal(ft.latlon_bbox[3])
         })
-        signals.pre_save.connect(geoserver_pre_save, sender=Layer) 
-        set_attributes(layer, overwrite=True)
+        #set_attributes(layer, overwrite=True)
         tj.join_layer = layer
         tj.save()
     except Exception as e:
         tj.delete()
+        import traceback
+        traceback.print_exc(sys.exc_info())
         msg = "Error creating GeoNode layer for %s: %s" % (view_name, str(e))
         return None, msg
 

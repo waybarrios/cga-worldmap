@@ -439,19 +439,19 @@ GEONODE_CLIENT_LOCATION = "/static/geonode/"
 # GeoNode vector data backend configuration.
 
 #Import uploaded shapefiles into a database such as PostGIS?
-DB_DATASTORE = False
+DB_DATASTORE = True 
 
 #
 #Database datastore connection settings
 #
-DB_DATASTORE_DATABASE = ''
-DB_DATASTORE_USER = ''
-DB_DATASTORE_PASSWORD = ''
+DB_DATASTORE_DATABASE = 'wm_db'
+DB_DATASTORE_USER = 'wm_user'
+DB_DATASTORE_PASSWORD = 'wm_password'
 DB_DATASTORE_HOST = ''
 DB_DATASTORE_PORT = ''
 DB_DATASTORE_TYPE = ''
 # Name of the store in geoserver
-DB_DATASTORE_NAME = ''
+DB_DATASTORE_NAME = 'geonode_imports'
 DB_DATASTORE_ENGINE = 'django.contrib.gis.db.backends.postgis'
 
 USE_GAZETTEER = False

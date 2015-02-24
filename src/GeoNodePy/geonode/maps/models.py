@@ -1124,6 +1124,10 @@ class Layer(ResourceBase, PermissionLevelMixin):
                 raise GeoNodeException(msg)
 
 
+    @property
+    def attributes(self):
+        return self.attribute_set.exclude(attribute='the_geom')
+
 
     def layer_attributes(self):
         attribute_fields = cache.get('layer_searchfields_' + self.typename)
