@@ -267,7 +267,7 @@ def ingest_maps():
 def ingest_layers():
     """create Solr records of layer objects in sql database"""
     layers = Layer.objects.all()
-    # layers = [layers[0]]  # just the first
+    #layers = [layers[0]]  # just the first
     i = 1
     solr = pysolr.Solr('http://localhost:8983/solr/ogpsearch', timeout=10)
     for layer in layers:
@@ -300,7 +300,9 @@ def ingest_layers():
                            "Access": "Public",
                            "DataType": "Polygon",
                            "Availability": "Online",
-                           "Location": '{"wms": ["http://geoserver01.uit.tufts.edu/wms"],"wfs": "http://geoserver01.uit.tufts.edu/wfs"}',
+                           "Location": '{"wms": ["http://geoserver01.uit.tufts.edu/wms"],"wfs": "http://geoserver01.uit.tufts.edu/wfs",' \
+                                       +' "workspace": "' + layer.workspace + '", "store": "' + layer.store + '",' \
+                                        ' "storeType": "' + layer.storeType + '", "name": "' + layer.name + '"}',
                            "Abstract": "abstract",
                            "SrsProjectionCode": "",
                            "MinY": minY,

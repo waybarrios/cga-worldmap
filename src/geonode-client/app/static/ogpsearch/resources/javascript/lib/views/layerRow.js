@@ -73,7 +73,17 @@ OpenGeoportal.Views.LayerRow = Backbone.View.extend({
 
 	viewMetadata : function() {
 		// console.log(arguments);
-		this.metadataViewer.viewMetadata(this.model);
+	    console.log("metadata clicked");
+	    model = this.model;
+	    var attributes = model.attributes;
+	    var attributeLocation = attributes.Location;
+
+	    if (typeof attributeLocation.store !== "undefined" && typeof attributeLocation.name!== "undefined")
+		{
+		    var tmp = "/data/" + attributeLocation.store + ":" + attributeLocation.name
+		    location = tmp;  // redirect to layer info page
+		}
+	    this.metadataViewer.viewMetadata(this.model);
 	},
 	
 	handlePreviewLink: function(){
