@@ -32,3 +32,15 @@
 .olControlPanel.olControlNoSelect {
         display: none;			    
 }
+
+#geosearchDiv {
+	display: none;
+}
+
+#top_menu {
+	display: none;
+}
+
+[aria-controls="cartTab"] {
+	display: none;
+}
