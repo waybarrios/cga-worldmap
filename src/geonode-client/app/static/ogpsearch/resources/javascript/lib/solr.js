@@ -120,13 +120,14 @@ OpenGeoportal.Solr = function() {
 			 * "{!ex=dt,insf}DataTypeSort", "{!ex=dt,insf}PlaceKeywordsSort" ],
 			 * "f.PlaceKeywordsSort.facet.mincount": 1,
 			 * "f.PlaceKeywordsSort.facet.limit": 10,
+			 "facet.heatmap.format" : "png" or "ints2D"
 			 */
 			defType : "edismax",
 			fl : this.getReturnedColumns(this.SearchRequest),
 			sort : this.getSortClause(),
 			facet : "true",
 			"facet.heatmap" : "bbox_rpt",
-			"facet.heatmap.format" : "png"
+			"facet.heatmap.format" : "ints2D"
 		// ,
 		// debug: true
 		};
