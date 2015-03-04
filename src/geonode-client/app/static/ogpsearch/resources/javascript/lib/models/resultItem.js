@@ -185,52 +185,7 @@ OpenGeoportal.ResultsCollection = Backbone.Collection.extend({
 
 });
 
-function drawBox()
-{
 
-    boxes  = new OpenLayers.Layer.Boxes("Boxes")
-    //coordinates = [boundingbox.left, boundingbox.bottom,boundingbox.right, boundingbox.top]
-    coordinates = [10, 10, 20, 20];
-
-    bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"))
-    box = new OpenLayers.Marker.Box(bounds, null, style)
-    ///box.setBorder("blue")
-    box.setStyle(style);
-    boxes.addMarker(box)
-    OpenGeoportal.ogp.map.addLayers([boxes])
-}
-
-function drawBox2()
-{
-var style = {
-   strokeColor: "#00FF00",
-   strokeOpacity: 1,
-   strokeWidth: 0,
-   fillColor: "#FF0000",
-   fillOpacity: 0.3
-    };
-    layer = new OpenLayers.Layer.Vector("boxes");
-    coordinates = [10, 10, 20, 20];
-    bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
-    box = new OpenLayers.Feature.Vector(bounds.toGeometry(), null, style);
-    layer.addFeatures(box);
-
-style = {
-   strokeColor: "#00FF00",
-   strokeOpacity: 1,
-   strokeWidth: 0,
-   fillColor: "#00FF00",
-   fillOpacity: 0.6
-    };
-    coordinates = [20, 20, 30, 30];
-    bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
-    style.fillColor = "#00FF00";
-    box = new OpenLayers.Feature.Vector(bounds.toGeometry(), null, style);
-    layer.addFeatures(box);
-
-    OpenGeoportal.ogp.map.addLayers([layer]);
-
-}
 
 function removeHeatmap()
 {
@@ -247,12 +202,13 @@ function removeHeatmap()
 heatmapLayer = null;
 
 /**
-  return the largest value in the heatmap so its values can be scaled
+  return the largest and smallest value in the heatmap so its values can be scaled
   some elements in the heatmap can be null so we replace them with 0
 */
-function heatmapMax(heatmap)
+function heatmapMinMax(heatmap)
 {
    var max = -1;
+   var min = Number.MAX_VALUE;
    for (i = 0 ; i < heatmap.length ; i++)
    {
        var currentRow = heatmap[i];
@@ -262,9 +218,18 @@ function heatmapMax(heatmap)
            if (currentRow[j] == null) currentRow[j] = 0;
            if (currentRow[j] > max)
               max = currentRow[j];
+           if (currentRow[j] < min);
+              min = currentRow[j];
        }
    }
-   return max;
+   return [min, max];
+}
+
+function scaleHeatmapValue(value, min, max)
+{
+    var tmp = value - min;
+    tmp = Math.floor((tmp / (max - min)) * 255);
+    return tmp;
 }
 
 /**
@@ -275,7 +240,9 @@ function heatmapMax(heatmap)
 function drawHeatmap(heatmapObject)
 {
     heatmap = heatmapObject[15];
-    var maxValue = heatmapMax(heatmap);
+    minMaxValue = heatmapMinMax(heatmap);
+    minValue = minMaxValue[0];
+    maxValue = minMaxValue[1];
     if (maxValue == -1) return;  // something wrong
 
     var minimumLatitude = heatmapObject[11];
@@ -296,7 +263,7 @@ function drawHeatmap(heatmapObject)
         for (j = 0 ; j < stepsLongitude ; j++)
         {
             var heatmapValue = heatmap[heatmap.length - i - 1][j];
-            var scaledHeatmapValue = Math.floor((heatmapValue / maxValue) * 255);
+            var scaledHeatmapValue = scaleHeatmapValue(heatmapValue, minValue, maxValue);
             var rgb = scaledHeatmapValue << 16;
             var color = '#' + rgb.toString(16);
             var coordinates = [minimumLongitude + (j * stepSizeLongitude), minimumLatitude + (i * stepSizeLatitude),
