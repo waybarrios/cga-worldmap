@@ -2,9 +2,9 @@
 
 
 #logoGraphic {
-		background: url("../media/OGP_logo.png") repeat scroll 0 -5px rgba(0, 0, 0, 0);
-		height: 50px;
-		width: 50px;
+		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat;
+		height: 40px;
+		width: 200px;
 		padding: 2px;
 }
 
@@ -15,6 +15,7 @@
 
 #logo > div.logoText {
 	margin-left: -9px;
+	display: none;
 }
 /*
 #footerLogos .institutionLogo {
