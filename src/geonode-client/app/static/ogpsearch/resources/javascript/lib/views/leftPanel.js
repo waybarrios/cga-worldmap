@@ -21,6 +21,7 @@ OpenGeoportal.Views.LeftPanel = Backbone.View
 				jQuery("#left_col").show().width(width).css({
 					"margin-left" : "-" + margin  + "px"
 				});
+				this.model.set({mode: "open"}); // quick fix, setting default in model did not work
 
 			},
 			events : {
