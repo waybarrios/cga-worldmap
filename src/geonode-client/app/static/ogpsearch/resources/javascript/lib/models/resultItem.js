@@ -57,7 +57,7 @@ OpenGeoportal.ResultsCollection = Backbone.Collection.extend({
 			tempResponse = dataObj;
 			var facetCounts = tempResponse.facet_counts;
 			var facetHeatmaps = facetCounts.facet_heatmaps;
-			var bbox_rpt = facetHeatmaps.bbox_rpt;
+			bbox_rpt = facetHeatmaps.bbox_rpt;
 
 			var heatmap = bbox_rpt[15];
 			if (heatmap != null)
@@ -218,7 +218,7 @@ function heatmapMinMax(heatmap)
            if (currentRow[j] == null) currentRow[j] = 0;
            if (currentRow[j] > max)
               max = currentRow[j];
-           if (currentRow[j] < min);
+           if (currentRow[j] < min)
               min = currentRow[j];
        }
    }
@@ -227,6 +227,7 @@ function heatmapMinMax(heatmap)
 
 function scaleHeatmapValue(value, min, max)
 {
+    if (value == null) value = min;
     var tmp = value - min;
     tmp = Math.floor((tmp / (max - min)) * 255);
     return tmp;
@@ -262,22 +263,31 @@ function drawHeatmap(heatmapObject)
     {
         for (j = 0 ; j < stepsLongitude ; j++)
         {
-            var heatmapValue = heatmap[heatmap.length - i - 1][j];
-            var scaledHeatmapValue = scaleHeatmapValue(heatmapValue, minValue, maxValue);
-            var rgb = scaledHeatmapValue << 16;
-            var color = '#' + rgb.toString(16);
-            var coordinates = [minimumLongitude + (j * stepSizeLongitude), minimumLatitude + (i * stepSizeLatitude),
+            try
+            {
+                var heatmapValue = heatmap[heatmap.length - i - 1][j];
+                var scaledHeatmapValue = scaleHeatmapValue(heatmapValue, minValue, maxValue);
+                if ((scaledHeatmapValue > 255) || (scaledHeatmapValue < 0) || (scaledHeatmapValue == null))
+                   console.log("warning scaledHeatmapValue out of range: " + scaledHeatmapValue + ", " + heatmapValue);
+                var rgb = scaledHeatmapValue << 16;
+                var color = '#' + rgb.toString(16);
+                var coordinates = [minimumLongitude + (j * stepSizeLongitude), minimumLatitude + (i * stepSizeLatitude),
                            minimumLongitude + ((j+1) * stepSizeLongitude), minimumLatitude + ((i+1) * stepSizeLatitude)];
-            var bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
-            // we should create 255 separate styles and use the right one rather than making a new style for each tile
-            var style = {strokeWidth: 0, fillOpacity: 0.4};
-            style.fillColor = color;
-            var box = new OpenLayers.Feature.Vector(bounds.toGeometry(), null, style);
-            heatmapLayer.addFeatures(box);
-            if ((i == 0) && (j == 0))
-                console.log(coordinates);
-            if ((i == (stepsLatitude-1)) && (j == (stepsLongitude-1)))
-                console.log(coordinates);
+                var bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+                // we should create 255 separate styles and use the right one rather than making a new style for each tile
+                var style = {strokeWidth: 0, fillOpacity: 0.4};
+                style.fillColor = color;
+                var box = new OpenLayers.Feature.Vector(bounds.toGeometry(), null, style);
+                heatmapLayer.addFeatures(box);
+                if ((i == 0) && (j == 0))
+                    console.log(coordinates);
+                if ((i == (stepsLatitude-1)) && (j == (stepsLongitude-1)))
+                    console.log(coordinates);
+            }
+            catch (error)
+            {
+                console.log("error making heatmap: " + error);
+            }
         }
     }
     OpenGeoportal.ogp.map.addLayers([heatmapLayer]);
