@@ -21,7 +21,7 @@ from owslib.tms import TileMapService
 from owslib.csw import CatalogueServiceWeb
 from arcrest import Folder as ArcFolder, MapService as ArcMapService
 from geonode.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
-
+from geonode.ogpsearch import utils
 
 # passed a string array, 
 def good_coords(coords):
@@ -326,7 +326,8 @@ def index(request):
     return render_to_response('ogpsearch/ogpsearch.html', RequestContext(request))
 
 def geonode_to_solr(request):
-    ingest_layers()
+    utils.OGP_utils.geonode_to_solr()
+    # ingest_layers()
     return render_to_response('ogpsearch/geonode_to_solr.html', RequestContext(request))
 
 def solr_to_geonode(request):
