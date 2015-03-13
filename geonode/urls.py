@@ -37,6 +37,13 @@ urlpatterns = patterns('',
     # Services views
     (r'^services/', include('geonode.services.urls')),
 
+    #Language Testing views
+    (r'^mylang/fr', 'geonode.views.mylang_fr'),
+    (r'^mylang/en', 'geonode.views.mylang_en'),
+    (r'^mylang/zh-cn', 'geonode.views.mylang_zh_cn'),
+    # This next section is added to service calls to that are sent to the /about URL 
+    (r'^about_link', 'geonode.views.lang_specific_about'),
+
      # Data views
 
      #For compatibility with newer version of geoserver-geonode-ext & GeoNode 2.0
@@ -81,7 +88,7 @@ urlpatterns = patterns('',
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     (r'^search/?', include('geonode.search.urls')),
     (r'^dvn/?', include('geonode.dvn.urls')),
-    (r'^ogpsearch/?', include('geonode.ogpsearch.urls')),
+    url(r'^ogpsearch/$', 'geonode.ogpsearch.views.index'),
     )
 
 urlpatterns += geonode.proxy.urls.urlpatterns

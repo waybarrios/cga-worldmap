@@ -54,6 +54,7 @@ LANGUAGE_CODE = 'en'
 LANGUAGES = (
     ('en', 'English'),
     ('fr', 'Français'),
+    ('zh-cn', u'简体中文'),
 )
 
 # If you set this to False, Django will make some optimizations so as not
@@ -225,6 +226,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     # The context processor belows add things like SITEURL
     # and GEOSERVER_BASE_URL to all pages that use a RequestContext
     'geonode.context_processors.resource_urls',
+    # The context processor below was added to be able to pass
+    # a language choice to all the templates.
+    'geonode.context_processors.set_my_language',
 
 )
 
@@ -264,8 +268,11 @@ ABSOLUTE_URL_OVERRIDES = {
 # Redirects to home page after login
 # FIXME(Ariel): I do not know why this setting is needed,
 # it would be best to use the ?next= parameter
+#LOGIN_REDIRECT_URL = "/"
 LOGIN_REDIRECT_URL = "/"
-
+#Inserted a LOGIN_URL comment to try and fis the login missing a '/' issue before the ?next
+#REF the djangoproject.com settings document discsuuon
+LOGIN_URL = "52.1.149.133/account/login/"
 
 #
 # Settings for third party apps
@@ -315,12 +322,13 @@ NOSE_ARGS = [
 
 SITENAME = "GeoNode"
 
-SITEURL = "http://localhost:8000/"
+#SITEURL = "http://localhost:8000/"
+SITEURL = "http://52.1.149.133/"
 
 # GeoServer information
 
 # The FULLY QUALIFIED url to the GeoServer instance for this GeoNode.
-GEOSERVER_BASE_URL = "http://localhost:8080/geoserver/"
+GEOSERVER_BASE_URL = "http://52.1.149.133/geoserver/"
 
 # The username and password for a user that can add and edit layer details on GeoServer
 GEOSERVER_CREDENTIALS = "geoserver_admin", SECRET_KEY

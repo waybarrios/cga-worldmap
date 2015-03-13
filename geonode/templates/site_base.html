@@ -62,6 +62,11 @@
                     $('html').removeClass('wait');
                 });
     </script>
+    <style media="screen" type="text/css">
+
+     <!-- input[type=button]{-->
+    <!--}-->
+    </style>
 </head>
 <body class="{% block body_class %}{% endblock %}">
 {% block start_body_js %}{% endblock %}
@@ -84,20 +89,62 @@
                     {% endif %}
                 {% endblock %}
             {% endblock logos %}
+            {% block login_area %}
             <div id="login-area">
                 {% if user.is_authenticated %}
                     <a href="{{ user.get_profile.get_absolute_url }}">{{ user.username}}</a> | <a href="{% url "account_logout" %}">{% trans "Log out" %}</a>
                 {% else %}
                     <!-- this should be updated to a url var -->
-                    <a href="/account/login?next={% if 'logout' not in request.path %}{{request.path}}{% else %}/{% endif %}"
+                    <a href="/account/login/?next={% if 'logout' not in request.path %}{{request.path}}{% else %}/{% endif %}"
                             >{% trans "Sign in" %}</a>
                 {% endif %}
                 | <a class="" id="mapLink" href="/maps/new">{% trans "Create Map" %}</a>
                 | <a class="" id="viewLink" href="{% url "maps_search" %}?sort=last_modified&dir=DESC">{% trans "View Map" %}</a>
                 | <a class="" id="helpLink" href="{{ STATIC_URL }}docs/WorldMap_Help_{{LANGUAGE_CODE}}.pdf" target="_blank">{% trans "Help" %}</a>
             </div>
+            {% endblock login_area %}
         </div><!-- /.wrap -->
     </div><!-- /#header -->
+
+	{% block js %}
+	<script>
+		$( "#dialog" ).hide();
+		$( "#target" ).click(function() {
+      			$( "#dialog" ).show();
+    			$( "#dialog" ).dialog();
+    			var x = document.getElementById("languageSelect").value;
+    			document.getElementById("demo").innerHTML = x;
+    			$("#demo").show();
+		});
+
+		$( "#dialog" ).change(function() {
+			var x = document.getElementById("languageSelect").value;
+			<!--var x = "test";-->
+			<!--alert( "Handler for .change() called. The language: " + x + " has been selected." );-->
+			if  (x == 'English') {
+    				window.location  = "{{SITE_URL}}mylang/en"
+    			}else if (x == 'Chinese'){
+    				window.location  = "{{SITE_URL}}mylang/zh-cn"
+    			}else{
+    				window.location  = "{{SITE_URL}}mylang/fr"
+    			}
+		}); 
+
+		$( "#dialog" ).click(function() {
+			var x = document.getElementById("languageSelect").value;
+			<!--var x = "test";-->
+			<!--alert( "Handler for .change() called. The language: " + x + " has been selected." );-->
+			if  (x == 'English') {
+    				window.location  = "{{SITE_URL}}mylang/en"
+    			}else if (x == 'Chinese'){
+    				window.location  = "{{SITE_URL}}mylang/zh-cn"
+    			}else{
+    				window.location  = "{{SITE_URL}}mylang/fr"
+    			}
+		});	
+	</script>
+	{% endblock js %}
+
 
     <div id="main">
         {% block content %}{% endblock %}

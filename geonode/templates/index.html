@@ -41,8 +41,18 @@
         });
     });
 
-    function startVideoOnOpen() {
-        $('#youtube_video').attr('src', 'https://www.youtube.com/embed/Ajctx6h1t5s?autoplay=1');
+    function startVideoOnOpen(languageChoice) {
+	if (languageChoice == "en"){
+		//alert("Language choice is " + languageChoice);
+        	$('#youtube_video').attr('src', 'https://www.youtube.com/embed/Ajctx6h1t5s?autoplay=1');
+	}else if (languageChoice == "zh-cn"){
+		//alert("Language choice is " + languageChoice);
+        	$('#youtube_video').attr('src', 'https://www.youtube.com/embed/ep11OyDDDiw?autoplay=1');
+	}else{
+		//alert("Language choice is " + languageChoice);
+        	//$('#youtube_video').attr('src', 'https://www.youtube.com/embed/JI12bfpo6SI?autoplay=1');
+        	$('#youtube_video').attr('src', 'https://www.youtube.com/embed/MpGNPkdknvc?autoplay=1');
+    	}
     }
 
 </script>
@@ -81,14 +91,38 @@
 </style>
 {% endblock %}
 
+{% block login_area %}
+            <div id="login-area">
+                {% if user.is_authenticated %}
+                    <a href="{{ user.get_profile.get_absolute_url }}">{{ user.username}}</a> | <a href="{% url "account_logout" %}">{% trans "Log out" %}</a>
+                {% else %}
+                    <!-- this should be updated to a url var -->
+                    <a href="/account/login/?next={% if 'logout' not in request.path %}{{request.path}}{% else %}/{% endif %}"
+                            >{% trans "Sign in" %}</a>
+                {% endif %}
+                | <a class="" id="mapLink" href="/maps/new">{% trans "Create Map" %}</a>
+                | <a class="" id="viewLink" href="{% url "maps_search" %}?sort=last_modified&dir=DESC">{% trans "View Map" %}</a>
+                | <a class="" id="helpLink" href="{{ STATIC_URL }}docs/WorldMap_Help_{{LANGUAGE_CODE}}.pdf" target="_blank">{% trans "Help" %}</a>
+		| <input type="button" style="background: transparent; border: 0; color: #18469c" id="target" value="Select Language"/>
+	                <div id="dialog" title="Languages Available">
+                	<select id="languageSelect" size="3">
+  			<option>English</option>
+			<option>Chinese</option>
+  			<option>French</option>
+			</select>
+			</div>
+            </div>
+{% endblock login_area %}
+
 {% block body %}
 <div class="onecol">
     <!-- TODO: i18n on the text here -->
     <div id="content">
         <div id="buttonsDiv" style="clear:both;margin: 0 auto;height:10px;width:625px" align="center">
             <div  style="float:left;padding-right:10px;"><a class="wmButton"  href="/maps/new">{% trans "Create a Map" %}</a></div>
-            <div  style="float:left;padding-right:10px;"><a  class="wmButton" href="/ogpsearch">{% trans "Search" %}</a></div>
-            <div style="float:left;"><a  class="wmButton" href="/about">{% trans "About" %}</a></div>
+            <div  style="float:left;padding-right:10px;"><a  class="wmButton" href="/maps/search?sort=last_modified&dir=DESC">{% trans "View a Map" %}</a></div>
+            <!--<div style="float:left;"><a  class="wmButton" href="/about">{% trans "About" %}</a></div>-->
+            <div style="float:left;"><a  class="wmButton" href="/about_link">{% trans "About" %}</a></div>
         </div>
 
         <div id="slider-wrapper">
@@ -111,7 +145,8 @@
                 {% trans "Build your own mapping portal and publish it to the world or to just a few collaborators. WorldMap is open source software." %}
             </div>
             <div style="position:relative;float:right;font-size: 10pt;font-weight:bold;height:250px;width:340px;text-align:center;">
-                <a href='' onclick='$("#tutorial_block").modal();startVideoOnOpen();return false;'>
+                <!--<a href='' onclick='$("#tutorial_block").modal();startVideoOnOpen();return false;'>-->
+     <a href=''  onclick='$("#tutorial_block").modal();startVideoOnOpen("{{user_language}}");return false;'>
                     <img src="{{STATIC_URL}}theme/img/youtube_tutorial.png" border="0" /><br/>{% trans "Watch the WorldMap Quick Start video" %}
                 </a>
             </div>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body onload='reloadWorldMap()'>
+
+{% block js %}
+<script>
+function reloadWorldMap(){
+    //var lang_choice = "cz"; //This worked
+    var lang_choice = "{{selected_language}}"; 
+    //alert("The current selected language is -->" + lang_choice + "<--");
+    if (lang_choice == 'en'){
+        window.location  = "http://about.worldmap.harvard.edu/icb/icb.do?keyword=k28501";
+    }else if (lang_choice == 'fr'){
+        //window.location  = "http://www.weru.ksu.edu/symposium/proceedings/underwoo.pdf";
+        window.location  = "{{SITE_URL}}media/test.pdf";
+    }else if (lang_choice == 'zh-cn'){
+        window.location  = "{{SITE_URL}}media/list-simp-char.pdf";
+    }else{
+        alert("The language is not found.");
+    }
+}
+</script>
+{% endblock js%}
+</body>
+</html>

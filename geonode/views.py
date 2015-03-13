@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.template import RequestContext, loader
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext as _
 
@@ -116,3 +116,33 @@ def ajax_lookup_email(request):
         content=json.dumps(json_dict),
         mimetype='text/plain'
     )
+
+
+def mylang_en(request):
+    request.session['django_language'] = 'en'
+    #return HttpResponse("request.session['django_language'] = %s\n" % request.session['django_language'])
+    return render_to_response('reload_wm.html') 
+
+def mylang_fr(request):
+    request.session['django_language'] = 'fr'
+    #return HttpResponse("request.session['django_language'] = %s\n" % request.session['django_language'])
+    return render_to_response('reload_wm.html') 
+
+def mylang_zh_cn(request):
+    request.session['django_language'] = 'zh-cn'
+    return render_to_response('reload_wm.html') 
+
+def lang_specific_about(request):
+    my_language = request.session.get('django_language')
+    if my_language == 'en':
+        template_name = "en_about.html"
+    else:
+        template_name = "non_en_about.html"
+    
+    #return render_to_response(template_name)
+    if my_language == None:
+        request.session['django_language'] = 'en'
+        my_language = request.session.get('django_language')
+    
+    context = {'selected_language' : my_language}
+    return render_to_response("lang_specific_about.html", context)
