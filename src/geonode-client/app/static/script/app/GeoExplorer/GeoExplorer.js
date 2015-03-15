@@ -2258,7 +2258,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
 
         this.searchWindow = new Ext.Window({
             id: 'ge_searchWindow',
-            title: "Add Layers",
+            title: gettext("Add Layers"),
             closeAction: 'hide',
             layout: 'fit',
             width: 850,
@@ -2274,7 +2274,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     showFeedDialog:function (selectedOption) {
         if (!this.feedDialog) {
             this.feedDialog = new gxp.FeedSourceDialog({
-                title:"Add a GeoRSS Feed",
+                title: gettext("Add a GeoRSS Feed"),
                 closeAction:"hide",
                 target:this,
                 listeners:{

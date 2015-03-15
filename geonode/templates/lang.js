@@ -86,7 +86,7 @@ if (window.GeoExplorer) {
         layerPropertiesTipText: gettext('Change layer format and style'),
         layerStylesText: gettext('Edit Styles'),
         layerStylesTipText: gettext('Edit layer styles'),
-        switchTo3DActionText: gettext("Switch to Google Earth 3D Viewer"),
+        switchTo3DActionText: gettext("Switch to 3D Viewer"),
         unknownMapMessage: gettext("The map that you are trying to load does not exist.  Creating a new map instead."),
         unknownMapTitle: gettext("Unknown Map"),
         widthLabel: gettext("Width"),
@@ -274,7 +274,7 @@ if (window.GeoExplorer && GeoExplorer.ViewerPrint) {
 			 If you would like to adjust the map extent, press Cancel, \
 			 then use your browser's print button when you are ready"),
 		printTitle: gettext("Print")
-	});
+    });
 }
 
 {% block extra_lang %}

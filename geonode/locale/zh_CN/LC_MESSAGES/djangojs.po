@@ -3,71 +3,66 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-25 16:22-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"POT-Creation-Date: 2015-03-10 15:57+0000\n"
+"PO-Revision-Date: 2015-01-30 12:36+0800\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n>1\n"
+"Plural-Forms: nplurals=2; plural=n>1;\n"
+"X-Generator: Poedit 1.7\n"
 
-#: media/static/script/GeoNode.js:33 media/static/script/GeoNode.js.c:76
-#: static/geonode/script/GeoNode.js:33 static/geonode/script/GeoNode.js.c:76
+#: static/geonode/script/GeoNode.js:32 static/geonode/script/GeoNode.js.c:78
 msgid "Add user..."
-msgstr ""
+msgstr "添加用户"
 
-#: media/static/script/GeoNode.js:37 media/static/script/GeoNode.js.c:64
-#: static/geonode/script/GeoNode.js:37 static/geonode/script/GeoNode.js.c:64
+#: static/geonode/script/GeoNode.js:36 static/geonode/script/GeoNode.js.c:65
 msgid "Anyone"
-msgstr ""
+msgstr "任何人"
 
-#: media/static/script/GeoNode.js:37 media/static/script/GeoNode.js.c:39
-#: media/static/script/GeoNode.js:64 media/static/script/GeoNode.js.c:66
-#: static/geonode/script/GeoNode.js:37 static/geonode/script/GeoNode.js.c:39
-#: static/geonode/script/GeoNode.js:64 static/geonode/script/GeoNode.js.c:66
+#: static/geonode/script/GeoNode.js:36 static/geonode/script/GeoNode.js.c:38
+#: static/geonode/script/GeoNode.js:65 static/geonode/script/GeoNode.js.c:67
 msgid "Any registered user"
-msgstr ""
+msgstr "任何已注册用户"
 
-#: media/static/script/GeoNode.js:37 media/static/script/GeoNode.js.c:39
-#: media/static/script/GeoNode.js:64 static/geonode/script/GeoNode.js:37
-#: static/geonode/script/GeoNode.js.c:39 static/geonode/script/GeoNode.js:64
+#: static/geonode/script/GeoNode.js:36 static/geonode/script/GeoNode.js.c:38
+#: static/geonode/script/GeoNode.js:65
 msgid "Only users who can edit"
-msgstr ""
+msgstr "仅可编辑的用户"
 
-#: media/static/script/GeoNode.js:38 static/geonode/script/GeoNode.js:38
+#: static/geonode/script/GeoNode.js:37
 msgid "Who can view or download this?"
-msgstr ""
+msgstr "谁可以查看或下载这些？"
 
-#: media/static/script/GeoNode.js:39 static/geonode/script/GeoNode.js:39
+#: static/geonode/script/GeoNode.js:38
 msgid "Who can edit this?"
-msgstr ""
+msgstr "谁可以编辑这些？"
 
-#: media/static/script/GeoNode.js:41 static/geonode/script/GeoNode.js:41
+#: static/geonode/script/GeoNode.js:40
 msgid "Who can manage and edit this?"
-msgstr ""
+msgstr "谁可以管理并编辑这些？"
 
-#: media/static/script/GeoNode.js:64 static/geonode/script/GeoNode.js:64
+#: static/geonode/script/GeoNode.js:65
 msgid "Who can view and download this data?"
-msgstr ""
+msgstr "谁可以查看并下载这些数据？"
 
-#: media/static/script/GeoNode.js:65 static/geonode/script/GeoNode.js:65
+#: static/geonode/script/GeoNode.js:66
 msgid "Who can edit this data?"
-msgstr ""
+msgstr "谁可以编辑这些数据？"
 
-#: media/static/script/GeoNode.js:66 static/geonode/script/GeoNode.js:66
+#: static/geonode/script/GeoNode.js:67
 msgid "Only the following users or groups:"
-msgstr ""
+msgstr "仅下列用户或组"
 
-#: media/static/script/GeoNode.js:67 static/geonode/script/GeoNode.js:67
+#: static/geonode/script/GeoNode.js:68
 msgid "Who can manage and edit this data?"
-msgstr ""
+msgstr "谁可以编辑并修改这些数据？"
 
 #: templates/lang.js:9 templates/lang.js.c:13
 msgid "Add Layers"
@@ -75,7 +70,7 @@ msgstr "添加层"
 
 #: templates/lang.js:10
 msgid "Add ArcGIS REST Server"
-msgstr ""
+msgstr "添加ArcGIS REST服务"
 
 #: templates/lang.js:11
 msgid "Area"
@@ -107,26 +102,25 @@ msgstr "详情..."
 
 #: templates/lang.js:22
 msgid "Google Earth"
-msgstr ""
+msgstr "谷歌地球"
 
-#: templates/lang.js:23 templates/lang.js.c:140
+#: templates/lang.js:23 templates/lang.js.c:148
 msgid "Height"
 msgstr "高度"
 
 #: templates/lang.js:24
 msgid "Help"
-msgstr ""
+msgstr "帮助"
 
 #: templates/lang.js:25
 msgid "About"
-msgstr ""
+msgstr "关于"
 
-#: templates/lang.js:26 templates/lang.js.c:141
+#: templates/lang.js:26 templates/lang.js.c:149
 msgid "Large"
 msgstr "大量"
 
 #: templates/lang.js:27
-#, fuzzy
 msgid "Add another server"
 msgstr "或添加新的服务器。"
 
@@ -140,7 +134,7 @@ msgstr "查看可用的数据："
 
 #: templates/lang.js:30
 msgid "Upload your own data"
-msgstr ""
+msgstr "上传你自己的数据"
 
 #: templates/lang.js:32
 msgid "Data"
@@ -162,14 +156,15 @@ msgstr "长度"
 msgid "Loading Map..."
 msgstr "载入地图..."
 
-#: templates/lang.js:37 templates/lang.js.c:142
+#: templates/lang.js:37 templates/lang.js.c:150
 msgid "Map Size"
 msgstr "地图大小"
 
 #: templates/lang.js:38
 msgid "Warning"
-msgstr ""
+msgstr "警告"
 
+# 不确定
 #: templates/lang.js:39
 #, c-format
 msgid ""
@@ -177,29 +172,30 @@ msgid ""
 "experience problems with layer ordering, info balloon display, and general "
 "performance."
 msgstr ""
+"您当前地图内还有(%n)个图层。超过(%max)个图层可能含有图层顺序，信息气泡显示和"
+"一般性能的问题。"
 
 #: templates/lang.js:40
 msgid "Measure"
 msgstr "测量"
 
 #: templates/lang.js:41
-#, fuzzy
 msgid "About this Map View"
 msgstr "关于此地图"
 
 #: templates/lang.js:42
 msgid "Abstract (brief description)"
-msgstr ""
+msgstr "抽象（简要描述）"
 
 #: templates/lang.js:43
 msgid "Keywords (for Picasa and YouTube overlays)"
-msgstr ""
+msgstr "关键字（关于Picasa和YouTube图层）"
 
 #: templates/lang.js:44
 msgid "Introduction (tell visitors more about your map view)"
-msgstr ""
+msgstr "介绍（告诉访问者更多关于你的地图的信息）"
 
-#: templates/lang.js:45 templates/lang.js.c:116 templates/lang.js.c:182
+#: templates/lang.js:45 templates/lang.js.c:124 templates/lang.js.c:190
 msgid "Contact"
 msgstr "联系"
 
@@ -207,7 +203,7 @@ msgstr "联系"
 msgid "Permalink"
 msgstr "固定"
 
-#: templates/lang.js:47 templates/lang.js.c:258
+#: templates/lang.js:47 templates/lang.js.c:266
 msgid "Cancel"
 msgstr "取消"
 
@@ -219,16 +215,17 @@ msgstr "另存为"
 msgid "Save"
 msgstr "保存"
 
-#: templates/lang.js:50 templates/lang.js.c:119 templates/lang.js.c:128
-#: templates/lang.js:181 templates/lang.js.c:203 templates/lang.js.c:240
+#: templates/lang.js:50 templates/lang.js.c:127 templates/lang.js.c:136
+#: templates/lang.js:189 templates/lang.js.c:211 templates/lang.js.c:248
 msgid "Title"
 msgstr "标题"
 
+# 统一资源定位符是对可以从互联网上得到的资源的位置和访问方法的一种简洁的表示，是互联网上标准资源的地址。互联网上的每个文件都有一个唯一的URL，它包含的信息指出文件的位置以及浏览器应该怎么处理它。
 #: templates/lang.js:51
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
-#: templates/lang.js:52 templates/lang.js.c:143
+#: templates/lang.js:52 templates/lang.js.c:151
 msgid "Mini"
 msgstr "迷你"
 
@@ -248,7 +245,7 @@ msgstr "缩放到下一个区域"
 msgid "This map has not yet been saved."
 msgstr "地图还没保存"
 
-#: templates/lang.js:58 templates/lang.js.c:144
+#: templates/lang.js:58 templates/lang.js.c:152
 msgid "Premium"
 msgstr "高级"
 
@@ -256,7 +253,7 @@ msgstr "高级"
 msgid "Print Map"
 msgstr "打印地图"
 
-#: templates/lang.js:60 templates/lang.js.c:170 templates/lang.js.c:268
+#: templates/lang.js:60 templates/lang.js.c:178 templates/lang.js.c:276
 msgid "Print"
 msgstr "打印"
 
@@ -269,13 +266,12 @@ msgid "Properties"
 msgstr "属性"
 
 #: templates/lang.js:63
-#, fuzzy
 msgid "Link to Map"
 msgstr "打印地图"
 
 #: templates/lang.js:64
 msgid "Link"
-msgstr ""
+msgstr "链接"
 
 #: templates/lang.js:65 templates/lang.js.c:66
 msgid "Remove Layer"
@@ -283,7 +279,7 @@ msgstr "删除图层"
 
 #: templates/lang.js:67
 msgid "Revisions"
-msgstr ""
+msgstr "修订"
 
 #: templates/lang.js:68
 msgid "Sorry, your map could not be saved."
@@ -298,24 +294,26 @@ msgid "Save Map"
 msgstr "保存地图"
 
 #: templates/lang.js:72
+msgid "Copy"
+msgstr ""
+
+#: templates/lang.js:73
 msgid "You must be logged in to save this map."
 msgstr "您必须登录才能保存地图。"
 
-#: templates/lang.js:73
-#, fuzzy
-msgid "Share Layer"
-msgstr "地图图层"
-
 #: templates/lang.js:74
-#, fuzzy
-msgid "Share Map"
-msgstr "保存地图"
+msgid "Share Layer"
+msgstr "分享图层"
 
-#: templates/lang.js:75 templates/lang.js.c:147
+#: templates/lang.js:75
+msgid "Share Map"
+msgstr "分享地图"
+
+#: templates/lang.js:76 templates/lang.js.c:155
 msgid "Small"
 msgstr "小"
 
-#: templates/lang.js:76
+#: templates/lang.js:77
 msgid ""
 "Error contacting server.\n"
 " Please check the url and try again."
@@ -323,348 +321,387 @@ msgstr ""
 "连接服务时出错。\n"
 "请检查网址再重试。"
 
-#: templates/lang.js:77
-msgid "Street View"
-msgstr ""
-
 #: templates/lang.js:78
-msgid "Add New Category"
-msgstr ""
+msgid "Street View"
+msgstr "街景视图"
 
 #: templates/lang.js:79
-msgid "Add a new layer category"
-msgstr ""
+msgid "Add New Category"
+msgstr "添加新类目"
 
 #: templates/lang.js:80
-msgid "Rename Category"
-msgstr ""
+msgid "Add a new layer category"
+msgstr "添加一个新的图层类目"
 
 #: templates/lang.js:81
-msgid "Rename this category"
-msgstr ""
+msgid "Rename Category"
+msgstr "重命名类目"
 
 #: templates/lang.js:82
-#, fuzzy
-msgid "Remove Category"
-msgstr "删除图层"
+msgid "Rename this category"
+msgstr "重命名该类目"
+
+msgid "New Map"
+msgstr "zh-cn django.po New Map"
 
 #: templates/lang.js:83
-msgid "Remove this category and layers"
-msgstr ""
+msgid "Remove Category"
+msgstr "移除图层"
 
 #: templates/lang.js:84
+msgid "Remove this category and layers"
+msgstr "移除这个类目和图层"
+
+#: templates/lang.js:85
 msgid "Layer Properties"
 msgstr "图层属性"
 
-#: templates/lang.js:85
+#: templates/lang.js:86
 msgid "Change layer format and style"
 msgstr "更改图层格式和样式"
 
-#: templates/lang.js:86
+#: templates/lang.js:87
 msgid "Edit Styles"
 msgstr "编辑样式"
 
-#: templates/lang.js:87
+#: templates/lang.js:88
 msgid "Edit layer styles"
 msgstr "编辑图层样式"
 
-#: templates/lang.js:88
-msgid "Switch to Google Earth 3D Viewer"
+#: templates/lang.js:89
+msgid "Switch to 3D Viewer"
 msgstr "切换到谷歌地球3D查看器"
 
-#: templates/lang.js:89
+#: templates/lang.js:90
 msgid ""
 "The map that you are trying to load does not exist.  Creating a new map "
 "instead."
 msgstr "您加载的地图不存在。请创建一个新的地图"
 
-#: templates/lang.js:90
+#: templates/lang.js:91
 msgid "Unknown Map"
 msgstr "未知地图"
 
-#: templates/lang.js:91 templates/lang.js.c:148
+#: templates/lang.js:92 templates/lang.js.c:156
 msgid "Width"
 msgstr "宽度"
 
-#: templates/lang.js:92
+#: templates/lang.js:93
 msgid "Zoom In"
 msgstr "放大"
 
-#: templates/lang.js:93
+#: templates/lang.js:94
 msgid "Zoom Out"
 msgstr "缩小"
 
-#: templates/lang.js:94
+#: templates/lang.js:95
 msgid "Zoom level"
 msgstr "缩放级别"
 
-#: templates/lang.js:95
+#: templates/lang.js:96
 msgid "Zoom Level"
 msgstr "缩放级别"
 
-#: templates/lang.js:96
+#: templates/lang.js:97
 msgid "Zoom to Layer Extent"
 msgstr "缩放范围"
 
-#: templates/lang.js:97
-#, fuzzy
+#: templates/lang.js:98
 msgid "Zoom to Original Map Extent"
 msgstr "缩放到可见范围"
 
-#: templates/lang.js:98
-msgid "Picasa"
-msgstr ""
-
 #: templates/lang.js:99
-msgid "YouTube"
+msgid "Flickr"
 msgstr ""
 
 #: templates/lang.js:100
-msgid "Harvard Geospatial Library"
+msgid "Picasa"
 msgstr ""
+"Picas, Google 的免费图片管理工具Picasa，数秒钟内就可找到并欣赏计算机上的图"
+"片。 Picasa 原为独立收费的图像管理、处理软件，其界面美观华丽， 功能实用丰富。"
+"后来被 Google 收购并改为免费软件， 成为了 Google 的一部分，它最突出的优点是搜"
+"索硬盘中的相片图片的速度很快，当你输入一个字后，准备输入第二个字时，它已经即"
+"时显示出搜索出的图片。不管照片有多少，空间有多大，几秒内就可以查找到所需要的"
+"图片。"
 
 #: templates/lang.js:101
-msgid "More..."
+msgid "YouTube"
 msgstr ""
+"YouTube是世界上最大的视频网站，早期公司总部位于加利福尼亚州的圣布鲁诺。在比萨"
+"店和日本餐馆，让用户下载、观看及分享影片或短片。公司于2005年2月15日注册，由华"
+"裔（台湾）美籍华人陈士骏等人创立。2006年11月，Google公司以16.5亿美元收购了"
+"YouTube，并把其当做一间子公司来经营。"
+
+#: templates/lang.js:102
+msgid "Harvard Geospatial Library"
+msgstr "哈佛地理图书馆"
+
+#: templates/lang.js:103
+msgid "More..."
+msgstr "更多..."
+
+#: templates/lang.js:104
+msgid "Upload Layer"
+msgstr "添加层"
+
+#: templates/lang.js:105
+msgid "Create Layer"
+msgstr "创建地图"
+
+#: templates/lang.js:106
+msgid "Rectify Layer"
+msgstr "选定图层"
 
 #: templates/lang.js:107
+msgid "WorldMap Data"
+msgstr ""
+
+#: templates/lang.js:108
+msgid "External Data"
+msgstr ""
+
+#: templates/lang.js:109
+msgid "If you leave this page, unsaved changes will be lost."
+msgstr "djangojs.po If you leave this page, unsaved changes will be lost."
+
+#: templates/lang.js:115
 msgid "Zoom Level {zoom}"
 msgstr "缩放级别{缩放}"
 
-#: templates/lang.js:113
+#: templates/lang.js:121
 msgid "Create Map"
 msgstr "创建地图"
 
-#: templates/lang.js:114
+#: templates/lang.js:122
 msgid "Export Map"
 msgstr "导出地图"
 
-#: templates/lang.js:115 templates/lang.js.c:184
+#: templates/lang.js:123 templates/lang.js.c:192
 msgid "Abstract"
 msgstr "摘要"
 
-#: templates/lang.js:117
+#: templates/lang.js:125
 msgid "Map"
 msgstr "地图"
 
-#: templates/lang.js:118 templates/lang.js.c:185
+#: templates/lang.js:126 templates/lang.js.c:193
 msgid "View this Map"
 msgstr "查看地图"
 
-#: templates/lang.js:120
+#: templates/lang.js:128
 msgid "Open Map"
 msgstr "打开地图"
 
-#: templates/lang.js:126 templates/lang.js.c:202
+#: templates/lang.js:134 templates/lang.js.c:210
 msgid "Name"
 msgstr "名称"
 
-#: templates/lang.js:127
+#: templates/lang.js:135
 msgid "Queryable"
 msgstr "查询"
 
-#: templates/lang.js:134
+#: templates/lang.js:142
 msgid "No background"
 msgstr "没有背景"
 
-#: templates/lang.js:145
+#: templates/lang.js:153
 msgid "Publish Map"
 msgstr "发布地图"
 
-#: templates/lang.js:146
+#: templates/lang.js:154
 msgid ""
 "Your map is ready to be published to the web!  Simply copy the following "
 "HTML to embed the map in your website:"
 msgstr "您可以随时发布地图到网上！只需复制下面的HTML地图代码嵌入到您的网页："
 
-#: templates/lang.js:154
+#: templates/lang.js:162
 msgid "Category:"
-msgstr ""
+msgstr "类目："
 
-#: templates/lang.js:155 templates/lang.js.c:223
+#: templates/lang.js:163 templates/lang.js.c:231
 msgid "Abstract:"
 msgstr "摘要："
 
-#: templates/lang.js:156 templates/lang.js.c:225
+#: templates/lang.js:164 templates/lang.js.c:233
 msgid "No attribution information is provided for this layer."
 msgstr "此图层提供无属性信息。"
 
-#: templates/lang.js:157 templates/lang.js.c:226
+#: templates/lang.js:165 templates/lang.js.c:234
 msgid "Provided by:"
 msgstr "提供："
 
-#: templates/lang.js:158 templates/lang.js.c:227
+#: templates/lang.js:166 templates/lang.js.c:235
 msgid "Download:"
 msgstr "下载："
 
-#: templates/lang.js:159 templates/lang.js.c:229
+#: templates/lang.js:167 templates/lang.js.c:237
 msgid "No keywords are listed for this layer."
 msgstr "无关键字列出此图层。"
 
-#: templates/lang.js:160 templates/lang.js.c:230
+#: templates/lang.js:168 templates/lang.js.c:238
 msgid "Keywords:"
 msgstr "关键词："
 
-#: templates/lang.js:161 templates/lang.js.c:231
+#: templates/lang.js:169 templates/lang.js.c:239
 msgid "No metadata URLs are defined for this layer."
 msgstr "此图层没有指定元数据链接。"
 
-#: templates/lang.js:162 templates/lang.js.c:232
+#: templates/lang.js:170 templates/lang.js.c:240
 msgid "Metadata Links:"
 msgstr "元数据链接："
 
-#: templates/lang.js:168
+#: templates/lang.js:176
 msgid "Paper size:"
 msgstr "纸张尺寸："
 
-#: templates/lang.js:169
+#: templates/lang.js:177
 msgid "Resolution:"
 msgstr "分辨率："
 
-#: templates/lang.js:171
+#: templates/lang.js:179
 msgid "Enter map title here."
 msgstr "在此处输入地图标题。"
 
-#: templates/lang.js:172
+#: templates/lang.js:180
 msgid "Include legend?"
 msgstr "包含图例吗？"
 
-#: templates/lang.js:173
+#: templates/lang.js:181
 msgid "Enter comments here."
 msgstr "在这里输入评论。"
 
-#: templates/lang.js:174
+#: templates/lang.js:182
 msgid "Creating PDF..."
 msgstr "生成PDF..."
 
-#: templates/lang.js:183
+#: templates/lang.js:191
 msgid "Last Modified"
 msgstr "最后修改"
 
-#: templates/lang.js:186 templates/lang.js.c:207
+#: templates/lang.js:194 templates/lang.js.c:215
 msgid "Prev"
 msgstr "上一页"
 
-#: templates/lang.js:187 templates/lang.js.c:208
+#: templates/lang.js:195 templates/lang.js.c:216
 msgid "Next"
 msgstr "下一页"
 
-#: templates/lang.js:188 templates/lang.js.c:209
+#: templates/lang.js:196 templates/lang.js.c:217
 msgid "of"
 msgstr "对于"
 
-#: templates/lang.js:189 templates/lang.js.c:210
+#: templates/lang.js:197 templates/lang.js.c:218
 msgid "Your search did not match any items."
 msgstr "没有搜索到您要的结果。"
 
-#: templates/lang.js:190
+#: templates/lang.js:198
 msgid "Search Maps"
 msgstr "查询地图"
 
-#: templates/lang.js:191 templates/lang.js.c:211
+#: templates/lang.js:199 templates/lang.js.c:219
 msgid "Search"
 msgstr "查询"
 
-#: templates/lang.js:192 templates/lang.js.c:212
+#: templates/lang.js:200 templates/lang.js.c:220
 msgid "Showing"
 msgstr "显示"
 
-#: templates/lang.js:193
+#: templates/lang.js:201
 msgid "Loading"
 msgstr "加载"
 
-#: templates/lang.js:194 templates/lang.js.c:214
+#: templates/lang.js:202 templates/lang.js.c:222
 msgid "permalink"
 msgstr "永久"
 
-#: templates/lang.js:201
+#: templates/lang.js:209
 msgid "Select"
 msgstr "选择"
 
-#: templates/lang.js:204
+#: templates/lang.js:212
 msgid "Select:"
 msgstr "选择："
 
-#: templates/lang.js:205
+#: templates/lang.js:213
 msgid "All"
 msgstr "全部"
 
-#: templates/lang.js:206
+#: templates/lang.js:214
 msgid "None"
 msgstr "没有"
 
-#: templates/lang.js:213
+#: templates/lang.js:221
 msgid "Loading..."
 msgstr "载入中..."
 
-#: templates/lang.js:215
+#: templates/lang.js:223
 msgid "You do not have permission to view this data"
 msgstr "您没有权限查看此数据"
 
-#: templates/lang.js:216
+#: templates/lang.js:224
 msgid "This data is stored on a remote server"
 msgstr "此数据存储在远程服务器上"
 
-#: templates/lang.js:221
+#: templates/lang.js:229
 msgid "Category"
-msgstr ""
+msgstr "类目"
 
-#: templates/lang.js:222
-#, fuzzy
+#: templates/lang.js:230
 msgid "No category is provided for this layer."
-msgstr "此图层没有抽象摘要。"
+msgstr "此图层没有归类"
 
-#: templates/lang.js:224
+#: templates/lang.js:232
 msgid "No abstract is provided for this layer."
 msgstr "此图层没有抽象摘要。"
 
-#: templates/lang.js:228
+#: templates/lang.js:236
 msgid "No download URLs are definied for this layer."
 msgstr "此图层没有下载的网址。"
 
-#: templates/lang.js:238
+#: templates/lang.js:246
 msgid "Selected Layers"
 msgstr "选定图层"
 
-#: templates/lang.js:239
+#: templates/lang.js:247
 msgid "No Layers Selected"
 msgstr "没有选择任何图层"
 
-#: templates/lang.js:241
+#: templates/lang.js:249
 msgid "Clear Selected"
 msgstr "清除选定"
 
-#: templates/lang.js:242
+#: templates/lang.js:250
 msgid "Clear All"
 msgstr "全部清除"
 
-#: templates/lang.js:243
-#, fuzzy
+#: templates/lang.js:251
 msgid "Add Selected Layers"
 msgstr "选定图层"
 
-#: templates/lang.js:249
+#: templates/lang.js:257
 msgid "Operation Failed"
 msgstr "操作失败"
 
-#: templates/lang.js:250
+#: templates/lang.js:258
 msgid "No layers are currently selected."
 msgstr "当前没有选择任何图层。"
 
-#: templates/lang.js:257
+#: templates/lang.js:265
 msgid "Downloading..."
 msgstr "下载..."
 
-#: templates/lang.js:259
+#: templates/lang.js:267
 msgid "Please wait"
 msgstr "请稍候"
 
-#: templates/lang.js:265
+#: templates/lang.js:273
 msgid ""
 "Press OK to print this page as is.  \t\t\t If you would like to adjust the "
 "map extent, press Cancel, \t\t\t then use your browser's print button when "
 "you are ready"
 msgstr ""
+"选择OK打印该页面（所见即所得）。如果你想要调整图幅范围，选择Cancel，调整好后"
+"再使用浏览器上的打印按钮打印。"
 
 #~ msgid "Get Feature Info"
 #~ msgstr "获取图形信息"

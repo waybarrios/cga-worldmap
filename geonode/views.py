@@ -116,3 +116,19 @@ def ajax_lookup_email(request):
         content=json.dumps(json_dict),
         mimetype='text/plain'
     )
+
+
+def lang_specific_about(request):
+    my_language = request.session.get('django_language')
+    if my_language == 'en':
+        template_name = "en_about.html"
+    else:
+        template_name = "non_en_about.html"
+    
+    #return render_to_response(template_name)
+    if my_language == None:
+        request.session['django_language'] = 'en'
+        my_language = request.session.get('django_language')
+    
+    context = {'selected_language' : my_language}
+    return render_to_response("lang_specific_about.html", context)
