@@ -53,15 +53,14 @@ OpenGeoportal.ResultsCollection = Backbone.Collection.extend({
 				}
 			});
 			// temp code to pull out heatmap png from solr response and display
-			removeHeatmap();
 			tempResponse = dataObj;
 			var facetCounts = tempResponse.facet_counts;
 			var facetHeatmaps = facetCounts.facet_heatmaps;
 			bbox_rpt = facetHeatmaps.bbox_rpt;
 
 			var heatmap = bbox_rpt[15];
-			if (heatmap != null)
-			    drawHeatmap(bbox_rpt);
+			//if (heatmap != null)
+			drawHeatmapOpenLayers(bbox_rpt);
 
 			// create Image object to get png width and height
 			// layer creation based on
@@ -191,7 +190,6 @@ function removeHeatmap()
 {
     if (heatmapLayer != null)
 	{
-	    console.log("removing layer");
 		OpenGeoportal.ogp.map.removeLayer(heatmapLayer);
 		heatmapLayer = null;
 	}
@@ -233,6 +231,15 @@ function scaleHeatmapValue(value, min, max)
     return tmp;
 }
 
+function getAlpha(scaledValue)
+{
+    var tmp = scaledValue / 255.;
+    if (tmp > .6) tmp = .6;
+
+    return .4;
+}
+
+
 /**
   the passed heatmap object is an array that contains the heatmap 2d array
    as well as its geodetic bounds
@@ -240,11 +247,15 @@ function scaleHeatmapValue(value, min, max)
 */
 function drawHeatmap(heatmapObject)
 {
+    histogram = [];
     heatmap = heatmapObject[15];
     minMaxValue = heatmapMinMax(heatmap);
     minValue = minMaxValue[0];
     maxValue = minMaxValue[1];
     if (maxValue == -1) return;  // something wrong
+
+    if ((maxValue - minValue) < (maxValue * .05))
+        return;  // if there is no variation skip the heatmap
 
     var minimumLatitude = heatmapObject[11];
     var maximumLatitude = heatmapObject[13];
@@ -269,16 +280,22 @@ function drawHeatmap(heatmapObject)
                 var scaledHeatmapValue = scaleHeatmapValue(heatmapValue, minValue, maxValue);
                 if ((scaledHeatmapValue > 255) || (scaledHeatmapValue < 0) || (scaledHeatmapValue == null))
                    console.log("warning scaledHeatmapValue out of range: " + scaledHeatmapValue + ", " + heatmapValue);
+                if (scaledHeatmapValue < 200)
+                    scaledHeatmapValue = 0;
                 var rgb = scaledHeatmapValue << 16;
                 var color = '#' + rgb.toString(16);
                 var coordinates = [minimumLongitude + (j * stepSizeLongitude), minimumLatitude + (i * stepSizeLatitude),
                            minimumLongitude + ((j+1) * stepSizeLongitude), minimumLatitude + ((i+1) * stepSizeLatitude)];
                 var bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
                 // we should create 255 separate styles and use the right one rather than making a new style for each tile
-                var style = {strokeWidth: 0, fillOpacity: 0.4};
+                var alpha = getAlpha(scaledHeatmapValue);
+                var style = {strokeWidth: 0, fillOpacity: alpha};
                 style.fillColor = color;
                 var box = new OpenLayers.Feature.Vector(bounds.toGeometry(), null, style);
                 heatmapLayer.addFeatures(box);
+                if (histogram[scaledHeatmapValue] == null)
+                    histogram[scaledHeatmapValue] = 0;
+                histogram[scaledHeatmapValue]++;
                 if ((i == 0) && (j == 0))
                     console.log(coordinates);
                 if ((i == (stepsLatitude-1)) && (j == (stepsLongitude-1)))
@@ -293,3 +310,199 @@ function drawHeatmap(heatmapObject)
     OpenGeoportal.ogp.map.addLayers([heatmapLayer]);
 
 }
+
+/// use the heatmap.js library
+heatmapJs = null;
+function drawHeatmapJs(heatmapObject)
+{
+    heatmap = heatmapObject[15];
+    minMaxValue = heatmapMinMax(heatmap);
+    minValue = minMaxValue[0];
+    maxValue = minMaxValue[1];
+    minimumLatitude = heatmapObject[11];
+    maximumLatitude = heatmapObject[13];
+    var deltaLatitude = maximumLatitude - minimumLatitude;
+    minimumLongitude = heatmapObject[7];
+    maximumLongitude = heatmapObject[9];
+    var deltaLongitude = maximumLongitude - minimumLongitude;
+
+    var stepsLatitude = heatmap.length;
+    var stepsLongitude = heatmap[0].length;
+    stepSizeLatitude = deltaLatitude / stepsLatitude;
+    stepSizeLongitude = deltaLongitude / stepsLongitude;
+    mapSize = OpenGeoportal.ogp.map.getSize();
+    screenWidth = mapSize.w;
+    screenHeight = mapSize.h;
+    pointSpacingLatitude = screenHeight / stepsLatitude;
+    pointSpacingLongitude = screenWidth / stepsLongitude;
+
+    heatmapData = [];
+    epsg4326 = new OpenLayers.Projection("EPSG:4326");
+    epsg900913 = new OpenLayers.Projection("EPSG:900913");
+
+    for (i = 0 ; i < stepsLatitude ; i++)
+    {
+        for (j = 0 ; j < stepsLongitude ; j++)
+        {
+            try
+            {
+                heatmapValue = heatmap[heatmap.length - i - 1][j];
+
+                var x = minimumLongitude + (j * stepSizeLongitude);
+                var y = minimumLatitude + (i * stepSizeLatitude);
+                xGeodetic = minimumLongitude + (j * stepSizeLongitude);
+                yGeodetic = minimumLatitude + (i * stepSizeLatitude);
+                geodetic = new OpenLayers.LonLat(xGeodetic, yGeodetic);
+                pixel = OpenGeoportal.ogp.map.getPixelFromLonLat(geodetic);
+                //var point = new OpenLayers.Geometry.Point(x,y);
+                //point.transform(epsg900913, epsg4326);
+                if (j == 0)
+                {
+                    console.log(x + ", " + y + ": " + Math.floor(i*pointSpacingLongitude) + ", " + Math.floor(j*pointSpacingLatitude));
+                    console.log("  " + xGeodetic + ", " + yGeodetic + ":  " + pixel.x + ", " + pixel.y);
+                }
+                var current = {x: Math.floor(j * pointSpacingLongitude) , y: Math.floor((stepsLatitude - i) * pointSpacingLatitude), value: heatmapValue};
+                heatmapData.push(current);
+            }
+            catch (error)
+            {
+                console.log("error making heatmapjs: " + error);
+            }
+        }
+    }
+    if (heatmapJs == null)
+        heatmapJs = h337.create({container: document.getElementById("map"), radius: 30, opacity: .2});
+    heatmapJs.setData({data: heatmapData, max: maxValue, min: minValue});
+    heatmapJs.repaint();
+}
+
+
+
+/**
+    radius of heatmap point depends on how many pixels are between adjacent points
+*/
+function computeRadius(latitude, longitude, stepSize)
+{
+    mercator1 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude, latitude);
+    pixel1 = OpenGeoportal.ogp.map.getPixelFromLonLat(mercator1);
+    mercator2 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude + stepSize, latitude + stepSize);
+    pixel2 = OpenGeoportal.ogp.map.getPixelFromLonLat(mercator2);
+    deltaLatitude = Math.abs(pixel1.x - pixel2.x);
+    return Math.ceil(deltaLatitude * 2.);
+}
+
+var heatmapFactor = .95;
+
+/**
+    process the passed array of arrays to compute a threshold value
+    put all values into a new array and sort it
+    the returned threshold value selected from the array
+*/
+function getThreshold(heatmap)
+{
+    tmp = [];
+    for (i = 0 ; i < heatmap.length ; i++)
+        tmp.push.apply(tmp, heatmap[i]);
+    tmp.sort(function(a, b) {return a - b;});  // force numeric sort
+    length = tmp.length;
+    threshold = tmp[Math.floor(length * heatmapFactor)];
+    return threshold;
+}
+
+/**
+    uses openlayer-heatmap library from https://github.com/hoehrmann/openlayers-heatmap
+    draw heatmap over cells containing the most documents
+    the heatmap points are reset every time
+*/
+heatmapLayer = null;
+
+function drawHeatmapOpenLayers(heatmapObject)
+{
+    if (heatmapLayer == null)
+        heatmapLayer = new Heatmap.Layer("Heatmap");
+    console.log("number of points = " + heatmapLayer.points.length);
+    heatmapLayer.points = [];  //delete any previously added points
+
+    heatmap = heatmapObject[15];
+    minMaxValue = heatmapMinMax(heatmap);
+    minValue = minMaxValue[0];
+    maxValue = minMaxValue[1];
+    if (maxValue == -1) return;  // something wrong
+
+    var minimumLatitude = heatmapObject[11];
+    var maximumLatitude = heatmapObject[13];
+    var deltaLatitude = maximumLatitude - minimumLatitude;
+    var minimumLongitude = heatmapObject[7];
+    var maximumLongitude = heatmapObject[9];
+    var deltaLongitude = maximumLongitude - minimumLongitude;
+
+    var stepsLatitude = heatmap.length;
+    var stepsLongitude = heatmap[0].length;
+    var stepSizeLatitude = deltaLatitude / stepsLatitude;
+    var stepSizeLongitude = deltaLongitude / stepsLongitude;
+    var radius = computeRadius(minimumLatitude, minimumLongitude, Math.max(stepSizeLatitude, stepSizeLongitude));
+    var minimumThreshold = getThreshold(heatmap);
+    for (i = 0 ; i < stepsLatitude ; i++)
+    {
+        for (j = 0 ; j < stepsLongitude ; j++)
+        {
+            try
+            {
+                var heatmapValue = heatmap[heatmap.length - i - 1][j];
+                currentLongitude = minimumLongitude + (j * stepSizeLongitude) + (.5 * stepSizeLongitude);
+                currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude);
+                mercator = OpenGeoportal.ogp.map.WGS84ToMercator(currentLongitude, currentLatitude);
+                if (heatmapValue >= minimumThreshold)
+                    heatmapLayer.addSource(new Heatmap.Source(mercator, radius, heatmapValue - minValue));
+            }
+            catch (error)
+            {
+                console.log("error making heatmap: " + error);
+            }
+        }
+    }
+    heatmapLayer.setOpacity(0.33);
+    OpenGeoportal.ogp.map.addLayer(heatmapLayer);
+
+}
+
+function heatmapTest()
+{
+    map = new OpenLayers.Map('map2', {
+                    controls: [
+                        new OpenLayers.Control.Navigation(),
+                        new OpenLayers.Control.PanZoomBar(),
+                        new OpenLayers.Control.LayerSwitcher({'ascending':false}),
+                        new OpenLayers.Control.MousePosition(),
+                    ]
+                    });
+    var heat = new Heatmap.Layer("Heatmap");
+    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(9.434, 54.740)));
+    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(9.833, 54.219)));
+    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(10.833, 55.219)));
+    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(16.833, 56.219)));
+    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(17.833, 57.219)));
+    heat.defaultIntensity = 0.1;
+    heat.setOpacity(0.33);
+    var wms = new OpenLayers.Layer.WMS("OpenLayers WMS", "http://labs.metacarta.com/wms/vmap0", {layers: 'basic'});
+    map.addLayers([wms, heat]);
+    map.zoomToExtent(heat.getDataExtent());
+    console.log("added heatmap");
+}
+
+/*
+    var heat = new Heatmap.Layer("Heatmap");
+    merc = OpenGeoportal.ogp.map.WGS84ToMercator(9.434, 54.740);
+    console.log("merc = " + merc);
+    heat.addSource(new Heatmap.Source(merc));
+
+    merc = OpenGeoportal.ogp.map.WGS84ToMercator(12.434, 56.740);
+    ll2 = new OpenLayers.LonLat(merc.x, merc.y);
+    console.log("  merc = " + merc);
+    heat.addSource(new Heatmap.Source(merc));
+
+    OpenGeoportal.ogp.map.addLayer(heat);
+    console.log("added heatmap");
+
+    if (true == true) return;
+*/

@@ -19,7 +19,9 @@ OpenGeoportal = {};
 OpenGeoportal.Config = {};
 OpenGeoportal.Config.analyticsId="${analyticsId}";
 //OpenGeoportal.Config.searchUrl="http://geodata.tufts.edu/solr/select";
-OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/ogpsearch/select";
+//OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/ogpsearch/select";
+//OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/kml/select";
+OpenGeoportal.Config.searchUrl="http://107.22.231.227:8984/solr/ogpsearch/select";
 OpenGeoportal.Config.loginRepository="Harvard";
 OpenGeoportal.Config.loginType="";
 OpenGeoportal.Config.loginUrl="";
@@ -130,6 +132,8 @@ on	src="/static/geonode/ogpsearch/resources/javascript/lib/models/protocolAwareM
 <script type="text/javascript" src="/static/geonode/ogpsearch/resources/javascript/lib/solr.js"></script>
 <script type="text/javascript"
         src="/static/geonode/ogpsearch/resources/javascript/lib/views/searchResultsTable.js"></script>
+<script type="text/javascript" src="/static/geonode/ogpsearch/resources/javascript/HeatmapLayer.js"></script>
+
 
 
 
