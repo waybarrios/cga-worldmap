@@ -3,8 +3,7 @@ import pysolr
 import math
 import json
 
-from geonode.maps.models import Layer
-from geonode.maps.models import Map
+import geonode.maps.models
 
 from django.conf import settings
 from geoserver.catalog import Catalog, FailedRequestError
@@ -13,7 +12,7 @@ from owslib.wfs import WebFeatureService
 from owslib.tms import TileMapService
 from owslib.csw import CatalogueServiceWeb
 from arcrest import Folder as ArcFolder, MapService as ArcMapService
-from geonode.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
+#from geonode.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
 
 class OGP_utils(object):
 
