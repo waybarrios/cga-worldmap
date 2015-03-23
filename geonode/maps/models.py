@@ -35,6 +35,7 @@ import re
 from geonode.maps.encode import despam, XssCleaner
 if 'haystack' in settings.INSTALLED_APPS and settings.HAYSTACK_SEARCH:
     from haystack import connections
+from geonode.ogpsearch import utils
 
 
 logger = logging.getLogger("geonode.maps.models")
@@ -2487,6 +2488,8 @@ def post_save_layer(instance, sender, **kwargs):
         instance.save_to_geoserver()
         if kwargs['created']:
             instance._populate_from_gs()
+    if (settings.SOLR_SEARCH):
+        utils.OGP_utils.layer_to_solr(instance)
 
 def post_update_index(instance, sender, **kwargs):
     if 'haystack' in settings.INSTALLED_APPS and settings.HAYSTACK_SEARCH:
