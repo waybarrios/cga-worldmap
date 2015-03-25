@@ -452,7 +452,7 @@ function drawHeatmapOpenLayers(heatmapObject)
                 currentLongitude = minimumLongitude + (j * stepSizeLongitude) + (.5 * stepSizeLongitude);
                 currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude);
                 mercator = OpenGeoportal.ogp.map.WGS84ToMercator(currentLongitude, currentLatitude);
-                if (heatmapValue >= minimumThreshold)
+                if (heatmapValue >= minimumThreshold) 
                     heatmapLayer.addSource(new Heatmap.Source(mercator, radius, heatmapValue - minValue));
             }
             catch (error)
