@@ -418,6 +418,11 @@ heatmapLayer = null;
 
 function drawHeatmapOpenLayers(heatmapObject)
 {
+    if (heatmapLayer != null)
+    {
+        OpenGeoportal.ogp.map.removeLayer(heatmapLayer);
+        heatmapLayer = null;
+    }
     if (heatmapLayer == null)
         heatmapLayer = new Heatmap.Layer("Heatmap");
     console.log("number of points = " + heatmapLayer.points.length);
@@ -452,8 +457,14 @@ function drawHeatmapOpenLayers(heatmapObject)
                 currentLongitude = minimumLongitude + (j * stepSizeLongitude) + (.5 * stepSizeLongitude);
                 currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude);
                 mercator = OpenGeoportal.ogp.map.WGS84ToMercator(currentLongitude, currentLatitude);
-                if (heatmapValue >= minimumThreshold) 
-                    heatmapLayer.addSource(new Heatmap.Source(mercator, radius, heatmapValue - minValue));
+                scaledValue = scaleHeatmapValue(heatmapValue, minValue, maxValue) / 255.;
+                scaledValue = Math.pow(scaledValue, 4);
+                // linearly scale values to between 0 and 255
+                // use power function to non-linearly adjust values
+                // finally apply floor for non-zero values
+                if (scaledValue > 0 && scaledValue < .04)
+                    scaledValue = .04;
+                heatmapLayer.addSource(new Heatmap.Source(mercator, radius*.9, scaledValue));
             }
             catch (error)
             {
