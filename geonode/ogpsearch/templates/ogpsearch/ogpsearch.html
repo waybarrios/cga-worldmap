@@ -7,8 +7,11 @@
 <script src="/static/geonode/ogpsearch/resources/javascript/spinners/spinners/spinners.min.js"></script>
 <script src="/static/geonode/ogpsearch/resources/javascript/jquery.ba-postmessage.min.js"></script>
 <script src="//maps.google.com/maps/api/js?v=3.10&sensor=false"></script>
-<script src="/static/geonode/ogpsearch/resources/javascript/openlayers/OpenLayers-2.11/OpenLayers.js"></script>
+<!--  <script src="/static/geonode/ogpsearch/resources/javascript/openlayers/OpenLayers-2.11/OpenLayers.js"></script> -->
+<script type="text/javascript" src="http://openlayers.org/api/2.11/OpenLayers.js"></script>
+
 <script src="/static/geonode/ogpsearch/resources/javascript/panZoom.js"></script>
+<script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
 
 <link rel="stylesheet" href="/static/geonode/ogpsearch/resources/css/jquery-ui-ogpTheme.custom.css" type="text/css" />
 
@@ -19,9 +22,10 @@ OpenGeoportal = {};
 OpenGeoportal.Config = {};
 OpenGeoportal.Config.analyticsId="${analyticsId}";
 //OpenGeoportal.Config.searchUrl="http://geodata.tufts.edu/solr/select";
-//OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/ogpsearch/select";
-//OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/kml/select";
-OpenGeoportal.Config.searchUrl="http://107.22.231.227:8984/solr/ogpsearch/select";
+//OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/wmprod/select";
+//OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/all/select";
+OpenGeoportal.Config.searchUrl="http://localhost:8983/solr/ogpsearch/select";
+//OpenGeoportal.Config.searchUrl="http://107.22.231.227:8983/solr/ogpsearch/select";
 OpenGeoportal.Config.loginRepository="Harvard";
 OpenGeoportal.Config.loginType="";
 OpenGeoportal.Config.loginUrl="";
@@ -41,6 +45,8 @@ OpenGeoportal.Config.shareBbox="";
 <link rel="stylesheet" href="/static/geonode/ogpsearch/resources/css/localize.css"
         type="text/css" />
 <link rel="stylesheet" href="/static/geonode/ogpsearch/resources/css/localizeHarvard.css"
+        type="text/css" />
+<link rel="stylesheet" href="/static/geonode/ogpsearch/resources/css/geostats.css"
         type="text/css" />
 
 
@@ -88,7 +94,8 @@ on	src="/static/geonode/ogpsearch/resources/javascript/lib/models/protocolAwareM
         src="/static/geonode/ogpsearch/resources/javascript/lib/models/queryModel.js"></script>
 <script type="text/javascript"
         src="/static/geonode/ogpsearch/resources/javascript/lib/models/leftPanelModel.js"></script>
-
+<script type="text/javascript"
+        src="/static/geonode/ogpsearch/resources/javascript/lib/models/heatmapModel.js"></script>
 
 <script type="text/javascript"
         src="/static/geonode/ogpsearch/resources/javascript/lib/views/selectBoxes.js"></script>
@@ -133,6 +140,7 @@ on	src="/static/geonode/ogpsearch/resources/javascript/lib/models/protocolAwareM
 <script type="text/javascript"
         src="/static/geonode/ogpsearch/resources/javascript/lib/views/searchResultsTable.js"></script>
 <script type="text/javascript" src="/static/geonode/ogpsearch/resources/javascript/HeatmapLayer.js"></script>
+<script type="text/javascript" src="/static/geonode/ogpsearch/resources/javascript/lib/geostats.js"></script>
 
 
 

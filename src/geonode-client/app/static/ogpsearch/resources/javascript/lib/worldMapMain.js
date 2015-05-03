@@ -56,6 +56,8 @@ jQuery(document)
 					};
 
 					ogp.map = new WorldMapMapController(); //new OpenGeoportal.MapController();
+					ogp.map = new OpenGeoportal.MapController();
+					console.log("set ogp.map");
 					ogp.map.initMap("map");
 
 					// creating the cart
@@ -107,6 +109,7 @@ jQuery(document)
 										// bubbles, first search opens Search
 										// Results, etc.
 										ogp.structure.introFlow(hasSharedLayers);
+										ogp.heatmapModel = new OpenGeoportal.Models.Heatmap();
 									});
 
 					/* downtime notice --does this still work? */
