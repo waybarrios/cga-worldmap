@@ -95,6 +95,11 @@ OpenGeoportal.Solr = function() {
 		return shards;
 	};
 
+	this.enableHeatmap = function()
+        {
+	    this.heatmap = true;
+        };
+
 	/***************************************************************************
 	 * Base Query
 	 **************************************************************************/
@@ -124,13 +129,14 @@ OpenGeoportal.Solr = function() {
 			 */
 			defType : "edismax",
 			fl : this.getReturnedColumns(this.SearchRequest),
-			sort : this.getSortClause(),
-			facet : "true",
-			"facet.heatmap" : "bbox_rpt",
-			"facet.heatmap.format" : "ints2D"
+			sort : this.getSortClause()};
+		if (this.heatmap)
+		{
+		    var heatmapParams = {facet : "true", "facet.heatmap" : "bbox_rpt", "facet.heatmap.format" : "ints2D"};
+		    this.baseParams = this.combineParams(this.baseParams, heatmapParams);
+		}
 		// ,
 		// debug: true
-		};
 
 		var params = this.combineParams(this.baseParams, this.spatialParams,
 				this.textParams);
@@ -495,6 +501,13 @@ OpenGeoportal.Solr = function() {
 
 	};
 
+    this.createNonGlobalAreaFilter = function createNonGlobalAreaFilter()
+    {
+        var filter = this.createFilter("Area", "[0 TO 400]");
+        return filter;
+
+    };
+
 	/***************************************************************************
 	 * Spatial query components
 	 **************************************************************************/
@@ -540,13 +553,17 @@ OpenGeoportal.Solr = function() {
 						+ this.LayerMatchesCenter.boost,
 				this.classicLayerWithinMap(bounds) + "^"
 						+ this.LayerWithinMap.boost ];
+        // fq : [ this.getIntersectionFilter(), "Area:[0 TO 400]" ],
 		var params = {
 			bf : bf_array,
-			fq : [ this.getIntersectionFilter() ],
-			intx : this.getIntersectionFunction(bounds),
-			"facet.heatmap.geom" : '["' + bounds.minX + ' ' + bounds.minY + '" TO "' + bounds.maxX + ' ' + bounds.maxY + '"]'
-		};
 
+			intx : this.getIntersectionFunction(bounds)};
+		if (this.heatmap)
+		{
+		    heatmapParams = {"facet.heatmap.geom" : '["' + bounds.minX + ' ' + bounds.minY + '" TO "' + bounds.maxX + ' ' + bounds.maxY + '"]'};
+		    params = this.combineParams(params, heatmapParams);
+		}
+		    //"facet.heatmap.geom" : '["' + bounds.minX + ' ' + bounds.minY + '" TO "' + bounds.maxX + ' ' + bounds.maxY + '"]'
 		return params;
 	};
 

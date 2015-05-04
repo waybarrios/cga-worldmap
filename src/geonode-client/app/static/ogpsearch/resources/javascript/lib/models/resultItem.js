@@ -52,33 +52,7 @@ OpenGeoportal.ResultsCollection = Backbone.Collection.extend({
 					ids.push(model.get("LayerId"));
 				}
 			});
-			// temp code to pull out heatmap png from solr response and display
-			tempResponse = dataObj;
-			var facetCounts = tempResponse.facet_counts;
-			var facetHeatmaps = facetCounts.facet_heatmaps;
-			bbox_rpt = facetHeatmaps.bbox_rpt;
 
-			var heatmap = bbox_rpt[15];
-			//if (heatmap != null)
-			drawHeatmapOpenLayers(bbox_rpt);
-
-			// create Image object to get png width and height
-			// layer creation based on
-			//   http://gis.stackexchange.com/questions/58607/displaying-a-multi-zoom-image-layer-in-open
-			/* old code to display Solr heatmap png
-			heatmapPng = bbox_rpt[15];
-			img = new Image();
-			img.src = "data:image/png;base64," + heatmapPng;
-			bounds = OpenGeoportal.ogp.map.getExtent().transform(OpenGeoportal.ogp.map.projection, new OpenLayers.Projection("EPSG:4326"));
-			bounds2 = OpenGeoportal.ogp.map.getExtent();
-			heatmapLayer = new OpenLayers.Layer.Image( 'Heatmap', "data:image/png;base64," + heatmapPng,
-								  new OpenLayers.Bounds(bounds2.left,bounds2.bottom,bounds2.right,bounds2.top), 
-								  new OpenLayers.Size(img.width, img.height),
-                                  {opacity: 0.7});
-
-			OpenGeoportal.ogp.map.addLayer(heatmapLayer);
-			console.log("added heapmap layer to map");
-            */
 			// solr docs holds an array of hashtables, each hashtable contains a
 			// layer
 			var arrModels = [];
@@ -203,177 +177,89 @@ heatmapLayer = null;
   return the largest and smallest value in the heatmap so its values can be scaled
   some elements in the heatmap can be null so we replace them with 0
 */
-function heatmapMinMax(heatmap)
+function heatmapMinMax(heatmap, stepsLatitude, stepsLongitude)
 {
    var max = -1;
    var min = Number.MAX_VALUE;
-   for (i = 0 ; i < heatmap.length ; i++)
+   for (i = 0 ; i < stepsLatitude ; i++)
    {
        var currentRow = heatmap[i];
        if (currentRow == null)  heatmap[i] = currentRow = [];
-       for (j = 0 ; j < currentRow.length ; j++)
+       for (j = 0 ; j < stepsLongitude ; j++)
        {
-           if (currentRow[j] == null) currentRow[j] = 0;
+           if (currentRow[j] == null)
+               currentRow[j] = -1;
            if (currentRow[j] > max)
               max = currentRow[j];
-           if (currentRow[j] < min)
+           if (currentRow[j] < min && currentRow[j] > -1)
               min = currentRow[j];
        }
    }
    return [min, max];
 }
 
+function rescaleHeatmapValue(value, min, max)
+{
+
+    if (value == null)
+        return 0;
+    if (value == -1)
+        return 0;
+    if (value == 0)
+        return 0;
+    value = value * 1.0;
+
+    if (true)
+        return value / max;
+    var delta = max - min;
+    if (delta <= 0)
+        return 0;
+    if (value < min)
+        return 0;
+    var tmp = (value - (min - 1)) / delta;
+    console.log(" " + value + ", " + tmp + " : " + min + ", " + max);
+    if (tmp < 0)
+        return 0;
+    if (tmp > 1)
+        return 1.0;
+    return tmp;
+}
+
+function rescaleHeatmapValue2(value, min, max)
+{
+ if (value == null)
+        return 0;
+    if (value == -1)
+        return -1;
+    if (value == 0)
+        return 0;
+    value = value * 1.0;
+
+    if (true)
+        return value / max;
+    var delta = max - min;
+    if (delta <= 0)
+        return 0;
+    if (value < min)
+        return 0;
+    var tmp = (value - (min - 1)) / delta;
+    console.log("   " + value + ", " + tmp + " : " + min + ", " + max);
+    if (tmp < 0)
+        return 0;
+    if (tmp > 1)
+        return 1.0;
+    return tmp;
+}
+
+
 function scaleHeatmapValue(value, min, max)
 {
     if (value == null) value = min;
     var tmp = value - min;
     tmp = Math.floor((tmp / (max - min)) * 255);
+    if (tmp < 0) tmp = 0;
+    if (isNaN(tmp)) tmp = 0;
     return tmp;
-}
-
-function getAlpha(scaledValue)
-{
-    var tmp = scaledValue / 255.;
-    if (tmp > .6) tmp = .6;
-
-    return .4;
-}
-
-
-/**
-  the passed heatmap object is an array that contains the heatmap 2d array
-   as well as its geodetic bounds
-  the heatmap is displayed by creating a grid of translucent red rectangles
-*/
-function drawHeatmap(heatmapObject)
-{
-    histogram = [];
-    heatmap = heatmapObject[15];
-    minMaxValue = heatmapMinMax(heatmap);
-    minValue = minMaxValue[0];
-    maxValue = minMaxValue[1];
-    if (maxValue == -1) return;  // something wrong
-
-    if ((maxValue - minValue) < (maxValue * .05))
-        return;  // if there is no variation skip the heatmap
-
-    var minimumLatitude = heatmapObject[11];
-    var maximumLatitude = heatmapObject[13];
-    var deltaLatitude = maximumLatitude - minimumLatitude;
-    var minimumLongitude = heatmapObject[7];
-    var maximumLongitude = heatmapObject[9];
-    var deltaLongitude = maximumLongitude - minimumLongitude;
-
-    var stepsLatitude = heatmap.length;
-    var stepsLongitude = heatmap[0].length;
-    var stepSizeLatitude = deltaLatitude / stepsLatitude;
-    var stepSizeLongitude = deltaLongitude / stepsLongitude;
-    heatmapLayer = new OpenLayers.Layer.Vector("heatmap");
-
-    for (i = 0 ; i < stepsLatitude ; i++)
-    {
-        for (j = 0 ; j < stepsLongitude ; j++)
-        {
-            try
-            {
-                var heatmapValue = heatmap[heatmap.length - i - 1][j];
-                var scaledHeatmapValue = scaleHeatmapValue(heatmapValue, minValue, maxValue);
-                if ((scaledHeatmapValue > 255) || (scaledHeatmapValue < 0) || (scaledHeatmapValue == null))
-                   console.log("warning scaledHeatmapValue out of range: " + scaledHeatmapValue + ", " + heatmapValue);
-                if (scaledHeatmapValue < 200)
-                    scaledHeatmapValue = 0;
-                var rgb = scaledHeatmapValue << 16;
-                var color = '#' + rgb.toString(16);
-                var coordinates = [minimumLongitude + (j * stepSizeLongitude), minimumLatitude + (i * stepSizeLatitude),
-                           minimumLongitude + ((j+1) * stepSizeLongitude), minimumLatitude + ((i+1) * stepSizeLatitude)];
-                var bounds = OpenLayers.Bounds.fromArray(coordinates).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
-                // we should create 255 separate styles and use the right one rather than making a new style for each tile
-                var alpha = getAlpha(scaledHeatmapValue);
-                var style = {strokeWidth: 0, fillOpacity: alpha};
-                style.fillColor = color;
-                var box = new OpenLayers.Feature.Vector(bounds.toGeometry(), null, style);
-                heatmapLayer.addFeatures(box);
-                if (histogram[scaledHeatmapValue] == null)
-                    histogram[scaledHeatmapValue] = 0;
-                histogram[scaledHeatmapValue]++;
-                if ((i == 0) && (j == 0))
-                    console.log(coordinates);
-                if ((i == (stepsLatitude-1)) && (j == (stepsLongitude-1)))
-                    console.log(coordinates);
-            }
-            catch (error)
-            {
-                console.log("error making heatmap: " + error);
-            }
-        }
-    }
-    OpenGeoportal.ogp.map.addLayers([heatmapLayer]);
-
-}
-
-/// use the heatmap.js library
-heatmapJs = null;
-function drawHeatmapJs(heatmapObject)
-{
-    heatmap = heatmapObject[15];
-    minMaxValue = heatmapMinMax(heatmap);
-    minValue = minMaxValue[0];
-    maxValue = minMaxValue[1];
-    minimumLatitude = heatmapObject[11];
-    maximumLatitude = heatmapObject[13];
-    var deltaLatitude = maximumLatitude - minimumLatitude;
-    minimumLongitude = heatmapObject[7];
-    maximumLongitude = heatmapObject[9];
-    var deltaLongitude = maximumLongitude - minimumLongitude;
-
-    var stepsLatitude = heatmap.length;
-    var stepsLongitude = heatmap[0].length;
-    stepSizeLatitude = deltaLatitude / stepsLatitude;
-    stepSizeLongitude = deltaLongitude / stepsLongitude;
-    mapSize = OpenGeoportal.ogp.map.getSize();
-    screenWidth = mapSize.w;
-    screenHeight = mapSize.h;
-    pointSpacingLatitude = screenHeight / stepsLatitude;
-    pointSpacingLongitude = screenWidth / stepsLongitude;
-
-    heatmapData = [];
-    epsg4326 = new OpenLayers.Projection("EPSG:4326");
-    epsg900913 = new OpenLayers.Projection("EPSG:900913");
-
-    for (i = 0 ; i < stepsLatitude ; i++)
-    {
-        for (j = 0 ; j < stepsLongitude ; j++)
-        {
-            try
-            {
-                heatmapValue = heatmap[heatmap.length - i - 1][j];
-
-                var x = minimumLongitude + (j * stepSizeLongitude);
-                var y = minimumLatitude + (i * stepSizeLatitude);
-                xGeodetic = minimumLongitude + (j * stepSizeLongitude);
-                yGeodetic = minimumLatitude + (i * stepSizeLatitude);
-                geodetic = new OpenLayers.LonLat(xGeodetic, yGeodetic);
-                pixel = OpenGeoportal.ogp.map.getPixelFromLonLat(geodetic);
-                //var point = new OpenLayers.Geometry.Point(x,y);
-                //point.transform(epsg900913, epsg4326);
-                if (j == 0)
-                {
-                    console.log(x + ", " + y + ": " + Math.floor(i*pointSpacingLongitude) + ", " + Math.floor(j*pointSpacingLatitude));
-                    console.log("  " + xGeodetic + ", " + yGeodetic + ":  " + pixel.x + ", " + pixel.y);
-                }
-                var current = {x: Math.floor(j * pointSpacingLongitude) , y: Math.floor((stepsLatitude - i) * pointSpacingLatitude), value: heatmapValue};
-                heatmapData.push(current);
-            }
-            catch (error)
-            {
-                console.log("error making heatmapjs: " + error);
-            }
-        }
-    }
-    if (heatmapJs == null)
-        heatmapJs = h337.create({container: document.getElementById("map"), radius: 30, opacity: .2});
-    heatmapJs.setData({data: heatmapData, max: maxValue, min: minValue});
-    heatmapJs.repaint();
 }
 
 
@@ -393,20 +279,75 @@ function computeRadius(latitude, longitude, stepSize)
 
 var heatmapFactor = .95;
 
-/**
-    process the passed array of arrays to compute a threshold value
-    put all values into a new array and sort it
-    the returned threshold value selected from the array
-*/
-function getThreshold(heatmap)
+
+function flattenValues(heatmap)
 {
     tmp = [];
     for (i = 0 ; i < heatmap.length ; i++)
         tmp.push.apply(tmp, heatmap[i]);
+    return tmp;
+}
+
+function getCeilingValues(heatmap)
+{
+    tmp = [];
+    ceilingValues = [];
+    for (i = 0 ; i < heatmap.length ; i++)
+        tmp.push.apply(tmp, heatmap[i]);
     tmp.sort(function(a, b) {return a - b;});  // force numeric sort
     length = tmp.length;
-    threshold = tmp[Math.floor(length * heatmapFactor)];
-    return threshold;
+    ceilingValues[0] = tmp[0];
+    ceilingValues[1] = tmp[Math.ceil(length * .25)];
+    ceilingValues[2] = tmp[Math.ceil(length * .5)];
+    ceilingValues[3] = tmp[Math.ceil(length * .75)];
+    return ceilingValues;
+}
+
+/**
+  for a given value and list of groups, return the appropriate group
+*/
+function clipValue(value, ceilingValues)
+{
+    if (value == null)
+        return 0;
+    if (value == ceilingValues[0])
+        return value;
+    if (value <= ceilingValues[1])
+        return 0;
+
+    for (var i = 2 ; i < ceilingValues.length ; i++)
+    {
+        if (value <= ceilingValues[i])
+         return ceilingValues[i];
+    }
+    return ceilingValues[ceilingValues.length -1];
+}
+
+function clipValueIndex(value, ceilingValues)
+{
+    if (value == ceilingValues[0])
+        return 0;
+
+    for (var i = 0 ; i < ceilingValues.length ; i++)
+    {
+        if (value < ceilingValues[i])
+         return i;
+    }
+    return ceilingValues.length -1;
+}
+
+// when the user moves the mouse we note how may documents are under the cursor
+function processEvent(event)
+{
+    foo = event;
+    pixel = event.xy;
+    mercator = OpenGeoportal.ogp.map.getLonLatFromViewPortPx(pixel);
+    epsg4326 = new OpenLayers.Projection("EPSG:4326");
+    epsg900913 = new OpenLayers.Projection("EPSG:900913");
+    point = mercator.transform(epsg900913, epsg4326);
+    count = getCountGeodetic(lastHeatmapObject, point.lat, point.lon);
+    message = "Number of layers = " + count;
+    jQuery("#map").tooltip( "option", "content", message );
 }
 
 /**
@@ -415,21 +356,50 @@ function getThreshold(heatmap)
     the heatmap points are reset every time
 */
 heatmapLayer = null;
+backgroundLayer = null;
+var radiusFactor = .9;
 
 function drawHeatmapOpenLayers(heatmapObject)
 {
-    if (heatmapLayer != null)
+    lastHeatmapObject = heatmapObject;
+    try
     {
-        OpenGeoportal.ogp.map.removeLayer(heatmapLayer);
-        heatmapLayer = null;
+        if (heatmapLayer != null)
+        {
+            OpenGeoportal.ogp.map.removeLayer(heatmapLayer);
+            heatmapLayer = null;
+        }
+    }
+    catch (err)
+    {
+        ;
     }
     if (heatmapLayer == null)
+    {
         heatmapLayer = new Heatmap.Layer("Heatmap");
-    console.log("number of points = " + heatmapLayer.points.length);
+
+        jQuery("#map").attr("title", "Number of layers =     ");
+        jQuery("#map").tooltip({track: true});
+        //jQuery("#map").tooltip( "option", "content", "Number of layers");
+        OpenGeoportal.ogp.map.events.register("mousemove", OpenGeoportal.ogp.map,
+                                              function(event) {processEvent(event);}, true);
+    }
+    if (backgroundLayer == null)
+    {
+        // hack to set background layer for evaluation
+        backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
+        OpenGeoportal.ogp.map.addLayer(backgroundLayer);
+    }
     heatmapLayer.points = [];  //delete any previously added points
 
     heatmap = heatmapObject[15];
-    minMaxValue = heatmapMinMax(heatmap);
+    if (heatmap == null)
+        return;
+    stepsLatitude = heatmapObject[5];  //heatmap.length;
+    stepsLongitude = heatmapObject[3];   //heatmap[0].length;
+
+    minMaxValue = heatmapMinMax(heatmap, stepsLatitude, stepsLongitude);
+    ceilingValues = getCeilingValues(heatmap);
     minValue = minMaxValue[0];
     maxValue = minMaxValue[1];
     if (maxValue == -1) return;  // something wrong
@@ -441,30 +411,64 @@ function drawHeatmapOpenLayers(heatmapObject)
     var maximumLongitude = heatmapObject[9];
     var deltaLongitude = maximumLongitude - minimumLongitude;
 
-    var stepsLatitude = heatmap.length;
-    var stepsLongitude = heatmap[0].length;
+
     var stepSizeLatitude = deltaLatitude / stepsLatitude;
     var stepSizeLongitude = deltaLongitude / stepsLongitude;
-    var radius = computeRadius(minimumLatitude, minimumLongitude, Math.max(stepSizeLatitude, stepSizeLongitude));
-    var minimumThreshold = getThreshold(heatmap);
-    for (i = 0 ; i < stepsLatitude ; i++)
+    radius = computeRadius(minimumLatitude, minimumLongitude, Math.max(stepSizeLatitude, stepSizeLongitude));
+
+    flattenedValues = flattenValues(heatmap);
+    series = new geostats(flattenedValues);
+    //series.setPrecision(6);
+    jenksClassifications = series.getClassJenks(5);
+    classifications = jenksClassifications;
+    //classifications = [0];
+    //classifications = classifications.concat(jenksClassifications);
+    //colors = [0xffffff00, 0x00c9fcff, 0x0078f2ff, 0x4a2cd9ff, 0x99019aff, 0x000000ff];
+    //colors = [0xffffff00, 0xffffff00, 0xffffff00, 0xffffff00, 0xffffffff, 0xa0a0a0ff, 0x808080ff, 0x000000ff];
+    colors = [0x00000000, 0xfef0d9ff, 0xfdcc8aff, 0xfc8d59ff, 0xe34a33ff, 0xb30000ff];
+    colorGradient = {};
+    //for (var i in jenksClassifications)
+    for (var i = 0 ; i < jenksClassifications.length ; i++)
     {
-        for (j = 0 ; j < stepsLongitude ; j++)
+            value = classifications[i];
+            scaledValue = rescaleHeatmapValue2(value, classifications[0], maxValue);
+            if (scaledValue < 0)
+                scaledValue = 0;
+            colorGradient[scaledValue] = colors[i];
+    }
+    heatmapLayer.setGradientStops(colorGradient);
+
+    scaledValues = [];
+    clippedValues= [];
+    scaledValues = [];
+
+    for (var i = 0 ; i < stepsLatitude ; i++)
+    {
+        for (var j = 0 ; j < stepsLongitude ; j++)
         {
             try
             {
-                var heatmapValue = heatmap[heatmap.length - i - 1][j];
+                heatmapValue = heatmap[heatmap.length - i - 1][j];
                 currentLongitude = minimumLongitude + (j * stepSizeLongitude) + (.5 * stepSizeLongitude);
                 currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude);
                 mercator = OpenGeoportal.ogp.map.WGS84ToMercator(currentLongitude, currentLatitude);
-                scaledValue = scaleHeatmapValue(heatmapValue, minValue, maxValue) / 255.;
-                scaledValue = Math.pow(scaledValue, 4);
+                clippedValue = clipValue(heatmapValue, classifications);
+                clippedValues.push(clippedValue);
+                scaledValue = scaleHeatmapValue(clippedValue, classifications[1], maxValue) / 255.;
+                scaledValue2 = rescaleHeatmapValue2(heatmapValue, classifications[1], maxValue);
+                //scaledValue = Math.pow(scaledValue, 4);
                 // linearly scale values to between 0 and 255
                 // use power function to non-linearly adjust values
                 // finally apply floor for non-zero values
-                if (scaledValue > 0 && scaledValue < .04)
-                    scaledValue = .04;
-                heatmapLayer.addSource(new Heatmap.Source(mercator, radius*.9, scaledValue));
+                //if (scaledValue > 0 && scaledValue < .06)
+                //    scaledValue = .06;
+                if (heatmapValue > 0)
+                {
+                    //heatmapLayer.addSource(new Heatmap.Source(mercator, radius*.9, scaledValue));
+                    heatmapLayer.addSource(new Heatmap.Source(mercator, radius*radiusFactor, scaledValue2));
+                    scaledValues.push(scaledValue2);
+                }
+                // console.log(heatmapValue + ", " + scaledValue)
             }
             catch (error)
             {
@@ -472,48 +476,128 @@ function drawHeatmapOpenLayers(heatmapObject)
             }
         }
     }
-    heatmapLayer.setOpacity(0.33);
+
+    heatmapLayer.setOpacity(0.50);
     OpenGeoportal.ogp.map.addLayer(heatmapLayer);
-
+    console.log("heatmap displayed")
 }
 
-function heatmapTest()
+
+
+function createStyles()
 {
-    map = new OpenLayers.Map('map2', {
-                    controls: [
-                        new OpenLayers.Control.Navigation(),
-                        new OpenLayers.Control.PanZoomBar(),
-                        new OpenLayers.Control.LayerSwitcher({'ascending':false}),
-                        new OpenLayers.Control.MousePosition(),
-                    ]
-                    });
-    var heat = new Heatmap.Layer("Heatmap");
-    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(9.434, 54.740)));
-    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(9.833, 54.219)));
-    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(10.833, 55.219)));
-    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(16.833, 56.219)));
-    heat.addSource(new Heatmap.Source(new OpenLayers.LonLat(17.833, 57.219)));
-    heat.defaultIntensity = 0.1;
-    heat.setOpacity(0.33);
-    var wms = new OpenLayers.Layer.WMS("OpenLayers WMS", "http://labs.metacarta.com/wms/vmap0", {layers: 'basic'});
-    map.addLayers([wms, heat]);
-    map.zoomToExtent(heat.getDataExtent());
-    console.log("added heatmap");
+    colors = new Array('#e2dee6', '#c2abdd', '#9d87b6', '#735a8f', '#3d2e4e');
+    styles = []
+    for (i = 0 ; i < 5 ; i++)
+    {
+        style = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+        style.fillColor = colors[i];
+        style.strokeColor = colors[i];
+        styles.push(style);
+    }
+    return styles;
 }
+
+function getCount(heatmapObject, latitudeMercator, longitudeMercator)
+{
+    geodetic = OpenGeoportal.ogp.map.MercatorToWGS84(longitudeMercator, latitudeMercator);
+    longitude = geodetic.lon;
+    latitude = geodetic.lat;
+    return getCountGeodetic(heatmapObject, latitude, longitude);
+}
+
+
+function getCountGeodetic(heatmapObject, latitude, longitude)
+{
+    var heatmap = heatmapObject[15];
+    if (heatmap == null)
+        return;
+    var minimumLatitude = heatmapObject[11];
+    var maximumLatitude = heatmapObject[13];
+    var deltaLatitude = maximumLatitude - minimumLatitude;
+    var minimumLongitude = heatmapObject[7];
+    var maximumLongitude = heatmapObject[9];
+    var deltaLongitude = maximumLongitude - minimumLongitude;
+
+    var stepsLatitude = heatmap.length;
+    var stepsLongitude = heatmap[0].length;
+    var stepSizeLatitude = deltaLatitude / stepsLatitude;
+    var stepSizeLongitude = deltaLongitude / stepsLongitude;
+
+    var latitudeIndex = Math.floor((latitude - minimumLatitude) / stepSizeLatitude);
+    var longitudeIndex = Math.floor((longitude - minimumLongitude) / stepSizeLongitude);
+
+    if (latitudeIndex < 0) latitudeIndex = 0;
+    if (longitudeIndex < 0) longitudeIndex = 0;
+    try
+    {
+        var heatmapValue = heatmap[heatmap.length - latitudeIndex - 1][longitudeIndex];
+        return heatmapValue;
+    }
+    catch (err)
+    {
+        console.log("error in getCount with lat = " + latitude + ", lon = " + longitude);
+        console.log("  lat index = " + latitudeIndex + ", lon index = " + longitudeIndex);
+        return heatmap[0][0];
+    }
+}
+
+
 
 /*
-    var heat = new Heatmap.Layer("Heatmap");
-    merc = OpenGeoportal.ogp.map.WGS84ToMercator(9.434, 54.740);
-    console.log("merc = " + merc);
-    heat.addSource(new Heatmap.Source(merc));
+if (typeof OpenGeoportal === 'undefined') {
+        OpenGeoportal = {};
+}
+if (typeof OpenGeoportal.Models === 'undefined') {
+        OpenGeoportal.Models = {};
+}
 
-    merc = OpenGeoportal.ogp.map.WGS84ToMercator(12.434, 56.740);
-    ll2 = new OpenLayers.LonLat(merc.x, merc.y);
-    console.log("  merc = " + merc);
-    heat.addSource(new Heatmap.Source(merc));
 
-    OpenGeoportal.ogp.map.addLayer(heat);
-    console.log("added heatmap");
+OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
+    {
+        initialize: function()
+        {
+            console.log("heatmap model backbone initialize");
+            that = this;
+            jQuery(document).on("fireSearch", function()
+                {
+                    console.log("heatmap fireSearch handler");
+                    that.handleHeatmap();
+                });
+        },
+        fetchOn: false,
+        searcher: function() {return OpenGeoportal.ogp.search;},
+        url: function()
+            {
+                searcher = OpenGeoportal.ogp.appState.get("queryTerms");
+                solr = searcher.getBasicSearchQuery();
+                solr.enableHeatmap();
+                solr.addFilter(solr.createNonGlobalAreaFilter());
+                url = solr.getURL();
+		        return url;
+		    },
+		handleHeatmap: function()
+		    {
+                this.fetch({dataType: "jsonp", jsonp: "json.wrf",
+                            reset: true,
+                            complete: function(dataObj, success)
+                            {
+                                foo = dataObj;
+                                console.log("in heatmap complete " + dataObj.responseJSON.response.numFound);
+			                    var facetCounts = dataObj.responseJSON.facet_counts;
+                    			if (facetCounts != null)
+			                    {
+  			                        var facetHeatmaps = facetCounts.facet_heatmaps;
+			                        bbox_rpt = facetHeatmaps.bbox_rpt;
 
-    if (true == true) return;
+			                        var heatmap = bbox_rpt[15];
+
+  			                        drawHeatmapOpenLayers(bbox_rpt);
+                                }
+                            }});
+            }
+    }
+
+  );
+
 */
