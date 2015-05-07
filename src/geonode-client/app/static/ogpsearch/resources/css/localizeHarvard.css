@@ -2,7 +2,7 @@
 
 
 #logoGraphic {
-		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat;
+		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat; 
 		height: 40px;
 		width: 200px;
 		padding: 2px;
@@ -26,22 +26,32 @@
 }
 */
 
+
 #ogpMapButtons {
-	display: none;
+	display: none;  
 }
 
 .olControlPanel.olControlNoSelect {
-        display: none;			    
+        display: none;  
 }
 
 #geosearchDiv {
-	display: none;
+	display: none;  
 }
 
 #top_menu {
-	display: none;
+	display: none;  
 }
 
 [aria-controls="cartTab"] {
-	display: none;
+	display: none; 
+}
+
+.olControlModPanZoomBar {
+  margin-left: 475px;
+}
+
+
+#moreSearchOptions {
+	display: none;  
 }

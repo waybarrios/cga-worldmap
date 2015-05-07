@@ -438,7 +438,7 @@ OpenGeoportal.Views.SearchResultsTable = OpenGeoportal.Views.LayerTable
 									columnName : "Metadata",
 									resizable : false,
 									organize : false,
-									visible : true,
+									visible : false,
 									hidable : false,
 									header : "Meta",
 									columnClass : "colMetadata",
