@@ -124,6 +124,27 @@ OpenGeoportal.Models.QueryTerms = Backbone.Model.extend({
 		// console.log(solr.getURL());
 		return solr.getURL();
 	},
+
+	/**
+	 * return the solr object for the current search
+	 */
+        getSearchSolrObject : function() {
+
+	    var solr = null;
+
+	    var searchType = this.get("searchType");
+
+	    if (searchType === 'basic') {
+		solr = this.getBasicSearchQuery();
+	    } else if (searchType === 'advanced') {
+		solr = this.getAdvancedSearchQuery();
+	    } else {
+		// fall through                                                                                                    
+		solr = this.getBasicSearchQuery();
+	    }
+
+	    return solr
+        },
 	getSortInfo : function() {
 		return OpenGeoportal.ogp.resultsTableObj.tableOrganize;
 
