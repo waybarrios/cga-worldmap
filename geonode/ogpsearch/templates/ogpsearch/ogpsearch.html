@@ -171,7 +171,8 @@ if (typeof jQuery == 'undefined') {
 <div id="header">
 
   <div id="logo" onclick="location.href=location.href">
-                <div id="logoGraphic"></div><div class="logoText">WorldMap</div> <div class="logoText offsetColor"></div>
+                <!-- <div id="logoGraphic"></div><div class="logoText">WorldMap</div> <div class="logoText offsetColor"></div> -->
+                <div style="font-size: 20px">Harvard WorldMap Search Pre-Alpha</div>
         </div>
         <div id="top_menu">
                 <button class="reset button headerButton">Reset</button>
@@ -209,7 +210,7 @@ if (typeof jQuery == 'undefined') {
                 </div>
                 <div id="searchCol2" class="searchCol">
                         <div class="basicSearch whatBox searchFormRow">
-                                <label for="whatField"> <span class="labelText">What:</span>
+                                <label for="whatField"> <span class="labelText"><!-- What: --></span>
                                 </label> <input id="whatField" type="search" />
                         </div>
 
@@ -243,7 +244,7 @@ if (typeof jQuery == 'undefined') {
                                 <label for="advancedOriginatorText">Originator:</label> <input
                                         name="advancedOriginatorText" type="search" class="searchFormInput"
                                         id="advancedOriginatorText" />
-                        </div><div align="right"><i>Powered by OpenGeoportal</i></div>
+                        </div><div align="right"><i>Powered by <a href="http://opengeoportal.org/">OGP</a> and <a href="https://lucene.apache.org/">Lucene Heatmaps</a></i></div>
                         <div class="advancedSearch searchFormRow searchRow2">
                                 <label for="advancedDateFromText">Year(s):</label> <span
                                         class="searchFormInput"> <input name="advancedDateFromText"

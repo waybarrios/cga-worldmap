@@ -24,6 +24,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
                 {
                     that.handleHeatmap(that);
                 });
+	    jQuery(document).trigger("fireSearch");
         },
         fetchOn: false,
         searcher: function() {return OpenGeoportal.ogp.search;},
