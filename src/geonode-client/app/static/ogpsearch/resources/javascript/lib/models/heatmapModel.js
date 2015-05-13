@@ -127,13 +127,21 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	},
 
 
+	flattenValues: function(heatmap)
+	{
+	    tmp = [];
+	    for (i = 0 ; i < heatmap.length ; i++)
+		tmp.push.apply(tmp, heatmap[i]);
+	    return tmp;
+	},
+
 	/**
 	  uses a Jenks algorithm with 5 classifications
 	  the library supports many more options
 	*/
-	getClassifications: function(heatmap)
+	getClassifications: function(that, heatmap)
 	{
-	    flattenedValues = flattenValues(heatmap);
+	    flattenedValues = that.flattenValues(heatmap);
             series = new geostats(flattenedValues);
 
             jenksClassifications = series.getClassJenks(5);
@@ -228,7 +236,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    stepsLongitude = heatmapObject[3];   //heatmap[0].length;
 	    
 	    minMaxValue = that.heatmapMinMax(heatmap, stepsLatitude, stepsLongitude);
-	    ceilingValues = getCeilingValues(heatmap);
+	    //ceilingValues = getCeilingValues(heatmap);
 	    minValue = minMaxValue[0];
 	    maxValue = minMaxValue[1];
 	    if (maxValue == -1) return;  // something wrong
@@ -244,7 +252,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    var stepSizeLongitude = deltaLongitude / stepsLongitude;
 	    radius = that.computeRadius(minimumLatitude, minimumLongitude, Math.max(stepSizeLatitude, stepSizeLongitude));
 
-	    var classifications = that.getClassifications(heatmap);
+	    var classifications = that.getClassifications(that, heatmap);
 	    var colrGradient = that.getColorGradient(that, classifications);
 	    that.heatmapLayer.setGradientStops(colorGradient);
 
