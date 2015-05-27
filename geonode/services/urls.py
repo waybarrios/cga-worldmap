@@ -23,6 +23,7 @@ from django.conf.urls.defaults import patterns, url
 urlpatterns = patterns('geonode.services.views',
     url(r'^$', 'services', name='services'),
     url(r'^register/$', 'register_service', name="register_service"),
+    url(r'^register_multiple/$', 'register_service_multiple', name="register_service_multiple"),
     (r'^registerbytype/$', 'register_service_by_type'),
     url(r'^(?P<service_id>\d+)/$', 'service_detail', name='service_detail'),
     url(r'^(?P<service_id>\d+)/edit$', 'edit_service', name='edit_service'),

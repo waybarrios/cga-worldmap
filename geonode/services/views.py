@@ -79,6 +79,7 @@ maps, metadata, and development resources through a single common interface.
 """)
 
 
+# comment out login_required for easier testing
 @login_required
 def services(request):
     """
@@ -88,6 +89,16 @@ def services(request):
     return render_to_response("services/service_list.html", RequestContext(request, {
         'services': services,
     }))
+@login_required
+def register_service_multiple(request):
+    if request.method == "GET":
+        service_form = CreateServiceForm()
+        return render_to_response('services/service_register_multiple.html',
+                                  RequestContext(request, {
+                                      'create_service_form': service_form
+                                  }))
+
+
 
 @login_required
 def register_service(request):
@@ -778,6 +789,11 @@ def _register_arcgis_url(url,username, password, owner=None, parent=None):
     if re.search("\/MapServer\/*(f=json)*", baseurl):
         #This is a MapService
         arcserver = ArcMapService(baseurl)
+        print 'arcserver = ', arcserver
+        print 'isinstance = ', isinstance(arcserver,ArcMapService)
+        print _process_arcgis_service(arcserver, owner=owner, parent=parent)
+        print ' spatialReference = ', arcserver.spatialReference
+        print ' wkid = ', arcserver.spatialReference.wkid 
         if  isinstance(arcserver,ArcMapService) and arcserver.spatialReference.wkid in [102100,3857,900913]:
             return_json = [_process_arcgis_service(arcserver, owner=owner, parent=parent)]
         else:
@@ -794,6 +810,9 @@ def _register_arcgis_url(url,username, password, owner=None, parent=None):
     else:
         #This is a Folder
         arcserver = ArcFolder(baseurl)
+        print "processing arcgis rest folder"
+        print "using baseurl ", baseurl
+        print "created server: ", arcserver
         return_json = _process_arcgis_folder(arcserver, services=[], owner=owner, parent=parent)
 
     return HttpResponse(json.dumps(return_json),
@@ -804,6 +823,7 @@ def _register_arcgis_layers(service, arc=None):
     """
     Register layers from an ArcGIS REST service
     """
+    print "in _register_arcgis_layers"
     arc = arc or ArcMapService(service.base_url)
     for layer in arc.layers:
         count = 0
@@ -905,8 +925,13 @@ def _process_arcgis_folder(folder, services=[], owner=None, parent=None):
     """
     Iterate through folders and services in an ArcGIS REST service folder
     """
+    print "top of process_arcgis_folder with folder: ", folder
+    print "has services: ", hasattr(folder, 'services')
     for service in folder.services:
-        if  isinstance(service,ArcMapService) and service.spatialReference.wkid in [102100,3857,900913]:
+        print "service is map service:", isinstance(service,ArcMapService) 
+        print service
+        print "  spatialReference: ", hasattr(service, 'spatialReference')
+        if  isinstance(service,ArcMapService) and hasattr(service, 'spatialReference') and service.spatialReference.wkid in [102100,3857,900913]:
             print "Base URL is %s" % service.url
             result_json = _process_arcgis_service(service, owner, parent=parent)
             services.append(result_json)
@@ -915,7 +940,9 @@ def _process_arcgis_folder(folder, services=[], owner=None, parent=None):
             return_dict['msg'] =  _("Could not find any layers in a compatible projection:") + service.url
             services.append(return_dict)
     for subfolder in folder.folders:
-        _process_arcgis_folder(subfolder, services, owner)
+        print "  current subfolder ", subfolder
+        if (hasattr(subfolder, 'services')):
+            _process_arcgis_folder(subfolder, services, owner)
     return services
 
 def _register_ogp_service(url, owner=None):
