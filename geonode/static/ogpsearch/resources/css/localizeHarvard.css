@@ -1,0 +1,61 @@
+@CHARSET "UTF-8";
+
+
+#logoGraphic {
+		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat; 
+		height: 40px;
+		width: 200px;
+		padding: 2px;
+}
+
+#logo > div {
+    display: inline-block;
+    vertical-align: top;
+}
+
+#logo > div.logoText {
+	margin-left: -9px;
+	display: none;
+}
+/*
+#footerLogos .institutionLogo {
+	background: url("../media/ogp-institutions.png") no-repeat scroll -9px
+		-59px transparent;
+	height: 30px;
+	width: 66px;
+}
+*/
+
+
+#ogpMapButtons {
+	display: none;  
+}
+
+.olControlPanel.olControlNoSelect {
+        display: none;  
+}
+
+#geosearchDiv {
+	display: none;  
+}
+
+#top_menu {
+	display: none;  
+}
+
+[aria-controls="cartTab"] {
+	display: none; 
+}
+
+.olControlModPanZoomBar {
+  margin-left: 475px;
+}
+
+
+#moreSearchOptions {
+	display: none;  
+}
+
+#mapClearButton {
+	display: none;
+}

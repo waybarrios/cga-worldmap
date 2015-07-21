@@ -1,0 +1,23 @@
+
+def is_abc(parameter):
+    for letter in parameter:
+        if (letter =="a" or letter == "b" or letter == "c"):
+            print ("good letter")
+        else:
+            return False
+    return True
+
+
+def no_vowels(parameter):
+    for letter in parameter:
+        if (letter == 'a' or letter == 'e' or letter == 'i'):
+            pass
+        else:
+            print letter
+
+def not_abc(parameter):
+    temp = is_abc(parameter)
+    if temp == True:
+        return False
+    else:
+        return True
