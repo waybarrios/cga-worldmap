@@ -96,6 +96,8 @@ urlpatterns = patterns('',
                        (r'^groups/', include('geonode.groups.urls')),
                        (r'^documents/', include('geonode.documents.urls')),
                        (r'^services/', include('geonode.services.urls')),
+                       (r'^ogpsearch/?', include('geonode.ogpsearch.urls')),
+                       (r'^search2/?', include('geonode.ogpsearch.urls')),
                        url(r'', include(api.urls)),
                        )
 
