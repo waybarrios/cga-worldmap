@@ -140,6 +140,9 @@ setup(name='GeoNode',
         "celery==3.1.17",
         "django-celery==3.1.16",
 
+        # ogpsearch
+        "pysolr==3.3.2",
+
         # datetimepicker widget
         "django-bootstrap3-datetimepicker==2.2.3",
         "flake8==2.3.0",
