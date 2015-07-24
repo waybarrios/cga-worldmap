@@ -37,7 +37,8 @@ class OGP_utils(object):
                 return False
         return True
 
-    solr = pysolr.Solr('http://localhost:8983/solr/geonode24', timeout=60)
+    solr_url = settings.get('SOLR_URL', 'http://localhost:8983/solr/geonode24')
+    solr = pysolr.Solr(solr_url, timeout=60)
     logger = logging.getLogger("geonode.ogpsearch.utils")
 
 
