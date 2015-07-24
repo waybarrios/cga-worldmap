@@ -323,7 +323,7 @@ def index(request):
     # ingest_maps()
     # ingest_layers()
     #solr_test()
-    extra_context = {'SOLR_URL': settings.get('SOLR_URL', 'http://localhost:8983/solr/geonode24')}
+    extra_context = {'SOLR_URL': getattr(settings, 'SOLR_URL', 'http://localhost:8983/solr/geonode24')}
     return render_to_response('ogpsearch/ogpsearch.html', RequestContext(request, extra_context))
 
 def geonode_to_solr(request):
