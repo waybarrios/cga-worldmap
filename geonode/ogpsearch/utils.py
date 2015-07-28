@@ -95,8 +95,7 @@ class OGP_utils(object):
                 domain = OGP_utils.get_domain(owsUrl)
                 if (i == 0):
                     i = layer.title
-                #if domain != "Harvard":
-                #    dataType = "Remote"
+
                 OGP_utils.solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i), 
                                  "Name": layer.title,  
                                  "LayerDisplayName": layer.title,

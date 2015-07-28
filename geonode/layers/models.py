@@ -513,8 +513,14 @@ def post_delete_layer(instance, sender, **kwargs):
         for lf in instance.upload_session.layerfile_set.all():
             lf.file.delete()
 
+def post_save_layer(instance, sender, **kwargs):
+    instance._autopopulate()
+    logger.warn("in layers.models.post_save_layer")
+    if (settings.SOLR_SEARCH):
+        geonode.ogpsearch.utils.OGP_utils.layer_to_solr(instance)
 
 signals.pre_save.connect(pre_save_layer, sender=Layer)
 signals.post_save.connect(resourcebase_post_save, sender=Layer)
+signals.post_save.connect(post_save_layer, sender=Layer)
 signals.pre_delete.connect(pre_delete_layer, sender=Layer)
 signals.post_delete.connect(post_delete_layer, sender=Layer)
