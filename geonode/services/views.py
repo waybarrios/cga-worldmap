@@ -206,7 +206,6 @@ def _verify_service_type(base_url, service_type=None):
     Try to determine service type by process of elimination
     """
     logger.info("Checking the url: " + base_url)
-
     if service_type in ['WMS', 'OWS', None]:
         try:
             service = WebMapService(base_url)
@@ -812,6 +811,7 @@ def _register_arcgis_url(url, name, username, password, owner=None, parent=None)
             logger.exception(e)
         if isinstance(arcserver, ArcMapService) and arcserver.spatialReference.wkid in [
                 102100, 102113, 3785, 3857, 900913]:
+
             return_json = [_process_arcgis_service(arcserver, name, owner=owner, parent=parent)]
         else:
             return_json = [{'msg':  _("Could not find any layers in a compatible projection.")}]
