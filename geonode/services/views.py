@@ -945,13 +945,15 @@ def _process_arcgis_folder(folder, name, services=[], owner=None, parent=None):
             return_dict[
                 'msg'] = 'Service could not be identified as an ArcMapService, URL: %s' % service.url
         else:
-            if service.spatialReference.wkid in [102100, 3857, 900913]:
-                return_dict = _process_arcgis_service(
-                    service, name, owner, parent=parent)
-            else:
-                return_dict['msg'] = _("Could not find any layers in a compatible projection: \
-                The spatial id was: %(srs)s and the url %(url)s" % {'srs': service.spatialReference.wkid,
+            if hasattr(service, 'spatialReference'):
+                if service.spatialReference.wkid in [102100, 3857, 900913]:
+                    return_dict = _process_arcgis_service(service, name, owner, parent=parent)
+                else:
+                    return_dict['msg'] = _("Could not find any layers in a compatible projection: \
+                    The spatial id was: %(srs)s and the url %(url)s" % {'srs': service.spatialReference.wkid,
                                                                     'url': service.url})
+            else:
+                return_dict['msg'] = "No spatialReference for url " + service.url
 
         services.append(return_dict)
 
