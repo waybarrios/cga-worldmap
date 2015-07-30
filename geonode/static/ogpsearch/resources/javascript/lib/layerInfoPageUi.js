@@ -26,7 +26,7 @@ OpenGeoportal.LayerInfoPageUi = function LayerInfoPageUi() {
 	    console.log("in layerInfoPageUi.viewMetadata");
 	    layerInfoPage = model.get("Location").layerInfoPage;
 	    url = window.location.origin + layerInfoPage;
-	    window.location = url;
+	    window.open(url, "_blank");
 
 	}
 }
