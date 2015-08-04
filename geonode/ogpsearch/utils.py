@@ -66,8 +66,8 @@ class OGP_utils(object):
             if (OGP_utils.good_coords(bbox)):
                 print 'in utils.layer_to_solr, bbox = ', bbox
                 username = ""
-                if (l.owner):
-                    username = l.owner.username
+                if (layer.owner):
+                    username = layer.owner.username
                 minX = float(bbox[0])
                 minY = float(bbox[1])
                 maxX = float(bbox[2])
