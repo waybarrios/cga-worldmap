@@ -19,8 +19,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    // add listener for seach events
 	    that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
 	    OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
-	    //OpenGeoportal.Models.Heatmap.radiusFactor = .9;
-	    OpenGeoportal.Models.Heatmap.radiusFactor = .3  // for testing
+	    OpenGeoportal.Models.Heatmap.radiusFactor = .9;
             jQuery(document).on("fireSearch", function()
                 {
                     that.handleHeatmap(that);
@@ -40,6 +39,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
                 solr = searcher.getSearchSolrObject();
                 solr.enableHeatmap();
                 solr.addFilter(solr.createNonGlobalAreaFilter());
+                solr.addFilter(solr.createOriginFilter());
                 url = solr.getURL();
 		        return url;
 	    },
@@ -179,6 +179,11 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
             series = new geostats(flattenedValues);
 
             jenksClassifications = series.getClassJenks(5);
+	    for (var i = 0 ; i < jenksClassifications.length ; i++)
+	    {
+		if (jenksClassifications[i] < 0)
+		    jenksClassifications[i] = 0;
+	    }
 	    return jenksClassifications;
 	},
 
