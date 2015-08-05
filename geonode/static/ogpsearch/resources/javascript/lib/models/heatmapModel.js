@@ -19,7 +19,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    // add listener for seach events
 	    that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
 	    OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
-	    OpenGeoportal.Models.Heatmap.radiusFactor = .9;
+	    OpenGeoportal.Models.Heatmap.radiusAdjust = 1.;  // only used for testing
             jQuery(document).on("fireSearch", function()
                 {
                     that.handleHeatmap(that);
@@ -223,17 +223,33 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	/**
 	   radius of heatmap point depends on how many pixels are between adjacent points
 	*/
-	computeRadius: function(latitude, longitude, stepSize)
+	computeRadius: function(latitude, longitude, latitudeStepSize, longitudeStepSize)
 	{
 	    mercator1 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude, latitude);
 	    pixel1 = OpenGeoportal.ogp.map.getPixelFromLonLat(mercator1);
-	    mercator2 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude + stepSize, latitude + stepSize);
+	    mercator2 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude + longitudeStepSize, latitude + latitudeStepSize);
 	    pixel2 = OpenGeoportal.ogp.map.getPixelFromLonLat(mercator2);
 	    deltaLatitude = Math.abs(pixel1.x - pixel2.x);
-	    return Math.ceil(deltaLatitude * 2.);
+	    deltaLongitude = Math.abs(pixel1.y - pixel2.y);
+	    delta = Math.max(deltaLatitude, deltaLongitude);
+	    return Math.ceil(delta / 2.);
 	},
 
-
+	/**
+	   To improve the heatmap display we slightly adjust the radius of heatmap points based on zoom level
+	 */
+	getRadiusFactor: function()
+	{
+	    var factor = [1.6, 1.5, 2.0, 2.0, 2.2, 1.8, 1.8, 2., 2.];
+	    var zoomLevel = OpenGeoportal.ogp.map.getZoom();
+	    if (zoomLevel <1) 
+		return 1;
+	    var index = zoomLevel - 1;
+	    if (index > factor.length - 1)
+		return factor[factor.length - 1];
+	    var value = factor[index];
+	    return value;
+	},
 	/**
 	   return the largest and smallest value in the heatmap so its values can be scaled
 	   some elements in the heatmap can be null, this function replaces the nulls
@@ -293,7 +309,6 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 
 	    var stepSizeLatitude = deltaLatitude / stepsLatitude;
 	    var stepSizeLongitude = deltaLongitude / stepsLongitude;
-	    radius = that.computeRadius(minimumLatitude, minimumLongitude, Math.max(stepSizeLatitude, stepSizeLongitude));
 	    
 	    that.classifications = that.getClassifications(that, heatmap);
 	    var colrGradient = that.getColorGradient(that, that.classifications);
@@ -307,12 +322,14 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 		    {
 			heatmapValue = heatmap[heatmap.length - i - 1][j];
 			currentLongitude = minimumLongitude + (j * stepSizeLongitude) + (.5 * stepSizeLongitude);
-			currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude);
+			currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude)
+			radius = that.computeRadius(currentLatitude, currentLongitude, stepSizeLatitude, stepSizeLongitude);;
 			mercator = OpenGeoportal.ogp.map.WGS84ToMercator(currentLongitude, currentLatitude);
 			scaledValue = that.rescaleHeatmapValue(heatmapValue, that.classifications[1], maxValue);
+			radiusFactor = this.getRadiusFactor();
 			if (heatmapValue > 0)
 			{
-			    heatmapLayer.addSource(new Heatmap.Source(mercator, radius*OpenGeoportal.Models.Heatmap.radiusFactor, scaledValue));
+			    heatmapLayer.addSource(new Heatmap.Source(mercator, radius*radiusFactor*OpenGeoportal.Models.Heatmap.radiusAdjust, scaledValue));
 			}
 		    }
 		    catch (error)
