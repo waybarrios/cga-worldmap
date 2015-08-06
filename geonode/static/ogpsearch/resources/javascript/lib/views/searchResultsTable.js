@@ -417,12 +417,7 @@ OpenGeoportal.Views.SearchResultsTable = OpenGeoportal.Views.LayerTable
 										displayName : "Repository",
 										header : "Rep",
 										columnClass : "colSource",
-										width : 60,
-										modelRender : function(model) {
-											var repository = model.get("Institution");
-											return that.tableControls.renderRepositoryIcon(repository);
-
-										}
+										width : 60
 
 									}, {
 										order : 9,
