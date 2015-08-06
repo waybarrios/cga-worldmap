@@ -17,8 +17,8 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
         {
             that = this;
 	    // add listener for seach events
-	    that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
-	    OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
+	    //that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
+	    //OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
 	    OpenGeoportal.Models.Heatmap.radiusAdjust = 1.1;  // scales all heatmap circles
             jQuery(document).on("fireSearch", function()
                 {
@@ -178,7 +178,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    flattenedValues = that.flattenValues(heatmap);
             series = new geostats(flattenedValues);
 
-            jenksClassifications = series.getClassJenks(6);
+            jenksClassifications = series.getClassJenks(this.getColors().length);
 	    for (var i = 0 ; i < jenksClassifications.length ; i++)
 	    {
 		if (jenksClassifications[i] < 0)
@@ -187,13 +187,20 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    return jenksClassifications;
 	},
 
+	getColors: function()
+	{
+            //var colors = [0x00000000, 0xfef0d9ff, 0xfdcc8aff, 0xfc8d59ff, 0xe34a33ff, 0xb30000ff];
+	    var colors = [0x00000000, 0x0000dfff, 0x00effeff, 0x00ff42ff, 0xfeec30ff, 0xff5f00ff, 0xff0000ff];
+	    return colors;
+	},
+
 	/*
 	  convert Jenks classifications to Brewer colors 
 	*/
 	getColorGradient: function(that, classifications)
 	{
-            //colors = [0x00000000, 0xfef0d9ff, 0xfdcc8aff, 0xfc8d59ff, 0xe34a33ff, 0xb30000ff];
-	    colors = [0x00000000, 0x0000dfff, 0x00effeff, 0x00ff42ff, 0xfeec30ff, 0xff5f00ff, 0xff0000ff];
+
+	    colors = this.getColors();
             colorGradient = {};
             for (var i = 0 ; i < classifications.length ; i++)
 	    {
