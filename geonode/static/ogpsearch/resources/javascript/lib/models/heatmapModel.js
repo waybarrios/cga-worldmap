@@ -51,6 +51,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	*/
 	handleHeatmap: function(that)
 	{
+	    this.deleteHeatmapLayer(this);  // delete quickly to get heatmap off of UI
 	    this.fetch({dataType: "jsonp", jsonp: "json.wrf",
 			reset: true,
 			complete: function(dataObj, success)
@@ -247,11 +248,12 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	},
 
 	/**
-	   To improve the heatmap display we slightly adjust the radius of heatmap points based on zoom level
+	   to improve the heatmap display we slightly adjust the radius of heatmap points based on zoom level.
+	   these factos are computed by eyeballing the results and tweaking
 	 */
 	getRadiusFactor: function()
 	{
-	    var factor = [1.6, 1.5, 2.0, 2.0, 2.2, 1.8, 2., 2., 2.];
+	    var factor = [1.6, 1.5, 2.6, 2.4, 2.2, 1.8, 2., 2., 2.];
 	    var zoomLevel = OpenGeoportal.ogp.map.getZoom();
 	    if (zoomLevel <1) 
 		return 1;
