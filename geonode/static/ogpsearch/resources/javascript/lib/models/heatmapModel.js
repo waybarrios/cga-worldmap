@@ -19,6 +19,9 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    // add listener for seach events
 	    //that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
 	    //OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
+	    //var googleBasemap = OpenGeoportal.ogp.map.getLayersByName("Google Physical")[0];
+	    //OpenGeoportal.ogp.map.removeLayer(googleBasemap);
+
 	    OpenGeoportal.Models.Heatmap.radiusAdjust = 1.1;  // scales all heatmap circles
             jQuery(document).on("fireSearch", function()
                 {
@@ -122,7 +125,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    point = mercator.transform(epsg900913, epsg4326);
 	    count = that.getCountGeodetic(that.lastHeatmapObject, point.lat, point.lon);
 	    if (count < 0) count = 0;
-	    message = "Number of layers = " + count + ": " + that.classifications;
+	    message = "Number of layers = " + count;
 	    jQuery("#map").tooltip( "option", "content", message );
 	},
 
@@ -248,7 +251,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	 */
 	getRadiusFactor: function()
 	{
-	    var factor = [1.6, 1.5, 2.0, 2.0, 2.2, 1.8, 1.8, 2., 2.];
+	    var factor = [1.6, 1.5, 2.0, 2.0, 2.2, 1.8, 2., 2., 2.];
 	    var zoomLevel = OpenGeoportal.ogp.map.getZoom();
 	    if (zoomLevel <1) 
 		return 1;
