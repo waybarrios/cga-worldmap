@@ -919,7 +919,8 @@ def _process_arcgis_service(arcserver, name, owner=None, parent=None):
         return return_dict
 
     name = _get_valid_name(arcserver.mapName or arc_url) if not name else name
-    service = Service.objects.create(base_url=arc_url, name=name,
+    try:
+        service = Service.objects.create(base_url=arc_url, name=name,
                                      type='REST',
                                      method='I',
                                      title=arcserver.mapName,
@@ -927,6 +928,10 @@ def _process_arcgis_service(arcserver, name, owner=None, parent=None):
                                      online_resource=arc_url,
                                      owner=owner,
                                      parent=parent)
+    except:
+        return_dict={'status': 'ok', 'msg': 'could not create service ' + name}
+        return return_dict
+
 
     service.set_default_permissions()
 
