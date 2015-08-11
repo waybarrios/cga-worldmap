@@ -867,7 +867,7 @@ def _register_arcgis_layers(service, arc=None):
             try:
                 saved_layer.save()
             except:
-                return_dict={'status': 'ok', 'msg': 'could not save layer ' + value_name}
+                return_dict={'status': 'ok', 'msg': 'could not save layer ' + valid_name}
                 return return_dict
 
             service_layer, created = ServiceLayer.objects.get_or_create(
