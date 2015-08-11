@@ -842,32 +842,32 @@ def _register_arcgis_layers(service, arc=None):
 
         if existing_layer is None:
             # Need to check if layer already exists??
-            saved_layer, created = Layer.objects.get_or_create(
-                typename=typename,
-                service=service,
-                defaults=dict(
-                    name=valid_name,
-                    store=service.name,  # ??
-                    storeType="remoteStore",
-                    workspace="remoteWorkspace",
-                    title=layer.name,
-                    abstract=layer._json_struct[
-                        'description'] or _("Not provided"),
-                    uuid=layer_uuid,
-                    owner=None,
-                    srid="EPSG:%s" % layer.extent.spatialReference.wkid,
-                    bbox_x0=llbbox[0],
-                    bbox_x1=llbbox[2],
-                    bbox_y0=llbbox[1],
-                    bbox_y1=llbbox[3],
-                )
-            )
-
-            saved_layer.set_default_permissions()
             try:
+                saved_layer, created = Layer.objects.get_or_create(
+                    typename=typename,
+                    service=service,
+                    defaults=dict(
+                        name=valid_name,
+                        store=service.name,  # ??
+                        storeType="remoteStore",
+                        workspace="remoteWorkspace",
+                        title=layer.name,
+                        abstract=layer._json_struct[
+                            'description'] or _("Not provided"),
+                        uuid=layer_uuid,
+                        owner=None,
+                        srid="EPSG:%s" % layer.extent.spatialReference.wkid,
+                        bbox_x0=llbbox[0],
+                        bbox_x1=llbbox[2],
+                        bbox_y0=llbbox[1],
+                        bbox_y1=llbbox[3],
+                        )
+                    )
+
+                saved_layer.set_default_permissions()
                 saved_layer.save()
             except:
-                return_dict={'status': 'ok', 'msg': 'could not save layer ' + valid_name}
+                return_dict={'status': 'ok', 'msg': 'layer already exists or could not save layer ' + valid_name}
                 return return_dict
 
             service_layer, created = ServiceLayer.objects.get_or_create(
