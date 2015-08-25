@@ -842,29 +842,33 @@ def _register_arcgis_layers(service, arc=None):
 
         if existing_layer is None:
             # Need to check if layer already exists??
-            saved_layer, created = Layer.objects.get_or_create(
-                typename=typename,
-                service=service,
-                defaults=dict(
-                    name=valid_name,
-                    store=service.name,  # ??
-                    storeType="remoteStore",
-                    workspace="remoteWorkspace",
-                    title=layer.name,
-                    abstract=layer._json_struct[
-                        'description'] or _("Not provided"),
-                    uuid=layer_uuid,
-                    owner=None,
-                    srid="EPSG:%s" % layer.extent.spatialReference.wkid,
-                    bbox_x0=llbbox[0],
-                    bbox_x1=llbbox[2],
-                    bbox_y0=llbbox[1],
-                    bbox_y1=llbbox[3],
-                )
-            )
+            try:
+                saved_layer, created = Layer.objects.get_or_create(
+                    typename=typename,
+                    service=service,
+                    defaults=dict(
+                        name=valid_name,
+                        store=service.name,  # ??
+                        storeType="remoteStore",
+                        workspace="remoteWorkspace",
+                        title=layer.name,
+                        abstract=layer._json_struct[
+                            'description'] or _("Not provided"),
+                        uuid=layer_uuid,
+                        owner=None,
+                        srid="EPSG:%s" % layer.extent.spatialReference.wkid,
+                        bbox_x0=llbbox[0],
+                        bbox_x1=llbbox[2],
+                        bbox_y0=llbbox[1],
+                        bbox_y1=llbbox[3],
+                        )
+                    )
 
-            saved_layer.set_default_permissions()
-            saved_layer.save()
+                saved_layer.set_default_permissions()
+                saved_layer.save()
+            except:
+                return_dict={'status': 'ok', 'msg': 'layer already exists or could not save layer ' + valid_name}
+                return return_dict
 
             service_layer, created = ServiceLayer.objects.get_or_create(
                 service=service,
@@ -903,7 +907,8 @@ def _process_arcgis_service(arcserver, name, owner=None, parent=None):
         return return_dict
 
     name = _get_valid_name(arcserver.mapName or arc_url) if not name else name
-    service = Service.objects.create(base_url=arc_url, name=name,
+    try:
+        service = Service.objects.create(base_url=arc_url, name=name,
                                      type='REST',
                                      method='I',
                                      title=arcserver.mapName,
@@ -911,6 +916,10 @@ def _process_arcgis_service(arcserver, name, owner=None, parent=None):
                                      online_resource=arc_url,
                                      owner=owner,
                                      parent=parent)
+    except:
+        return_dict={'status': 'ok', 'msg': 'could not create service ' + name}
+        return return_dict
+
 
     service.set_default_permissions()
 
@@ -945,13 +954,15 @@ def _process_arcgis_folder(folder, name, services=[], owner=None, parent=None):
             return_dict[
                 'msg'] = 'Service could not be identified as an ArcMapService, URL: %s' % service.url
         else:
-            if service.spatialReference.wkid in [102100, 3857, 900913]:
-                return_dict = _process_arcgis_service(
-                    service, name, owner, parent=parent)
-            else:
-                return_dict['msg'] = _("Could not find any layers in a compatible projection: \
-                The spatial id was: %(srs)s and the url %(url)s" % {'srs': service.spatialReference.wkid,
+            if hasattr(service, 'spatialReference'):
+                if service.spatialReference.wkid in [102100, 3857, 900913]:
+                    return_dict = _process_arcgis_service(service, name, owner, parent=parent)
+                else:
+                    return_dict['msg'] = _("Could not find any layers in a compatible projection: \
+                    The spatial id was: %(srs)s and the url %(url)s" % {'srs': service.spatialReference.wkid,
                                                                     'url': service.url})
+            else:
+                return_dict['msg'] = "No spatialReference for url " + service.url
 
         services.append(return_dict)
 

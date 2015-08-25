@@ -17,9 +17,12 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
         {
             that = this;
 	    // add listener for seach events
-	    that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
-	    OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
-	    OpenGeoportal.Models.Heatmap.radiusFactor = .9;
+	    //that.backgroundLayer = new OpenLayers.Layer.Stamen("toner-lite");
+	    //OpenGeoportal.ogp.map.addLayer(that.backgroundLayer);
+	    //var googleBasemap = OpenGeoportal.ogp.map.getLayersByName("Google Physical")[0];
+	    //OpenGeoportal.ogp.map.removeLayer(googleBasemap);
+
+	    OpenGeoportal.Models.Heatmap.radiusAdjust = 1.1;  // scales all heatmap circles
             jQuery(document).on("fireSearch", function()
                 {
                     that.handleHeatmap(that);
@@ -39,6 +42,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
                 solr = searcher.getSearchSolrObject();
                 solr.enableHeatmap();
                 solr.addFilter(solr.createNonGlobalAreaFilter());
+                solr.addFilter(solr.createOriginFilter());
                 url = solr.getURL();
 		        return url;
 	    },
@@ -47,6 +51,7 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	*/
 	handleHeatmap: function(that)
 	{
+	    this.deleteHeatmapLayer(this);  // delete quickly to get heatmap off of UI
 	    this.fetch({dataType: "jsonp", jsonp: "json.wrf",
 			reset: true,
 			complete: function(dataObj, success)
@@ -177,8 +182,20 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    flattenedValues = that.flattenValues(heatmap);
             series = new geostats(flattenedValues);
 
-            jenksClassifications = series.getClassJenks(5);
+            jenksClassifications = series.getClassJenks(this.getColors().length);
+	    for (var i = 0 ; i < jenksClassifications.length ; i++)
+	    {
+		if (jenksClassifications[i] < 0)
+		    jenksClassifications[i] = 0;
+	    }
 	    return jenksClassifications;
+	},
+
+	getColors: function()
+	{
+            //var colors = [0x00000000, 0xfef0d9ff, 0xfdcc8aff, 0xfc8d59ff, 0xe34a33ff, 0xb30000ff];
+	    var colors = [0x00000000, 0x0000dfff, 0x00effeff, 0x00ff42ff, 0xfeec30ff, 0xff5f00ff, 0xff0000ff];
+	    return colors;
 	},
 
 	/*
@@ -186,7 +203,8 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	*/
 	getColorGradient: function(that, classifications)
 	{
-            colors = [0x00000000, 0xfef0d9ff, 0xfdcc8aff, 0xfc8d59ff, 0xe34a33ff, 0xb30000ff];
+
+	    colors = this.getColors();
             colorGradient = {};
             for (var i = 0 ; i < classifications.length ; i++)
 	    {
@@ -198,6 +216,10 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    }
 	    return colorGradient;
 	},
+
+	/*
+	  scale return value between 0 and 1
+	 */
 	rescaleHeatmapValue: function(value, min, max)
 	{
 	    if (value == null)
@@ -207,23 +229,40 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 	    if (value == 0)
 		return 0;
 	    value = value * 1.0;
-	    return (value * 1.0) / max;
+	    return value / max;
 	},
 
 	/**
 	   radius of heatmap point depends on how many pixels are between adjacent points
 	*/
-	computeRadius: function(latitude, longitude, stepSize)
+	computeRadius: function(latitude, longitude, latitudeStepSize, longitudeStepSize)
 	{
 	    mercator1 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude, latitude);
 	    pixel1 = OpenGeoportal.ogp.map.getPixelFromLonLat(mercator1);
-	    mercator2 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude + stepSize, latitude + stepSize);
+	    mercator2 = OpenGeoportal.ogp.map.WGS84ToMercator(longitude + longitudeStepSize, latitude + latitudeStepSize);
 	    pixel2 = OpenGeoportal.ogp.map.getPixelFromLonLat(mercator2);
 	    deltaLatitude = Math.abs(pixel1.x - pixel2.x);
-	    return Math.ceil(deltaLatitude * 2.);
+	    deltaLongitude = Math.abs(pixel1.y - pixel2.y);
+	    delta = Math.max(deltaLatitude, deltaLongitude);
+	    return Math.ceil(delta / 2.);
 	},
 
-
+	/**
+	   to improve the heatmap display we slightly adjust the radius of heatmap points based on zoom level.
+	   these factos are computed by eyeballing the results and tweaking
+	 */
+	getRadiusFactor: function()
+	{
+	    var factor = [1.6, 1.5, 2.6, 2.4, 2.2, 1.8, 2., 2., 2.];
+	    var zoomLevel = OpenGeoportal.ogp.map.getZoom();
+	    if (zoomLevel <1) 
+		return 1;
+	    var index = zoomLevel - 1;
+	    if (index > factor.length - 1)
+		return factor[factor.length - 1];
+	    var value = factor[index];
+	    return value;
+	},
 	/**
 	   return the largest and smallest value in the heatmap so its values can be scaled
 	   some elements in the heatmap can be null, this function replaces the nulls
@@ -283,10 +322,9 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 
 	    var stepSizeLatitude = deltaLatitude / stepsLatitude;
 	    var stepSizeLongitude = deltaLongitude / stepsLongitude;
-	    radius = that.computeRadius(minimumLatitude, minimumLongitude, Math.max(stepSizeLatitude, stepSizeLongitude));
-
-	    var classifications = that.getClassifications(that, heatmap);
-	    var colrGradient = that.getColorGradient(that, classifications);
+	    
+	    that.classifications = that.getClassifications(that, heatmap);
+	    var colrGradient = that.getColorGradient(that, that.classifications);
 	    that.heatmapLayer.setGradientStops(colorGradient);
 
 	    for (var i = 0 ; i < stepsLatitude ; i++)
@@ -297,12 +335,14 @@ OpenGeoportal.Models.Heatmap = Backbone.Model.extend(
 		    {
 			heatmapValue = heatmap[heatmap.length - i - 1][j];
 			currentLongitude = minimumLongitude + (j * stepSizeLongitude) + (.5 * stepSizeLongitude);
-			currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude);
+			currentLatitude = minimumLatitude + (i * stepSizeLatitude) + (.5 * stepSizeLatitude)
+			radius = that.computeRadius(currentLatitude, currentLongitude, stepSizeLatitude, stepSizeLongitude);;
 			mercator = OpenGeoportal.ogp.map.WGS84ToMercator(currentLongitude, currentLatitude);
-			scaledValue = that.rescaleHeatmapValue(heatmapValue, classifications[1], maxValue);
+			scaledValue = that.rescaleHeatmapValue(heatmapValue, that.classifications[1], maxValue);
+			radiusFactor = this.getRadiusFactor();
 			if (heatmapValue > 0)
 			{
-			    heatmapLayer.addSource(new Heatmap.Source(mercator, radius*OpenGeoportal.Models.Heatmap.radiusFactor, scaledValue));
+			    heatmapLayer.addSource(new Heatmap.Source(mercator, radius*radiusFactor*OpenGeoportal.Models.Heatmap.radiusAdjust, scaledValue));
 			}
 		    }
 		    catch (error)

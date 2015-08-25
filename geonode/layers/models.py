@@ -36,6 +36,7 @@ from agon_ratings.models import OverallRating
 from geonode.utils import check_shp_columnnames
 from geonode.security.models import remove_object_permissions
 
+
 logger = logging.getLogger("geonode.layers.models")
 
 shp_exts = ['.shp', ]
@@ -516,8 +517,13 @@ def post_delete_layer(instance, sender, **kwargs):
     except UploadSession.DoesNotExist:
         pass
 
+import geonode.ogpsearch.utils
+def post_save_layer(instance, sender, **kwargs):
+    # if (settings.SOLR_SEARCH):
+    geonode.ogpsearch.utils.OGP_utils.layer_to_solr(instance)
 
 signals.pre_save.connect(pre_save_layer, sender=Layer)
 signals.post_save.connect(resourcebase_post_save, sender=Layer)
+signals.post_save.connect(post_save_layer, sender=Layer)
 signals.pre_delete.connect(pre_delete_layer, sender=Layer)
 signals.post_delete.connect(post_delete_layer, sender=Layer)

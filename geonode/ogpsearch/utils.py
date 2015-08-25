@@ -65,6 +65,9 @@ class OGP_utils(object):
 
             if (OGP_utils.good_coords(bbox)):
                 print 'in utils.layer_to_solr, bbox = ', bbox
+                username = ""
+                if (layer.owner):
+                    username = layer.owner.username
                 minX = float(bbox[0])
                 minY = float(bbox[1])
                 maxX = float(bbox[2])
@@ -95,13 +98,12 @@ class OGP_utils(object):
                 domain = OGP_utils.get_domain(owsUrl)
                 if (i == 0):
                     i = layer.title
-                #if domain != "Harvard":
-                #    dataType = "Remote"
+
                 OGP_utils.solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i), 
                                  "Name": layer.title,  
                                  "LayerDisplayName": layer.title,
-                                 "Institution": domain,
-                                 "Publisher": "Harvard",
+                                 "Institution": "WorldMap",
+                                 "Publisher": username,
                                  "Originator": domain,
                                  "Access": "Public",
                                  "DataType": dataType, 
@@ -132,8 +134,6 @@ class OGP_utils(object):
         i = 1
         for layer in layers:
             bbox = layer.bbox
-            #if (layer.upload_session):
-            #    print '  ', layer.upload_session.processed, layer.upload_session.context
             OGP_utils.layer_to_solr(layer, i)
             i = i+1
             time.sleep(.1)

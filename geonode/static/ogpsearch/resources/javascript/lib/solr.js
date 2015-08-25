@@ -508,6 +508,14 @@ OpenGeoportal.Solr = function() {
 
     };
 
+	// eliminate small layers at origin, they actually have no spatial data
+	// we don't need to test a range of values, equality for the floating point numbers sufficies
+    this.createOriginFilter = function createOriginFilter()
+    {
+	var filter = "!(Area:1 AND MaxX:0 AND MaxY:0)";
+	return filter;
+    };
+
 	/***************************************************************************
 	 * Spatial query components
 	 **************************************************************************/
