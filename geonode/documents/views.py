@@ -101,6 +101,15 @@ def document_detail(request, docid):
         if settings.SOCIAL_ORIGINS:
             context_dict["social_links"] = build_social_links(request, document)
 
+        if getattr(settings, 'EXIF_ENABLED', False):
+            try:
+                from geonode.contrib.exif.utils import exif_extract_dict
+                exif = exif_extract_dict(document)
+                if exif:
+                    context_dict['exif_data'] = exif
+            except:
+                print "Exif extraction failed."
+
         return render_to_response(
             "documents/document_detail.html",
             RequestContext(request, context_dict))
@@ -144,8 +153,68 @@ class DocumentUploadView(CreateView):
         if settings.RESOURCE_PUBLISHING:
             is_published = False
         self.object.is_published = is_published
+
         self.object.save()
         self.object.set_permissions(form.cleaned_data['permissions'])
+
+        abstract = None
+        date = None
+        regions = []
+        keywords = []
+        bbox = None
+
+        if getattr(settings, 'EXIF_ENABLED', False):
+            try:
+                from geonode.contrib.exif.utils import exif_extract_metadata_doc
+                exif_metadata = exif_extract_metadata_doc(self.object)
+                if exif_metadata:
+                    date = exif_metadata.get('date', None)
+                    keywords.extend(exif_metadata.get('keywords', []))
+                    bbox = exif_metadata.get('bbox', None)
+                    abstract = exif_metadata.get('abstract', None)
+            except:
+                print "Exif extraction failed."
+
+        if getattr(settings, 'NLP_ENABLED', False):
+            try:
+                from geonode.contrib.nlp.utils import nlp_extract_metadata_doc
+                nlp_metadata = nlp_extract_metadata_doc(self.object)
+                if nlp_metadata:
+                    regions.extend(nlp_metadata.get('regions', []))
+                    keywords.extend(nlp_metadata.get('keywords', []))
+            except:
+                print "NLP extraction failed."
+
+        if abstract:
+            self.object.abstract = abstract
+            self.object.save()
+
+        if date:
+            self.object.date = date
+            self.object.date_type = "Creation"
+            self.object.save()
+
+        if len(regions) > 0:
+            self.object.regions.add(*regions)
+
+        if len(keywords) > 0:
+            self.object.keywords.add(*keywords)
+
+        if bbox:
+            bbox_x0, bbox_x1, bbox_y0, bbox_y1 = bbox
+            Document.objects.filter(id=self.object.pk).update(
+                bbox_x0=bbox_x0,
+                bbox_x1=bbox_x1,
+                bbox_y0=bbox_y0,
+                bbox_y1=bbox_y1)
+
+        if getattr(settings, 'SLACK_ENABLED', False):
+            try:
+                from geonode.contrib.slack.utils import build_slack_message_document, send_slack_message
+                send_slack_message(build_slack_message_document("document_new", self.object))
+            except:
+                print "Could not send slack message for new document."
+
         return HttpResponseRedirect(
             reverse(
                 'document_metadata',
@@ -269,6 +338,14 @@ def document_metadata(
                 the_document.metadata_author = new_author
                 the_document.keywords.add(*new_keywords)
                 Document.objects.filter(id=the_document.id).update(category=new_category)
+
+                if getattr(settings, 'SLACK_ENABLED', False):
+                    try:
+                        from geonode.contrib.slack.utils import build_slack_message_document, send_slack_messages
+                        send_slack_messages(build_slack_message_document("document_edit", the_document))
+                    except:
+                        print "Could not send slack message for modified document."
+
                 return HttpResponseRedirect(
                     reverse(
                         'document_detail',
@@ -341,8 +418,27 @@ def document_remove(request, docid, template='documents/document_remove.html'):
             return render_to_response(template, RequestContext(request, {
                 "document": document
             }))
+
         if request.method == 'POST':
-            document.delete()
+
+            if getattr(settings, 'SLACK_ENABLED', False):
+                slack_message = None
+                try:
+                    from geonode.contrib.slack.utils import build_slack_message_document
+                    slack_message = build_slack_message_document("document_delete", document)
+                except:
+                    print "Could not build slack message for delete document."
+
+                document.delete()
+
+                try:
+                    from geonode.contrib.slack.utils import send_slack_messages
+                    send_slack_messages(slack_message)
+                except:
+                    print "Could not send slack message for delete document."
+            else:
+                document.delete()
+
             return HttpResponseRedirect(reverse("document_browse"))
         else:
             return HttpResponse("Not allowed", status=403)

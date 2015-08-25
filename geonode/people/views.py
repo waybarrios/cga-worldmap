@@ -67,7 +67,7 @@ def profile_edit(request, username=None):
         return HttpResponseForbidden(
             'You are not allowed to edit other users profile')
 
-
+@login_required
 def profile_detail(request, username):
     profile = get_object_or_404(Profile, username=username)
     # combined queryset from each model content type
