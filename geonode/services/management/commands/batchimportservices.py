@@ -8,10 +8,13 @@ import sys
 from urlparse import urlparse
 from geonode.services.views import _register_cascaded_service, _register_indexed_service, \
     _register_harvested_service, _register_cascaded_layers, _register_indexed_layers, _process_wms_service, \
-    _register_arcgis_url
+    _register_arcgis_url, _verify_service_type
 from django.db.utils import DatabaseError, IntegrityError
 from pprint import pprint
+import owslib
 import traceback
+import logging
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
 
@@ -30,11 +33,11 @@ class Command(BaseCommand):
                     help="Security permissions JSON - who can view/edit"),
     )
 
-    args = 'filename name type method'
+    args = 'filename type method'
 
-    def handle(self, filename, type, console=sys.stdout, **options):
-        print 'in batchimportservices/handle.'
-        print ' type = ', type
+    def handle(self, filename, console=sys.stdout, **options):
+        print 'Beginning process of importing url services by batch'
+        logger.debug('Begining process of importing data from different services')
         f = file(filename, 'r')
         for line in f:
             try:
@@ -51,14 +54,17 @@ class Command(BaseCommand):
 
                 password = None
                 service = None
+                type, server = _verify_service_type(url)
+                logger.debug("Url being processed " +url+ " of type " +type )
                 if type in ['WMS', 'OWS']:
                     service = _process_wms_service(url, domain, "WMS", user, password, owner=owner)
                 elif type == 'CSW':
                     service = _register_harvested_service(url, domain, user, password, owner=owner)
                 elif type == 'REST':
-                    service = _register_arcgis_url(url, None, None, None, owner=owner) # , parent=csw)
+                    service = _register_arcgis_url(url, None, None, None, owner=owner)
 
                 print '  processed service = ', service
+                logger.debug("Processed Service ", service);
             except IntegrityError as integrityError:
                 print 'integrity error'
                 print '    ', integrityError
@@ -68,12 +74,14 @@ class Command(BaseCommand):
                 print exc_value
                 traceback.print_tb(exc_traceback)
                 print
+                logger.debug(exc_traceback)
             except:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print exc_type
                 print exc_value
                 traceback.print_tb(exc_traceback)
                 print
+                logger.debug(exc_traceback)
             
             
 
