@@ -205,6 +205,7 @@ def _verify_service_type(base_url, service_type=None):
     Try to determine service type by process of elimination
     """
     logger.info("Checking the url: " + base_url)
+
     if service_type in ['WMS', 'OWS', None]:
         try:
             service = WebMapService(base_url)
