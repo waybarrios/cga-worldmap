@@ -15,6 +15,7 @@ from arcrest import Folder as ArcFolder, MapService as ArcMapService
 import logging
 import time
 from geonode.layers.models import Layer
+from geonode.services.models import Service
 from urlparse import urlparse
 
 #from geonode.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
@@ -49,10 +50,7 @@ class OGP_utils(object):
         hostname = urlParts.hostname
         if hostname == "localhost":
             return "Harvard" # assumption
-        domainParts = hostname.split(".")
-        if len(domainParts) == 1:
-            return domainParts[0]
-        return domainParts[-2].capitalize()
+        return hostname
         
 
     @staticmethod
@@ -96,15 +94,17 @@ class OGP_utils(object):
                     institution = "Remote"
                 owsUrl = layer.ows_url
                 domain = OGP_utils.get_domain(owsUrl)
+                service = Service.objects.get(base_url=owsUrl)
                 if (i == 0):
                     i = layer.title
 
                 OGP_utils.solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i), 
                                  "Name": layer.title,  
                                  "LayerDisplayName": layer.title,
-                                 "Institution": "WorldMap",
+                                 "Institution": institution,
                                  "Publisher": username,
                                  "Originator": domain,
+                                 "Type": service.type,
                                  "Access": "Public",
                                  "DataType": dataType, 
                                  "Availability": "Online",
