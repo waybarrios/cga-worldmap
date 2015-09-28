@@ -1,13 +1,13 @@
 // This code provides an interface to the spatial data in the OpenGeoServer Solr server
 
-// To use it, first create an instance.  Then call member functions to set 
+// To use it, first create an instance.  Then call member functions to set
 //   as many search parameters as desired (e.g., setBoundingBox or setPublisher).
 //   Finally, to run the query call executeSearchQuery with success and error functions.
 
 // Solr queries can contain multiple filters (fq=) and a single query term (q=).  Filters are used to eliminate rows
 // from the set of returned results.  However, they do not affect scoring.  The query term
 // can both eliminate rows and specify a boost (which affects scoring).
-// For spatial searching, both filtering and query terms are used. 
+// For spatial searching, both filtering and query terms are used.
 // For keyword searching, only query terms are used (different boosts are applied to each field).
 // For searches requiring both keywords and spatial elements, their query terms are ANDed together
 
@@ -56,7 +56,7 @@ OpenGeoportal.Solr = function() {
 	 * specification ("http://") nor should the urls end in "/select". this
 	 * function removes these elements as needed this function is inefficient
 	 * because it re-processes the shards every time it is called
-	 * 
+	 *
 	 * @return
 	 */
 	this.getShardServerNames = function getShardNames() {
@@ -220,7 +220,7 @@ OpenGeoportal.Solr = function() {
 	this.SearchRequestColumns = [ "Name", "Institution", "Access", "DataType",
 			"LayerDisplayName", "Publisher", "GeoReferenced", "Originator",
 			"Location", "MinX", "MaxX", "MinY", "MaxY", "ContentDate",
-			"LayerId", "score", "WorkspaceName", "CollectionId", "Availability" ];
+			"LayerId", "score", "WorkspaceName", "CollectionId", "ServiceType","Availability" ];
 
 	// this function returns a Solr fl clause specifying the columns to return
 	// for the passed request
@@ -255,7 +255,7 @@ OpenGeoportal.Solr = function() {
 
 	/**
 	 * Return parameters for text search component
-	 * 
+	 *
 	 * @private
 	 * @return {object} solr parameters
 	 */
@@ -385,7 +385,7 @@ OpenGeoportal.Solr = function() {
 
 	/*
 	 * Filters
-	 * 
+	 *
 	 */
 	this.filters = [];
 	// a private function used to create filters
@@ -577,7 +577,7 @@ OpenGeoportal.Solr = function() {
 
 	/**
 	 * Query component to filter out non-intersecting layers.
-	 * 
+	 *
 	 * @return {string} Query string filter
 	 */
 	this.getIntersectionFilter = function() {
@@ -589,7 +589,7 @@ OpenGeoportal.Solr = function() {
 
 	/**
 	 * Returns the intersection area of the layer and map.
-	 * 
+	 *
 	 * @return {string} Query string to calculate intersection
 	 */
 	this.getIntersectionFunction = function(bounds) {
@@ -790,7 +790,7 @@ OpenGeoportal.Solr = function() {
 
 	/**
 	 * Other Solr queries: term query, layerInfo query, metadata query
-	 * 
+	 *
 	 */
 
 	/**
@@ -830,8 +830,8 @@ OpenGeoportal.Solr = function() {
 
 	// returns the solr query to obtain a layer's metadata document from the
 	// Solr server
-	
-	
+
+
 	this.getArbitraryParams = function(layerId, request) {
 		var params = {
 			q : this.createFilter("LayerId", layerId),
@@ -841,11 +841,11 @@ OpenGeoportal.Solr = function() {
 
 		return params;
 	};
-	
+
 	this.getMetadataParams = function(layerId) {
 		return this.getArbitraryParams(layerId, this.MetadataRequest);
 	};
-	
+
 
 	// returns the solr query to obtain terms directly from the index for a
 	// field
@@ -896,9 +896,9 @@ OpenGeoportal.Solr = function() {
 	};
 
 	/*
-	 * 
+	 *
 	 * Experimental spatial query clauses
-	 * 
+	 *
 	 */
 
 	// all we need is "bounds", which in the application is the map extent
@@ -933,11 +933,11 @@ OpenGeoportal.Solr = function() {
 	/**
 	 * Calculates the reciprocal of the distance of the layer center from the
 	 * bounding box center.
-	 * 
+	 *
 	 * note that, while the squared Euclidean distance is perfectly adequate to
 	 * calculate relative distances, it affects the score/ranking in a
 	 * non-linear way; we may decide that is ok
-	 * 
+	 *
 	 * @return {string} query string to calculate score for center distance
 	 */
 	this.getCenterRelevancyClause = function(centerLat, centerLon) {
@@ -953,7 +953,7 @@ OpenGeoportal.Solr = function() {
 
 	/**
 	 * Compares the area of the layer to the area of the map extent; "scale"
-	 * 
+	 *
 	 * @return {string} query string to calculate score for area comparison
 	 */
 	this.getBoundsAreaRelevancyClause = function() {
@@ -966,12 +966,12 @@ OpenGeoportal.Solr = function() {
 	};
 
 	/**
-	 * 
+	 *
 	 * Compares the area of the layer's intersection with the map extent to the
 	 * area of the map extent. $intx depends on the intersection function
 	 * defined in "getIntersectionFunction", while $union depends on the value
 	 * of union being populated with the area of the map extent
-	 * 
+	 *
 	 * @return {string} query string to calculate score for area comparison
 	 */
 	this.getIntersectionAreaRelevancyClause = function(area) {
