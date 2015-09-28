@@ -95,6 +95,7 @@ class OGP_utils(object):
                 if layer.storeType == "remoteStore":
                     institution = "Remote"
                     servicetype = Service.objects.get(base_url=owsUrl).type
+                    dataType = servicetype+"Services"
                 domain = OGP_utils.get_domain(owsUrl)
                 if (i == 0):
                     i = layer.title

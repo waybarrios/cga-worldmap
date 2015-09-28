@@ -2,7 +2,7 @@
 
 
 #logoGraphic {
-		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat; 
+		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat;
 		height: 40px;
 		width: 200px;
 		padding: 2px;
@@ -28,23 +28,23 @@
 
 
 #ogpMapButtons {
-	display: none;  
+	display: none;
 }
 
 .olControlPanel.olControlNoSelect {
-        display: none;  
+        display: none;
 }
 
 #geosearchDiv {
-	display: none;  
+	display: none;
 }
 
 #top_menu {
-	display: none;  
+	display: none;
 }
 
 [aria-controls="cartTab"] {
-	display: none; 
+	display: none;
 }
 
 .olControlModPanZoomBar {
@@ -52,10 +52,47 @@
 }
 
 
-#moreSearchOptions {
-	display: none;  
+/*#moreSearchOptions {
+	display: none;
+}*/
+.searchBox{
+	height:40px;
 }
+#searchCol3 .searchRow2{
+	display: none !important;
+}
+#searchCol3 .searchRow1{
+	display: none !important;
+}
+#searchCol1 .searchRow3{
+	display: none !important;
+}
+#searchCol1 .searchRow2{
+	display: none !important;
+}
+#searchCol1 .searchRow1{
+	display: none !important;
+}
+#searchCol2 .searchRow3{
+	display: none !important;
+}
+#searchCol2 .searchRow4{
+	display: none !important;
+	margin-bottom: 10px;
+}
+
+
 
 #mapClearButton {
 	display: none;
+}
+.esriIcon {
+    background: transparent url("../media/esri.png");
+    width: 17px;
+    height: 17px;
+}
+.wmsIcon {
+    background: transparent url("../media/wms.png");
+    width: 17px;
+    height: 17px;
 }
