@@ -90,11 +90,12 @@ class OGP_utils(object):
                 if (layer.is_vector()):
                     dataType = "Polygon"
                 institution = "Harvard"
+                servicetype = None;
+                owsUrl = layer.ows_url
                 if layer.storeType == "remoteStore":
                     institution = "Remote"
-                owsUrl = layer.ows_url
+                    servicetype = Service.objects.get(base_url=owsUrl).type
                 domain = OGP_utils.get_domain(owsUrl)
-                service = Service.objects.get(base_url=owsUrl)
                 if (i == 0):
                     i = layer.title
 
@@ -104,7 +105,7 @@ class OGP_utils(object):
                                  "Institution": institution,
                                  "Publisher": username,
                                  "Originator": domain,
-                                 "Type": service.type,
+                                 "ServiceType": servicetype,
                                  "Access": "Public",
                                  "DataType": dataType, 
                                  "Availability": "Online",
