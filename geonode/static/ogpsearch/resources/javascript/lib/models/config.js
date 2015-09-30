@@ -1,6 +1,6 @@
 /**
  * pulls info from config controller for the client to use
- * 
+ *
  * */
 
 // Repeat the creation and type-checking code for the next level
@@ -107,11 +107,22 @@ OpenGeoportal.Config.DataTypes = new OpenGeoportal.Config.DataTypeCollection([
 			displayName : "Scanned Map",
 			uiClass : "mapIcon",
 			selected : true
+		}, {
+			value : "RESTServices",
+			displayName : "ESRI Services",
+			uiClass : "esriIcon",
+			selected : true
+		},
+		{
+			value : "WMSServices",
+			displayName : "WMS Services",
+			uiClass : "wmsIcon",
+			selected : true
 		} ]);
 
 //Do I even need to extend this?
 OpenGeoportal.Config.TopicCollection = Backbone.Collection.extend({});
-OpenGeoportal.Config.IsoTopics = new OpenGeoportal.Config.TopicCollection([ 
+OpenGeoportal.Config.IsoTopics = new OpenGeoportal.Config.TopicCollection([
                                                                            {
                                                                         	   topic : "",
                                                                         	   label : "None",
@@ -174,5 +185,3 @@ OpenGeoportal.Config.IsoTopics = new OpenGeoportal.Config.TopicCollection([
                                                                         	   topic : "utilitiesCommunication",
                                                                         	   label : "Utilities and Communication"
                                                                            } ]);
-
-
