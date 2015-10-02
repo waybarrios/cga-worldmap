@@ -24,6 +24,7 @@ import logging
 import re
 from urlparse import urlsplit, urlunsplit
 import urlparse
+import requests
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -945,31 +946,37 @@ def _process_arcgis_folder(folder, name, services=[], owner=None, parent=None):
     """
     Iterate through folders and services in an ArcGIS REST service folder
     """
-    for service in folder.services:
-        return_dict = {}
-        if not isinstance(service, ArcMapService):
-            return_dict[
-                'msg'] = 'Service could not be identified as an ArcMapService, URL: %s' % service.url
-            logger.debug(return_dict['msg'])
-        else:
-            try:
-                if service.spatialReference.wkid in [102100, 102113, 3785, 3857, 900913]:
-                    return_dict = _process_arcgis_service(
-                        service, name, owner, parent=parent)
-                else:
-                    return_dict['msg'] = _("Could not find any layers in a compatible projection: \
-                    The spatial id was: %(srs)s and the url %(url)s" % {'srs': service.spatialReference.wkid,
-                                                                    'url': service.url})
-                    logger.debug(return_dict['msg'])
-            except Exception as e:
-                logger.exception('Error uploading from the service: '+ service.url + ' ' + str(e) )
+    logger.debug("The folder name is "+ folder.url)
+    try:
+        request = requests.get(folder.url)
+        json_return = json.loads(request.text)
+        for service in folder.services:
+            return_dict = {}
+            if not isinstance(service, ArcMapService):
+                return_dict[
+                    'msg'] = 'Service could not be identified as an ArcMapService, URL: %s' % service.url
+                logger.debug(return_dict['msg'])
+            else:
+                try:
+                    if service.spatialReference.wkid in [102100, 102113, 3785, 3857, 900913]:
+                        return_dict = _process_arcgis_service(
+                            service, name, owner, parent=parent)
+                    else:
+                        return_dict['msg'] = _("Could not find any layers in a compatible projection: \
+                        The spatial id was: %(srs)s and the url %(url)s" % {'srs': service.spatialReference.wkid,
+                                                                        'url': service.url})
+                        logger.debug(return_dict['msg'])
+                except Exception as e:
+                    logger.exception('Error uploading from the service: '+ service.url + ' ' + str(e) )
 
-        services.append(return_dict)
+            services.append(return_dict)
 
-    for subfolder in folder.folders:
-        _process_arcgis_folder(subfolder, name, services, owner)
+        for subfolder in folder.folders:
+            _process_arcgis_folder(subfolder, name, services, owner)
+        return services
+    except Exception as e:
+        logger.exception('Error uploading from the service: ' + str(e) )
     return services
-
 
 def _register_ogp_service(url, owner=None):
     """
