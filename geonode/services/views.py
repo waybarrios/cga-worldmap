@@ -805,7 +805,7 @@ def _register_arcgis_url(url, name, username, password, owner=None, parent=None)
             arcserver = ArcMapService(baseurl)
         except Exception, e:
             logger.exception(e)
-        if isinstance(arcserver, ArcMapService) and arcserver.spatialReference.wkid in [102100, 3857, 900913]:
+        if isinstance(arcserver, ArcMapService) and arcserver.spatialReference.wkid in [102100, 102113, 3785, 3857, 900913]:
             return_json = [_process_arcgis_service(arcserver, name, owner=owner, parent=parent)]
         else:
             return_json = [{'msg':  _("Could not find any layers in a compatible projection.")}]
@@ -953,7 +953,7 @@ def _process_arcgis_folder(folder, name, services=[], owner=None, parent=None):
             logger.debug(return_dict['msg'])
         else:
             try:
-                if service.spatialReference.wkid in [102100, 3857, 900913]:
+                if service.spatialReference.wkid in [102100, 102113, 3785, 3857, 900913]:
                     return_dict = _process_arcgis_service(
                         service, name, owner, parent=parent)
                 else:
