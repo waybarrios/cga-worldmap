@@ -457,7 +457,7 @@ def _register_cascaded_layers(service, owner=None):
             lyr = cat.get_resource(layer, store, cascade_ws)
             if lyr is None:
                 if service.type in ["WMS", "OWS"]:
-                    logger.info("Importing " +layer+ " as layer") 
+                    logger.info("Importing " +layer+ " as layer")
                     resource = cat.create_wmslayer(cascade_ws, store, layer)
                 elif service.type == "WFS":
                     resource = cat.create_wfslayer(cascade_ws, store, layer)
