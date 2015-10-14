@@ -18,6 +18,16 @@
     left: 1010px;
 		display: block;
 }
+.esriIcon {
+    background: transparent url("../media/esri.png");
+    width: 17px;
+    height: 17px;
+}
+.wmsIcon {
+    background: transparent url("../media/wms.png");
+    width: 17px;
+    height: 17px;
+}
 /*
 
 #logoGraphic {

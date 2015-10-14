@@ -107,7 +107,17 @@ OpenGeoportal.Config.DataTypes = new OpenGeoportal.Config.DataTypeCollection([
 			displayName : "Scanned Map",
 			uiClass : "mapIcon",
 			selected : true
-		} ]);
+		},{
+			value : "RESTServices",
+			displayName : "ESRI Services",
+			uiClass : "esriIcon",
+			selected : true
+		},{
+			value : "WMSServices",
+			displayName : "WMS Services",
+			uiClass : "wmsIcon",
+			selected : true
+ 		} ]);
 
 //Do I even need to extend this?
 OpenGeoportal.Config.TopicCollection = Backbone.Collection.extend({});
