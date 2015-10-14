@@ -1,8 +1,8 @@
-/** 
+/**
  * This javascript module includes functions for dealing with the user interface.
- * 
+ *
  * @author Chris Barnett
- * 
+ *
  */
 
 /**
@@ -25,9 +25,9 @@ OpenGeoportal.Structure = function() {
 	this.init = function() {
 		this.WelcomeBubbleAttr = "welcomeBubble";
 		this.DirectionsBubble1Attr = "directionsBubble";
-		
+
 		this.infoBubbleAttrs = [this.WelcomeBubbleAttr, this.DirectionsBubble1Attr];
-		
+
 		this.resizeWindowHandler();
 
 		this.searchToggleHandler();
@@ -38,10 +38,11 @@ OpenGeoportal.Structure = function() {
 			el : "div#left_col"
 		});
 
+
 		this.initializeTabs();
 
 		this.resetHandler();
-		
+
 		// dialogs
 		this.aboutHandler();
 		this.contactHandler();
@@ -53,12 +54,12 @@ OpenGeoportal.Structure = function() {
 		var that = this;
 		jQuery(".reset").on("click", function() {
 			analytics.track("Interface", "Reset Page");
-			
+
 			var cartAuthWarningArr = ["showAuthenticationWarningExternal", "showAuthenticationWarningLocal"];
 			OpenGeoportal.Utility.LocalStorage.resetItems(cartAuthWarningArr);
 			that.resetShowInfo();
-			
-			
+
+
 			window.location = window.location;
 		});
 
@@ -68,13 +69,13 @@ OpenGeoportal.Structure = function() {
 	this.resetShowInfo = function(){
 		OpenGeoportal.Utility.LocalStorage.resetItems(this.infoBubbleAttrs);
 	},
-	
+
 	this.doShowInfo = function(key){
 		return OpenGeoportal.Utility.LocalStorage.getBool(key, true);
 	},
-	
 
-	
+
+
 	this.introFlow = function(hasSharedLayers) {
 		var bubble1 = "welcomeBubble";
 
@@ -89,7 +90,7 @@ OpenGeoportal.Structure = function() {
 					//queue : false,
 					complete : function() {
 						that.panelView.model.set({
-							mode : "open"
+							mode : "closed"
 						});
 						jQuery(document).one("panelOpen", function() {
 							var bubble2 = "directionsBubble";
@@ -107,11 +108,11 @@ OpenGeoportal.Structure = function() {
 
 		} else {
 			// if there are shared layers or user has selected "do not show again", don't show the infobubble intro
-			// open the left column panel
+			// close the left column panel
 			this.panelView.model.set({
 				mode : "open"
 			});
-			
+
 			if (hasSharedLayers){
 				// set tab to the "cart" tab if there are shared layers
 				jQuery("#tabs").tabs({
@@ -213,27 +214,27 @@ OpenGeoportal.Structure = function() {
 
 		var minHeight = parseInt(jQuery("#container").css("min-height"));
 		var minWidth = parseInt(jQuery("#container").css("min-width"));
-		
+
 		var resizeElements = function() {
-			
+
 			var headerHeight = jQuery("#header").height();
 			var footerHeight = jQuery("#footer").height();
 			var fixedHeights = headerHeight + footerHeight + 3;
 			var container$ = jQuery("#container");
-			
+
 			var oldContainerWidth = container$.width();
 			var newContainerWidth = Math.max(jQuery(window).width(), minWidth);
 
 			var oldContainerHeight = container$.height();
 			var newContainerHeight = Math.max(jQuery(window).height()
 					- fixedHeights, minHeight);
-			
+
 			//resize the container if there is a change.
 			if ((newContainerWidth !== oldContainerWidth)||(newContainerHeight !== oldContainerHeight)){
 				container$.height(newContainerHeight).width(newContainerWidth);
 				jQuery(document).trigger("container.resize", {ht: newContainerHeight, wd: newContainerWidth, minHt: minHeight, minWd: minWidth});
 			}
-			
+
 		};
 		resizeElements();
 		jQuery(window).resize(resizeElements);
@@ -246,14 +247,14 @@ OpenGeoportal.Structure = function() {
 			that.toggleSearch(this);
 		});
 	};
-	
+
 	//this should move to the search view
 	this.toggleSearch = function(thisObj) {
 		var stepTime = 50;
 		var thisId = jQuery(thisObj).attr('id');
 		var hght = jQuery(".searchFormRow").height();
 		jQuery(".olControlModPanZoomBar, .olControlPanel, #mapToolBar, #neCorner, #nwCorner").addClass("slideVertical");
-		
+
 		if (thisId === 'moreSearchOptions') {
 
 			jQuery("#searchForm .basicSearch").hide();
@@ -338,9 +339,9 @@ OpenGeoportal.Structure = function() {
 								duration : stepTime,
 								easing : "linear",
 								complete : function() {
-									// jQuery(".slideVertical").animate({"margin-top":
-									// "-=" + hght, queue: false, duration: 100,
-									// easing: "linear"});
+									 jQuery(".slideVertical").animate({"margin-top":
+									 "-=" + hght, queue: false, duration: 100,
+									 easing: "linear"});
 									jQuery("#searchForm .advancedSearch.searchRow3").hide();
 									jQuery('#searchBox').animate(
 													{
@@ -362,16 +363,16 @@ OpenGeoportal.Structure = function() {
 																				duration : stepTime,
 																				easing : "linear",
 																				complete : function() {
-																					// jQuery(".slideVertical").animate({"margin-top":
-																					// "-="
-																					// +
-																					// hght,
-																					// queue:
-																					// false,
-																					// duration:
-																					// 100,
-																					// easing:
-																					// "linear"});
+																					jQuery(".slideVertical").animate({"margin-top":
+																					 "-="
+																					 +
+																					 hght,
+																					 queue:
+																					 false,
+																					 duration:
+																					 100,
+																					 easing:
+																					 "linear"});
 																					jQuery("#geosearchDiv").removeClass("advancedSearch")
 																							.addClass("basicSearch");
 																					jQuery("#searchForm .advancedSearch.searchRow1").hide();
@@ -428,7 +429,7 @@ OpenGeoportal.Structure = function() {
 		jQuery("#downtimeNotice").dialog("open");
 
 	};
-	
+
 	this.infoBubble = function(bubbleId, infoHtml, optionsObj) {
 
 		var arrowDirection = "top-arrow";// default value
@@ -455,7 +456,7 @@ OpenGeoportal.Structure = function() {
 			if (jQuery(this).is("input:checked")){
 				show = false;
 			}
-			OpenGeoportal.Utility.LocalStorage.setBool(bubbleId, show);
+			//OpenGeoportal.Utility.LocalStorage.setBool(bubbleId, show);
 		});
 		return infoBubble$;
 	};
