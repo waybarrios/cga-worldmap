@@ -28,6 +28,12 @@
     width: 17px;
     height: 17px;
 }
+#downloadButton {
+  display:none !important;
+}
+#webServiceButton {
+  display:none !important;
+}
 /*
 
 #logoGraphic {
