@@ -7,6 +7,10 @@
         display: none !important;
 }
 
+.is-disabled {
+    opacity: .5;
+    pointer-events: none;
+}
 #welcomeBubble {
     height: 335px;
     width: 700px;
