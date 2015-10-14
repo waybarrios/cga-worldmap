@@ -145,11 +145,9 @@ on	src="/static/ogpsearch/resources/javascript/lib/models/protocolAwareModel.js"
 
 
 
-<script type="text/javascript"
-	src="/static/ogpsearch/resources/javascript/lib/geoCommonsExport.js"></script>
+<script type="text/javascript" src="/static/ogpsearch/resources/javascript/lib/geoCommonsExport.js"></script>
 <script type="text/javascript" src="/static/ogpsearch/resources/javascript/lib/mapDiv.js"></script>
-<script type="text/javascript"
-	src="/static/ogpsearch/resources/javascript/lib/userInterface.js"></script>
+<script type="text/javascript" src="/static/ogpsearch/resources/javascript/lib/userInterface.js"></script>
 
 <!-- main ogp script -->
 <script type="text/javascript" src="/static/ogpsearch/resources/javascript/lib/worldMapMain.js"></script>
@@ -168,6 +166,7 @@ if (typeof jQuery == 'undefined') {
 -->
 
 <!-- from header.jspf -->
+
 <div id="header">
 
   <div id="logo" onclick="location.href=location.href">
@@ -244,7 +243,7 @@ if (typeof jQuery == 'undefined') {
                                 <label for="advancedOriginatorText">Originator:</label> <input
                                         name="advancedOriginatorText" type="search" class="searchFormInput"
                                         id="advancedOriginatorText" />
-                        </div><div align="right"><i>Powered by <a href="http://opengeoportal.org/">OGP</a> and <a href="https://lucene.apache.org/">Lucene Heatmaps</a></i></div>
+                        </div><div align="right"><i>Powered by <a href="http://lucene.apache.org/core/4_0_0/spatial">Spatial Lucene</a> ,  <a href="http://opengeoportal.org/">OGP</a> and <a href="http://geonode.org/">GeoNode</a></i></div>
                         <div class="advancedSearch searchFormRow searchRow2">
                                 <label for="advancedDateFromText">Year(s):</label> <span
                                         class="searchFormInput"> <input name="advancedDateFromText"
@@ -320,3 +319,49 @@ if (typeof jQuery == 'undefined') {
     </div>
   <div id="map"></div>
   </div>
+
+
+	<div id="dialogs" class="hiddenElements">
+		<div id="about" class="dialog infoDialog">
+	<p>The Open Geoportal (OGP) is a collaboratively developed, open source, federated web application framework
+	to rapidly discover, preview and retrieve geospatial data from multiple repositories. The Open Geoportal
+	Federation is a community of geospatial professionals, developers, information architects, librarians,
+	metadata specialists and enthusiasts working together to make geospatial data and maps available on the
+	web and contribute to global spatial data infrastructure.
+ 	</p>
+ 	<p>
+	For more information please visit <a href="http://opengeoportal.org">http://opengeoportal.org</a>
+	</p>
+	<p>
+		<span class="geodataContact">For questions, comments, or to
+	report problems, please contact: <a
+	href="mailto:geodata@elist.tufts.edu">geodata@elist.tufts.edu</a>
+</span>
+	</p>
+</div>
+		<div id="contact" class="dialog infoDialog">
+	<p>
+		<span class="geodataContact">For questions, comments, or to
+	report problems, please contact: <a
+	href="mailto:geodata@elist.tufts.edu">geodata@elist.tufts.edu</a>
+</span>
+	</p>
+
+	<div>
+		<h3>Project Management:</h3>
+		Patrick Florance, Manager of Geospatial Technology Services, UIT,
+		Tufts University
+	</div>
+
+	<div id="contactLogos">
+		<div class="gisLogo" title="GIS@Tufts"
+			onclick="location.href='http://gis.tufts.edu/'"></div>
+		<div class="itLogo" title="UIT"
+			onclick="location.href='http://uit.tufts.edu/'"></div>
+	</div>
+</div>
+
+	</div>
+
+	<div id="iframes" class="hiddenElements"></div>
+	<div id="infoBubbles"></div>
