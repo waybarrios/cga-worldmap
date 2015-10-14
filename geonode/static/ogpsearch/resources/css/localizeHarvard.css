@@ -1,8 +1,23 @@
 @CHARSET "UTF-8";
 
+.olControlPanel.olControlNoSelect {
+        display: none;
+}
+.olControlPanel.olControlNoSelect.slideHorizontal{
+        display: none !important;
+}
+
+#welcomeBubble {
+    height: 335px;
+    width: 700px;
+    top: 259px;
+    left: 1010px;
+		display: block;
+}
+/*
 
 #logoGraphic {
-		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat; 
+		background: url("../media/World-Map-w-Harvard-SMALL.png") no-repeat;
 		height: 40px;
 		width: 200px;
 		padding: 2px;
@@ -26,25 +41,23 @@
 }
 */
 
-
+/*
 #ogpMapButtons {
-	display: none;  
+	display: none;
 }
+*/
 
-.olControlPanel.olControlNoSelect {
-        display: none;  
-}
-
+/*
 #geosearchDiv {
-	display: none;  
+	display: none;
 }
 
 #top_menu {
-	display: none;  
+	display: none;
 }
 
 [aria-controls="cartTab"] {
-	display: none; 
+	display: none;
 }
 
 .olControlModPanZoomBar {
@@ -53,9 +66,9 @@
 
 
 #moreSearchOptions {
-	display: none;  
+	display: none;
 }
 
 #mapClearButton {
 	display: none;
-}
+}*/
