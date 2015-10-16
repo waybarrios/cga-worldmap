@@ -78,13 +78,12 @@ OpenGeoportal.Structure = function() {
 
 	this.introFlow = function(hasSharedLayers) {
 		var bubble1 = "welcomeBubble";
-
 		if (this.doShowInfo(bubble1) && !hasSharedLayers) {
 			var $bubble1 = this.showInfoBubble(bubble1);
-                        /*
+                        
 			var that = this;
 			jQuery(document).one("fireSearch", function(event) {
-				$bubble1.hide({
+				$bubble1.show({
 					effect : "drop",
 					duration : 250,
 					//queue : false,
@@ -104,7 +103,7 @@ OpenGeoportal.Structure = function() {
 					}
 				});
 
-			});*/
+			});
 
 		} else {
 			// if there are shared layers or user has selected "do not show again", don't show the infobubble intro
