@@ -160,7 +160,7 @@ OpenGeoportal.MapController = function() {
 	 * @returns {Number} - initial zoom level
 	 */
 	this.getInitialZoomLevel = function() {
-		var initialZoom = 1;
+		var initialZoom = 3;
 
 		if (jQuery('#' + this.containerDiv).parent().height() > 810) {
 			initialZoom = 3;
