@@ -15,8 +15,8 @@
     height: 335px;
     width: 700px;
     top: 259px;
-    left: 1010px;
-		display: block;
+    left: 500px;
+/*		display: block;*/
 }
 .esriIcon {
     background: transparent url("../media/esri.png");

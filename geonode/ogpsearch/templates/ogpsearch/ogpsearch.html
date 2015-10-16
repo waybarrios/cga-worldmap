@@ -166,7 +166,7 @@ if (typeof jQuery == 'undefined') {
 -->
 
 <!-- from header.jspf -->
-
+<div class="introMask"></div>
 <div id="header">
 
   <div id="logo" onclick="location.href=location.href">
@@ -243,8 +243,7 @@ if (typeof jQuery == 'undefined') {
                                 <label for="advancedOriginatorText">Originator:</label> <input
                                         name="advancedOriginatorText" type="search" class="searchFormInput"
                                         id="advancedOriginatorText" />
-                        </div><div align="right"><i>Powered by <a href="http://lucene.apache.org/core/4_0_0/spatial" target="_blank">Spatial Lucene</a> , 
-                          <a href="http://opengeoportal.org/" target="_blank">OGP</a> ,and <a href="http://geonode.org/" target="_blank">GeoNode</a></i></div>
+                        </div>
                         <div class="advancedSearch searchFormRow searchRow2">
                                 <label for="advancedDateFromText">Year(s):</label> <span
                                         class="searchFormInput"> <input name="advancedDateFromText"
@@ -257,6 +256,8 @@ if (typeof jQuery == 'undefined') {
                                 <button id="lessSearchOptions" class="searchToggle button offsetColor" tabindex="0" >Basic
                                         Search</button>
                         </div>
+<div align="right"><i>Powered by <a href="http://lucene.apache.org/core/4_0_0/spatial" target="_blank">Spatial Lucene</a> ,
+                          <a href="http://opengeoportal.org/" target="_blank">OGP</a> ,and <a href="http://geonode.org/" target="_blank">GeoNode</a></i></div>
                 </div>
         </form>
 </div>
