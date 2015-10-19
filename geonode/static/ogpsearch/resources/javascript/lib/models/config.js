@@ -86,12 +86,14 @@ OpenGeoportal.Config.DataTypes = new OpenGeoportal.Config.DataTypeCollection([
 			value : "Point",
 			displayName : "Point",
 			uiClass : "pointIcon",
-			selected : true
+			selected : false,
+                        disabled : true,
 		}, {
 			value : "Line",
 			displayName : "Line",
 			uiClass : "lineIcon",
-			selected : true
+			selected : false,
+                        disabled : true
 		}, {
 			value : "Polygon",
 			displayName : "Polygon",
@@ -106,7 +108,8 @@ OpenGeoportal.Config.DataTypes = new OpenGeoportal.Config.DataTypeCollection([
 			value : "Paper+Map",
 			displayName : "Scanned Map",
 			uiClass : "mapIcon",
-			selected : true
+			selected : false,
+                        disabled : true,
 		},{
 			value : "RESTServices",
 			displayName : "ESRI Services",

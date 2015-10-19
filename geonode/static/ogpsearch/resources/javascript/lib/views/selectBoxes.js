@@ -109,6 +109,9 @@ OpenGeoportal.Views.AbstractSelectMenu = Backbone.View.extend({
 	getSelectionAttribute: function(){
 		return this.getAttributeName(this.options.selectionAttribute, "selected");
 	},
+        getDisabledAttribute: function(){
+                return this.getAttributeName(this.options.disabledAttribute, "disabled");
+        },
 	getValueAttribute: function(){
 		return this.getAttributeName(this.options.valueAttribute, "value");
 	},
@@ -373,6 +376,7 @@ OpenGeoportal.Views.CollectionMultiSelectWithCheckbox = OpenGeoportal.Views.Coll
 		var iconRenderer = this.options.iconRenderer;
 		var controlClass = this.options.controlClass;
 		var selectionAttr = this.getSelectionAttribute();
+                var disabledAttr = this.getDisabledAttribute();
 
 
 		var collectionFilter = this.options.collectionFilter;
@@ -403,6 +407,9 @@ OpenGeoportal.Views.CollectionMultiSelectWithCheckbox = OpenGeoportal.Views.Coll
 			if (currModel.get(selectionAttr)){
 				isSelected = "checkOn";
 			}
+                        if (currModel.get(disabledAttr)){
+                                value = value +" disabled";
+                        } 
 
 			var control = extraControl + that.template.genericControl({displayClass: isSelected, controlClass: controlClass, text: "", tooltip: ""});
 			menuHtml += that.template.controlMenuItem({icon: icon, control: control, name: name, value: value, className: itemClass});

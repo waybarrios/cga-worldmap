@@ -11,6 +11,18 @@
     opacity: .5;
     pointer-events: none;
 }
+#ui-id-14{
+background-color:#d9d9d9 !important;
+    color:#aaa !important;
+}
+#ui-id-15{
+background-color:#d9d9d9 !important;
+    color:#aaa !important;
+}
+#ui-id-18{
+background-color:#d9d9d9 !important;
+    color:#aaa !important;
+}
 #welcomeBubble {
     height: 335px;
     width: 700px;
