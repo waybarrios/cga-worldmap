@@ -70,8 +70,10 @@ OpenGeoportal.Views.CartHeader = Backbone.View.extend({
 	createCartButtons: function() {
 
 		var that = this;
-		var mapItHtml = "Open highlighted layers in GeoCommons to create maps.";
-		var shareHtml = "Create a link to share this Cart.";
+		//var mapItHtml = "Open highlighted layers in GeoCommons to create maps.";
+		//var shareHtml = "Create a link to share this Cart.";
+                var mapItHtml = "Currently Disabled";
+                var shareHtml = "Currently Disabled";
 		var webServiceHtml = "Stream highlighted layers into an application.";
 		var downloadHtml = "Download highlighted layers to your computer.";
 		var removeHtml = "Remove selected layers from Cart.";
