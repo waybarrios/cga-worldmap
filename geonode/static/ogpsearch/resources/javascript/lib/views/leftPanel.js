@@ -10,17 +10,19 @@ if (typeof OpenGeoportal.Views == 'undefined') {
 }
 OpenGeoportal.Views.LeftPanel = Backbone.View.extend({
     initialize: function() {
-			  var mode = this.model.get("mode");
-				console.log("mode" + mode);
+        var mode = this.model.get("mode");
         this.listenTo(this.model, "change:mode", this.showPanel);
-
         var width = this.model.get("openWidth");
+        var margin = width - jQuery("#roll_right").width();
+        jQuery("#left_col").show().width(width).css({
+	    "margin-left" : "-" + margin  + "px"
+	});
         this.$rollRight = $("#roll_right");
-        this.$leftCol = $("#left_col");
+        /*this.$leftCol = $("#left_col");
         var margin = width - this.$rollRight.width();
         this.$leftCol.show().width(width).css({
             "margin-left": "-" + margin + "px"
-        });
+        });*/
     },
     events: {
         "click .arrow_right": "goRight",
@@ -58,7 +60,6 @@ OpenGeoportal.Views.LeftPanel = Backbone.View.extend({
     showPanel: function() {
         this.setAlsoMoves();
         var mode = this.model.get("mode");
-				console.log("What the fuck is happening here?" + mode);
         if (mode === "open") {
             if (this.model.previous("mode") === "closed") {
                 this.showPanelMidRight();
@@ -135,7 +136,7 @@ OpenGeoportal.Views.LeftPanel = Backbone.View.extend({
                 $("#roll_right").show();
             }
         });
-        this.$el.resizable("disable");
+        this.$el.resizable("enable");
     },
     showPanelFullScreen: function() {
         if (this.$rollRight.is(":visible")) {
@@ -159,7 +160,7 @@ OpenGeoportal.Views.LeftPanel = Backbone.View.extend({
         this.setAlsoMoves();
         var that = this;
         this.$el.resizable({
-            handles: 'e',
+            handles: 'se',
             start: function(event, ui) {
                 $(document).trigger('eventMaskOn');
                 this.$slide = $(".slideHorizontal");
