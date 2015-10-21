@@ -403,7 +403,7 @@ OpenGeoportal.Structure = function() {
 	this.showDirectionsBubble_1 = function(elId) {
 
 		var params = {
-			"height" : 255,
+			"height" : 280,
 			"width" : 600,
 			"top" : 259,
 			"left" : 520,
