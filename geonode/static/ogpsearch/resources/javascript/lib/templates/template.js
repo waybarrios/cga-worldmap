@@ -241,16 +241,26 @@ OpenGeoportal.Template = function() {
 	this.infoBubble = _.template(infoBubbleHtml);
 	
 	var welcomeTextHtml = '<div id="welcomeText" class="welcomeText">'
-		+ '<h1>Welcome</h1>' 
-		+ '<p>There are two ways to begin your search:</p>'
-		+ '<ol><li>Enter information using one or both search fields.</li>'
-		+ '<li>Zoom in on a location using the map.</li></ol></div>';
+		+ '<h1>Welcome to Harvard Geoweb Search</h1>' 
+		+ '<p>Red indicates more maps are available, blue means fewer.  Mouse over any area to see how many maps we have registered so far.   See the About page for more information on where these maps come from.</p>'
+                + '<p>Zoom in for more detail.  Ways to zoom:</p>'
+		+ '<ol><li>double click on the map</li>'
+		+ '<li>roll your mouse wheel</li>'
+                + '<li>drag the zoom bar box up</li>'
+                + '<li>hold your shift key down while dragging the mouse to create a window around the area you want to zoom to. Release the mouse when you want to zoom.</li></ol>'
+                + '<p>To zoom out:</p>'
+                + '<ol><li>roll your mouse wheel</li>'
+                + '<li>drag the zoom bar box down</li></ol>'
+                + '<p>To see the layers listed on the map click on the  symbol to the left.</p> '               
+ +'</div>';
 
 	this.welcomeText = _.template(welcomeTextHtml);
 	
 	var directionsTextHtml = '<div id="directionsText" class="directionsText">'
-		+ "<span>You can preview layers by clicking on the 'View' checkbox.</span><br/><br/>"
-		+ '<span>Layers can be added to the \'Cart\' by clicking on the </span><div class="saveControl notInCart exampleControl"></div><span> button.</span></div>';
+               + "<span>As you pan and zoom, this list will adjust.  There will often be more layers than fit in the list so you may want to use a combination of sorting and zooming and keyword filtering to find what you need.</span><br/><br/>"
++ "<span>Find out more about a layer by clicking on “i” and going to the layer page.  You can also sort by various columns and add and remove columns.  Eventually a “View” column will be added, allowing you to turn layers on.</span><br/><br/>"
++ "<span>Advanced Search allows you to search by type which currently means you can choose to view everything (the default) or you can filter by Esri and/or WMS map service types.  All other layers are local WorldMap layers.  See help doc for more on the differences between these types.</span><br/><br/>"
++ "<span>Currently some functions such as the cart are not being used.</span><br/></div>";
 	
 	this.directionsText = _.template(directionsTextHtml);
 };

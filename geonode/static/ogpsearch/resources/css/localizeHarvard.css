@@ -24,12 +24,26 @@ background-color:#d9d9d9 !important;
     color:#aaa !important;
 }
 #welcomeBubble {
-    height: 335px;
-    width: 700px;
-    top: 259px;
-    left: 567px !important;
+    height: 410px;
+    width: 600px;
+    top: 200px;
+    font-size: 10px;
+    left: 500px !important;
 /*		display: block;*/
 }
+#welcomeBubble h1{
+        font-size: 25px;
+}
+#welcomeBubble p{
+font-size: 14px;
+}
+#welcomeBubble ol{
+font-size: 14px;
+}
+#directionsText {
+font-size: 14px;
+}
+
 .esriIcon {
     background: transparent url("../media/esri.png");
     width: 17px;
