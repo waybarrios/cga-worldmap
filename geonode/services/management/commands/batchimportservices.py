@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 from optparse import make_option
-from geonode.services.models import Service
 import json
 from geonode.people.utils import get_valid_user
 import sys
