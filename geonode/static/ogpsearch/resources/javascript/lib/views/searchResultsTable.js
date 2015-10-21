@@ -55,7 +55,7 @@ OpenGeoportal.Views.SearchResultsTable = OpenGeoportal.Views.LayerTable
 				this.listenTo(this.collection, "add", this.appendRender);
 
 				this.listenTo(this.collection, "reset", this.closeAllSubview);
-				this.listenTo(this.collection, "reset", this.render);
+			        this.listenTo(this.collection, "reset", this.render);
 				this.listenTo(this.collection, "reset", this.updateResultsNumber);
 				//should call setFrameHeight whenever the search panel height changes or on render or render of previewPanel, or row render
 				jQuery(document).on("search.resize previewRow.expand",  function(){that.setFrameHeight.apply(that, arguments);});
@@ -233,7 +233,7 @@ OpenGeoportal.Views.SearchResultsTable = OpenGeoportal.Views.LayerTable
 			},
 			
 			render : function() {
-				//console.log("full render");
+				console.log("full render");
 				var that = this;
 				var previewedTable = null;
 				if (this.$(".previewedLayers").length > 0){

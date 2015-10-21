@@ -344,8 +344,8 @@ OpenGeoportal.MapController = function() {
 
 		// OpenLayers event
 		this.events.register('moveend', this, function() {
-			//var d = new Date();
-			//console.log("moveend: " + d.getTime());
+			var d = new Date();
+			console.log("moveend: " + d.getTime());
 			var newExtent = that.getSearchExtent();
 			var newCenter = that.getSearchCenter();
 
@@ -367,7 +367,7 @@ OpenGeoportal.MapController = function() {
 				});
 			};
 
-			this.moveEventId = setTimeout(trigger, 100);
+			this.moveEventId = setTimeout(trigger, 200);
 
 
 		});
