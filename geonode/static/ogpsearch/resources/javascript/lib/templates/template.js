@@ -242,16 +242,13 @@ OpenGeoportal.Template = function() {
 	
 	var welcomeTextHtml = '<div id="welcomeText" class="welcomeText">'
 		+ '<h1>Welcome to Harvard Geoweb Search</h1>' 
-		+ '<p>Red indicates more maps are available, blue means fewer.  Mouse over any area to see how many maps we have registered so far.   See the About page for more information on where these maps come from.</p>'
-                + '<p>Zoom in for more detail.  Ways to zoom:</p>'
+		+ '<p>This is a tool for finding map layers.  The heatmap shows the concentration of known layers.<br/>To see the layers listed on the map click on the <button class="arrow_right"></button> symbol to the left.<br/>Mouse over any area to see the number of maps. Zoom in for more detail.<br/>Ways to zoom:</p>'
 		+ '<ol><li>double click on the map</li>'
 		+ '<li>roll your mouse wheel</li>'
                 + '<li>drag the zoom bar box up</li>'
                 + '<li>hold your shift key down while dragging the mouse to create a window around the area you want to zoom to. Release the mouse when you want to zoom.</li></ol>'
-                + '<p>To zoom out:</p>'
-                + '<ol><li>roll your mouse wheel</li>'
-                + '<li>drag the zoom bar box down</li></ol>'
-                + '<p>To see the layers listed on the map click on the  symbol to the left.</p> '               
+                + '<p>As you move the map this list will adjust and the number of results will change.  Refine your query by changing the map view and adding a keyword. One may sort by columns and add and remove columns.Find out more about a layer and view it by clicking on the <button class="viewMetadataControl"></button> and going to the layer page. Currently only some layers will display correctly.  We are working on this. Eventually a “View” column will be added, allowing you to preview layers in the search view.</p>'
+                + '<p>Advanced Search also allows one to search by Type and Originator.  This currently supports WorldMap Vector, WorldMap Raster, Esri Remote and OGC Remote. See help doc for more information on these types.Currently the Cart is not being used.  Questions and comments please send to blewis@cga.harvard.edu.</p> '               
  +'</div>';
 
 	this.welcomeText = _.template(welcomeTextHtml);

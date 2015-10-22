@@ -93,6 +93,7 @@ OpenGeoportal.Structure = function() {
 						});
 						jQuery(document).one("panelOpen", function() {
 							var bubble2 = "directionsBubble";
+                                                        $bubble1.hide({});
 							if (that.doShowInfo(bubble2)){
 								var $bubbleDir = that.showDirectionsBubble_1(bubble2);
 								jQuery(document).one("click focus", function() {
@@ -391,7 +392,7 @@ OpenGeoportal.Structure = function() {
 
 	this.showInfoBubble = function(elId) {
 		var params = {
-			"height" : 410,
+			"height" : 510,
 			"width" : 600,
 			"top" : 259,
 			"left" : 269,
