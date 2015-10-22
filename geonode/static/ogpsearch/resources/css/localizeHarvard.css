@@ -60,6 +60,16 @@ font-size: 14px;
 #webServiceButton {
   display:none !important;
 }
+
+.triangle-isosceles.top-arrow:after {
+   display : none;
+}
+.triangle-isoscelesBackground.top-arrowBackground:after {
+display :none;
+}
+
+
+
 /*
 
 #logoGraphic {
