@@ -241,7 +241,7 @@ OpenGeoportal.Template = function() {
 	this.infoBubble = _.template(infoBubbleHtml);
 	
 	var welcomeTextHtml = '<div id="welcomeText" class="welcomeText">'
-		+ '<h1>welcome to geoweb search</h1>'
+		+ '<h1>Welcome to Geoweb Search</h1>'
                 + '<p>a tool for finding data on the geoweb and using it.  this work is funded by the National Endowment for the Humanities.</p>'
                 + '<p>the map shows concentrations of geodata including local (worldmap) and remote (map service) layers.</p>' 
 		+ '<p>view data layers by clicking <button class="arrow_right"></button> at upper left</p>'
