@@ -241,23 +241,21 @@ OpenGeoportal.Template = function() {
 	this.infoBubble = _.template(infoBubbleHtml);
 	
 	var welcomeTextHtml = '<div id="welcomeText" class="welcomeText">'
-		+ '<h1>Welcome to Harvard Geoweb Search</h1>' 
-		+ '<p>This is a tool for finding map layers.  The heatmap shows the concentration of known layers.<br/>To see the layers listed on the map click on the <button class="arrow_right"></button> symbol to the left.<br/>Mouse over any area to see the number of maps. Zoom in for more detail.<br/>Ways to zoom:</p>'
-		+ '<ol><li>double click on the map</li>'
-		+ '<li>roll your mouse wheel</li>'
-                + '<li>drag the zoom bar box up</li>'
-                + '<li>hold your shift key down while dragging the mouse to create a window around the area you want to zoom to. Release the mouse when you want to zoom.</li></ol>'
-                + '<p>As you move the map this list will adjust and the number of results will change.  Refine your query by changing the map view and adding a keyword. One may sort by columns and add and remove columns.Find out more about a layer and view it by clicking on the <button class="viewMetadataControl"></button> and going to the layer page. Currently only some layers will display correctly.  We are working on this. Eventually a “View” column will be added, allowing you to preview layers in the search view.</p>'
-                + '<p>Advanced Search also allows one to search by Type and Originator.  This currently supports WorldMap Vector, WorldMap Raster, Esri Remote and OGC Remote. See help doc for more information on these types.Currently the Cart is not being used.  Questions and comments please send to blewis@cga.harvard.edu.</p> '               
- +'</div>';
+		+ '<h1>welcome to geoweb search</h1>'
+                + '<p>a tool for finding data on the geoweb and using it.  this work is funded by the National Endowment for the Humanities.</p>'
+                + '<p>the map shows concentrations of geodata including local (worldmap) and remote (map service) layers.</p>' 
+		+ '<p>view data layers by clicking <button class="arrow_right"></button> at upper left</p>'
+                +'</div>';
 
 	this.welcomeText = _.template(welcomeTextHtml);
 	
 	var directionsTextHtml = '<div id="directionsText" class="directionsText">'
-               + "<span>As you pan and zoom, this list will adjust.  There will often be more layers than fit in the list so you may want to use a combination of sorting and zooming and keyword filtering to find what you need.</span><br/><br/>"
-+ "<span>Find out more about a layer by clicking on “i” and going to the layer page.  You can also sort by various columns and add and remove columns.  Eventually a “View” column will be added, allowing you to turn layers on.</span><br/><br/>"
-+ "<span>Advanced Search allows you to search by type which currently means you can choose to view everything (the default) or you can filter by Esri and/or WMS map service types.  All other layers are local WorldMap layers.  See help doc for more on the differences between these types.</span><br/><br/>"
-+ "<span>Currently some functions such as the cart are not being used.</span><br/></div>";
+               + "<span>refine search by zooming the map or adding a keyword.</span><br/><br/>"
+               + "<span>add and remove columns, sort columns.</span><br/><br/>"
+               + "<span>click “i” to learn more about a layer (working on layer display).</span><br/><br/>"
+               + "<span>use Advanced Search to refine by Type, Originator, and Date.</span><br/><br/>"
+               + "<span>see Help and About pages for more detail. questions and comments please contact blewis@cga.harvard.edu.</span><br/><br/>"
+               + "</div>";
 	
 	this.directionsText = _.template(directionsTextHtml);
 };

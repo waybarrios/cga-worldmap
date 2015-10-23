@@ -155,6 +155,8 @@ OpenGeoportal.Structure = function() {
 			autoOpen : false
 		});
 		jQuery("#aboutLink").click(function() {
+                        var infoBubble$ = jQuery('#welcomeBubble');
+                        infoBubble$.fadeOut("slow");
 			jQuery('#about').dialog("open");
 			analytics.track("Help", "Show About");
 		});
