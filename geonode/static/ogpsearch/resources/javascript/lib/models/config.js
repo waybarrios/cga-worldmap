@@ -96,12 +96,12 @@ OpenGeoportal.Config.DataTypes = new OpenGeoportal.Config.DataTypeCollection([
                         disabled : true
 		}, {
 			value : "Polygon",
-			displayName : "Polygon",
+			displayName : "WorldMap Vector",
 			uiClass : "polygonIcon",
 			selected : true
 		}, {
 			value : "Raster",
-			displayName : "Raster",
+			displayName : "WorldMap",
 			uiClass : "rasterIcon",
 			selected : true
 		}, {
