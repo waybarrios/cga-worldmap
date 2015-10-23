@@ -242,19 +242,19 @@ OpenGeoportal.Template = function() {
 	
 	var welcomeTextHtml = '<div id="welcomeText" class="welcomeText">'
 		+ '<h1>Welcome to Geoweb Search</h1>'
-                + '<p>a tool for finding data on the geoweb and using it.  this work is funded by the National Endowment for the Humanities.</p>'
-                + '<p>the map shows concentrations of geodata including local (worldmap) and remote (map service) layers.</p>' 
-		+ '<p>view data layers by clicking <button class="arrow_right"></button> at upper left</p>'
+                + '<p>A tool for finding data on the geoweb and using it.  This work is funded by the National Endowment for the Humanities.</p>'
+                + '<p>The map shows concentrations of geodata including local (Worldmap) and remote (map service) layers.</p>' 
+		+ '<p>View data layers by clicking <button class="arrow_right"></button> at upper left</p>'
                 +'</div>';
 
 	this.welcomeText = _.template(welcomeTextHtml);
 	
 	var directionsTextHtml = '<div id="directionsText" class="directionsText">'
-               + "<span>refine search by zooming the map or adding a keyword.</span><br/><br/>"
-               + "<span>add and remove columns, sort columns.</span><br/><br/>"
-               + "<span>click “i” to learn more about a layer (working on layer display).</span><br/><br/>"
-               + "<span>use Advanced Search to refine by Type, Originator, and Date.</span><br/><br/>"
-               + "<span>see Help and About pages for more detail. questions and comments please contact blewis@cga.harvard.edu.</span><br/><br/>"
+               + "<span>Refine search by zooming the map or adding a keyword.</span><br/><br/>"
+               + "<span>Add and remove columns, sort columns.</span><br/><br/>"
+               + "<span>Click “i” to learn more about a layer (working on layer display).</span><br/><br/>"
+               + "<span>Use Advanced Search to refine by Type, Originator, and Date.</span><br/><br/>"
+               + "<span>See Help and About pages for more detail. Questions and comments please contact blewis@cga.harvard.edu.</span><br/><br/>"
                + "</div>";
 	
 	this.directionsText = _.template(directionsTextHtml);
