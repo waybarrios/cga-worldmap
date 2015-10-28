@@ -109,7 +109,6 @@ def register_service(request):
             server = None
             if type == "AUTO":
                 type, server = _verify_service_type(url)
-
             if type is None:
                 return HttpResponse('Could not determine server type', status=400)
 
@@ -213,7 +212,6 @@ def _verify_service_type(base_url, service_type=None):
             pass
         else:
             return ['WMS', service]
-
     if service_type in ['WFS', 'OWS', None]:
         try:
             servicewfs = WebFeatureService(base_url)
@@ -239,9 +237,9 @@ def _verify_service_type(base_url, service_type=None):
             try:
                 service.services
                 return ['REST', service]
-            except ValueError:
+            except:
                 service = CatalogueServiceWeb(base_url)
-
+    
     if service_type in ['CSW', None]:
         try:
             service = CatalogueServiceWeb(base_url)
@@ -250,7 +248,6 @@ def _verify_service_type(base_url, service_type=None):
             raise
         else:
             return ['CSW', service]
-
     if service_type in ['OGP', None]:
         # Just use a specific OGP URL for now
         if base_url == settings.OGP_URL:
@@ -259,7 +256,7 @@ def _verify_service_type(base_url, service_type=None):
     return [None, None]
 
 
-def _process_wms_service(url, name, type, username, password, wms=None, owner=None, parent=None):
+def _process_wms_service(url, name, type, username, password, owner, wms=None, parent=None):
     """
     Create a new WMS/OWS service, cascade it if necessary (i.e. if Web Mercator not available)
     """
@@ -535,7 +532,6 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
                                 status=200)
         except:
             pass
-
         service = Service.objects.create(base_url=url,
                                          type=type,
                                          method='I',
@@ -547,15 +543,12 @@ def _register_indexed_service(type, url, name, username, password, verbosity=Fal
                                          online_resource=wms.provider.url,
                                          owner=owner,
                                          parent=parent)
-
         service.keywords = ','.join(wms.identification.keywords)
         service.save()
         service.set_default_permissions()
-
         available_resources = []
         for layer in list(wms.contents):
             available_resources.append([wms[layer].name, wms[layer].title])
-
         if settings.USE_QUEUE:
             # Create a layer import job
             WebServiceHarvestLayersJob.objects.get_or_create(service=service)
@@ -679,7 +672,7 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
         return HttpResponse('Invalid Service Type', status=400)
 
 
-def _register_harvested_service(url, name, username, password, csw=None, owner=None):
+def _register_harvested_service(url, name, username, password, owner, csw=None):
     """
     Register a CSW service, then step through results (or queue for asynchronous harvesting)
     """
@@ -700,7 +693,6 @@ def _register_harvested_service(url, name, username, password, csw=None, owner=N
 
     if csw is None:
         csw = CatalogueServiceWeb(url)
-
     service = Service.objects.create(base_url=url,
                                      type='CSW',
                                      method='H',
@@ -742,7 +734,6 @@ def _harvest_csw(csw, maxrecords=10, totalrecords=float('inf')):
     flag = 0
 
     src = CatalogueServiceWeb(csw.base_url)
-
     while stop == 0:
         if flag == 0:  # first run, start from 0
             startposition = 0
@@ -776,12 +767,10 @@ def _harvest_csw(csw, maxrecords=10, totalrecords=float('inf')):
                 if ref["scheme"] == "ESRI":
                     print "ESRI:%s" % ref["url"]
                     known_types["REST"] = ref["url"]
-
             if "WMS" in known_types:
                 type = "OWS" if "WFS" in known_types else "WMS"
                 try:
-                    _process_wms_service(
-                        known_types["WMS"], type, None, None, parent=csw)
+                    _process_wms_service(known_types["WMS"], src.identification.title, type, None, None, owner=csw.owner, parent=csw)
                 except Exception, e:
                     logger.error("Error registering %s:%s" %
                                  (known_types["WMS"], str(e)))
