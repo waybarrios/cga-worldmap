@@ -706,7 +706,6 @@ def _register_harvested_service(url, name, username, password, owner, csw=None):
     service.keywords = ','.join(csw.identification.keywords)
     service.save
     service.set_default_permissions()
-
     message = "Service %s registered" % service.name
     return_dict = [{'status': 'ok',
                     'msg': message,
@@ -770,7 +769,7 @@ def _harvest_csw(csw, maxrecords=10, totalrecords=float('inf')):
             if "WMS" in known_types:
                 type = "OWS" if "WFS" in known_types else "WMS"
                 try:
-                    _process_wms_service(known_types["WMS"], src.identification.title, type, None, None, owner=csw.owner, parent=csw)
+                    _process_wms_service(known_types["WMS"], _get_valid_name(src.identification.title), type, None, None, owner=csw.owner, parent=csw)
                 except Exception, e:
                     logger.error("Error registering %s:%s" %
                                  (known_types["WMS"], str(e)))
