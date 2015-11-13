@@ -15,10 +15,9 @@ from arcrest import Folder as ArcFolder, MapService as ArcMapService
 import logging
 import time
 from geonode.layers.models import Layer
-from geonode.services.models import Service
 from urlparse import urlparse
 
-#from geonode.services.models import Service, Layer, ServiceLayer, WebServiceHarvestLayersJob, WebServiceRegistrationJob
+from geonode.services.models import Service
 
 class OGP_utils(object):
 
