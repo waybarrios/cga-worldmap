@@ -619,7 +619,6 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
                 return HttpResponse(json.dumps(return_dict),
                                     mimetype='application/json',
                                     status=200)
-
             bbox = list(
                 wms_layer.boundingBoxWGS84 or (-179.0, -89.0, 179.0, 89.0))
 
@@ -632,7 +631,7 @@ def _register_indexed_layers(service, wms=None, verbosity=False):
                     store=service.name,  # ??
                     storeType="remoteStore",
                     workspace="remoteWorkspace",
-                    title=wms_layer.title or wms_layer.name,
+                    title=wms_layer.title[:254] or wms_layer.name,
                     abstract=abstract or _("Not provided"),
                     uuid=layer_uuid,
                     owner=None,
