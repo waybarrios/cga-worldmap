@@ -90,15 +90,22 @@ class Command(BaseCommand):
                         abstract = layer['nypl_digital_id'] + "  " + layer['description']
                     else:
                         abstract = layer['description']
-                    if layer['depicts_year'] is not None:
+                    if layer['depicts_year'] is not None and layer['depicts_year'] != "":
                         layerdate = str(layer['depicts_year'])+"/01/01"
                     elif layer['date_depicted'] != None and layer['date_depicted'] != "":
                         layerdate = layer['date_depicted']
+                    elif layer['published_date'] != None and layer['published_date'] != "":
+                        layerdate = layer['published_date'] 
                     else:
                         layerdate = layer['created_at'].split()[0] + " "+ layer['created_at'].split()[1]
                     layerdate = dateutil.parser.parse(layerdate)
                     service = _process_wms_service(owsurl,name,"WMS", user, password, owner=owner, parent=nyplservice)
                     servicejson = json.loads(service.content)
                     serviceobject = Service.objects.get(id=servicejson[0]['service_id'])
-                    servicelayers = Layer.objects.filter(service=serviceobject).update(date=layerdate,abstract=abstract)
+                    #servicelayers = Layer.objects.filter(service=serviceobject).update(date=layerdate,abstract=abstract)
+                    servicelayers = Layer.objects.filter(service=serviceobject)
+                    for servicelayer in servicelayers:
+                        servicelayer.date = layerdate
+                        servicelayer.abstract = abstract
+                        servicelayer.save()
             current_page = current_page + 1
