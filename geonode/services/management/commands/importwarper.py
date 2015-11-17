@@ -88,8 +88,13 @@ class Command(BaseCommand):
                     name = domain + str(layer['id'])
                     if 'nypl_digital_id' in layer:
                         abstract = layer['nypl_digital_id'] + "  " + layer['description']
+                        abstract = abstract + "    " + base_url + "/" + str(layer['id'])
                     else:
                         abstract = layer['description']
+                    if 'date_depicted' not in layer:
+                        layer['date_depicted'] = None
+                    if 'published_date' not in layer:
+                        layer['published_date'] = None 
                     if layer['depicts_year'] is not None and layer['depicts_year'] != "":
                         layerdate = str(layer['depicts_year'])+"/01/01"
                     elif layer['date_depicted'] != None and layer['date_depicted'] != "":
@@ -97,7 +102,8 @@ class Command(BaseCommand):
                     elif layer['published_date'] != None and layer['published_date'] != "":
                         layerdate = layer['published_date'] 
                     else:
-                        layerdate = layer['created_at'].split()[0] + " "+ layer['created_at'].split()[1]
+                        layerdate = layer['created_at'][:10]
+                        #layerdate = layer['created_at'].split()[0] + " "+ layer['created_at'].split()[1]
                     layerdate = dateutil.parser.parse(layerdate)
                     service = _process_wms_service(owsurl,name,"WMS", user, password, owner=owner, parent=nyplservice)
                     servicejson = json.loads(service.content)
