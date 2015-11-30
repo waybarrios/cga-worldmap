@@ -22,6 +22,10 @@ class Command(BaseCommand):
 
         make_option('-o', '--owner', dest="owner", default=None,
                     help="Name of the user account which should own the imported layers"),
+        make_option('-c', '--start', dest="start", default=1,
+                    help="Page from which to begin to process"),
+        make_option('-e', '--pages', dest="pages", default=None,
+                    help="End page to process"),
         make_option('-r', '--registerlayers', dest="registerlayers", default=False,
                     help="Register all layers found in the service"),
         make_option('-u', '--username', dest="username", default=None,
@@ -40,6 +44,8 @@ class Command(BaseCommand):
         register_layers = options.get('registerlayers')
         username = options.get('username')
         password = options.get('password')
+        pages = options.get('pages')
+        start_page = options.get('start')
         perm_spec = options.get('permspec')
 
         register_service = True
@@ -51,9 +57,13 @@ class Command(BaseCommand):
         payload = {'field':'title','query':'','show_warped': '1', 'format':'json'}
         headers = {'Content-Type': 'application/json','Accept': 'application/json'}
         request = requests.get(base_url,headers=headers,params=payload)
-        records = json.loads(request.content) 
-        total_pages = records['total_pages']
+        records = json.loads(request.content)
+        total_pages = int(records['total_pages'])
         current_page = 1
+        if start_page is not None:
+            start_page = int(start_page)
+        if pages is not None:
+            total_pages = int(pages)
         per_page = records['per_page']
         # We will need to introduce a loop later on here, for now let us just get the first item
         layer = records['items'][0]
@@ -69,8 +79,8 @@ class Command(BaseCommand):
 
         nyplservice.save()
         nyplservice.set_default_permissions()
-        while current_page < total_pages:
-            payload = {'field':'title','query':'','show_warped': '1', 'format':'json', 'page': current_page}
+        while start_page <= total_pages:
+            payload = {'field':'title','query':'','show_warped': '1', 'format':'json', 'page': start_page}
             headers = {'Content-Type': 'application/json','Accept': 'application/json'}
             request = requests.get(base_url,headers=headers,params=payload)
             records = json.loads(request.content)
@@ -94,13 +104,13 @@ class Command(BaseCommand):
                     if 'date_depicted' not in layer:
                         layer['date_depicted'] = None
                     if 'published_date' not in layer:
-                        layer['published_date'] = None 
+                        layer['published_date'] = None
                     if layer['depicts_year'] is not None and layer['depicts_year'] != "":
                         layerdate = str(layer['depicts_year'])+"/01/01"
                     elif layer['date_depicted'] != None and layer['date_depicted'] != "":
                         layerdate = layer['date_depicted']
                     elif layer['published_date'] != None and layer['published_date'] != "":
-                        layerdate = layer['published_date'] 
+                        layerdate = layer['published_date']
                     else:
                         layerdate = layer['created_at'][:10]
                         #layerdate = layer['created_at'].split()[0] + " "+ layer['created_at'].split()[1]
@@ -114,4 +124,4 @@ class Command(BaseCommand):
                         servicelayer.date = layerdate
                         servicelayer.abstract = abstract
                         servicelayer.save()
-            current_page = current_page + 1
+            start_page = start_page + 1
