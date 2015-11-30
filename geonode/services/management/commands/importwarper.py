@@ -67,7 +67,10 @@ class Command(BaseCommand):
         per_page = records['per_page']
         # We will need to introduce a loop later on here, for now let us just get the first item
         layer = records['items'][0]
-        nyplservice, created = Service.objects.get_or_create(base_url=base_url+"/tile/"+str(layer['id'])+"/{z}/{x}/{y}.png",
+        try:
+            nyplservice = Service.objects.get(name=domain,parent=None)
+        except:
+            nyplservice = Service.objects.get_or_create(base_url=base_url+"/tile/"+str(layer['id'])+"/{z}/{x}/{y}.png",
                                      type='XYZ',
                                      method='X',
                                      name=domain,
@@ -77,8 +80,8 @@ class Command(BaseCommand):
                                      owner=owner,
                                      parent=None)
 
-        nyplservice.save()
-        nyplservice.set_default_permissions()
+            nyplservice.save()
+            nyplservice.set_default_permissions()
         while start_page <= total_pages:
             payload = {'field':'title','query':'','show_warped': '1', 'format':'json', 'page': start_page}
             headers = {'Content-Type': 'application/json','Accept': 'application/json'}
