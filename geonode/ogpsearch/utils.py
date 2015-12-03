@@ -83,6 +83,14 @@ class OGP_utils(object):
                 halfWidth = (maxX - minX) / 2.0
                 halfHeight = (maxY - minY) / 2.0
                 area = (halfWidth * 2) * (halfHeight * 2)
+                if (minX < -180):
+                    minX = -180
+                if (maxX > 180):
+                    maxX = 180
+                if (minY < -90):
+                    minY = -90
+                if (maxY > 90):
+                    maxY = 90
                 # ENVELOPE(minX, maxX, maxY, minY) per https://github.com/spatial4j/spatial4j/issues/36
                 wkt = "ENVELOPE({:f},{:f},{:f},{:f})".format(minX, maxX, maxY, minY)
                 dataType = "Raster"
