@@ -7,6 +7,7 @@ from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 from tastypie import fields
 from tastypie.utils import trailing_slash
+from tastypie.authentication import BasicAuthentication
 
 from guardian.shortcuts import get_objects_for_user
 
@@ -536,3 +537,28 @@ class DocumentResource(CommonModelApi):
         if settings.RESOURCE_PUBLISHING:
             queryset = queryset.filter(is_published=True)
         resource_name = 'documents'
+
+
+class BasicAuthLayerResource(CommonModelApi):
+
+    """Layer API"""
+
+    class Meta(CommonMetaApi):
+        authorization = GeoNodeAuthorization()
+        authentication = BasicAuthentication()
+        allowed_methods = ['get']
+        filtering = {'title': ALL,
+                     'keywords': ALL_WITH_RELATIONS,
+                     'regions': ALL_WITH_RELATIONS,
+                     'category': ALL_WITH_RELATIONS,
+                     'owner': ALL_WITH_RELATIONS,
+                     'date': ALL,
+                     }
+        ordering = ['date', 'title', 'popular_count']
+        max_limit = None
+        queryset = Layer.objects.distinct().order_by('-date')
+        if settings.RESOURCE_PUBLISHING:
+            queryset = queryset.filter(is_published=True)
+        resource_name = 'auth_layers'
+        excludes = ['csw_anytext', 'metadata_xml']
+
