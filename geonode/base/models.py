@@ -275,9 +275,9 @@ class ResourceBase(PolymorphicModel, PermissionLevelMixin):
                                                     help_text=spatial_representation_type_help_text)
 
     # Section 5
-    temporal_extent_start = models.DateTimeField(_('temporal extent start'), blank=True, null=True,
+    temporal_extent_start = models.CharField(_('temporal extent start'), max_length=255, blank=True, null=True,
                                                  help_text=temporal_extent_start_help_text)
-    temporal_extent_end = models.DateTimeField(_('temporal extent end'), blank=True, null=True,
+    temporal_extent_end = models.CharField(_('temporal extent end'), max_length=255, blank=True, null=True,
                                                help_text=temporal_extent_end_help_text)
 
     supplemental_information = models.TextField(_('supplemental information'), default=DEFAULT_SUPPLEMENTAL_INFORMATION,
