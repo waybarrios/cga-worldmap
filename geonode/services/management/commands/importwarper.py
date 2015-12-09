@@ -9,6 +9,7 @@ from geonode.geoserver.helpers import set_attributes
 import sys
 import uuid
 import requests
+import re
 import logging
 import dateutil.parser
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class Command(BaseCommand):
     )
 
     args = 'url name type method'
-
+    
     def handle(self, url, console=sys.stdout, **options):
         user = options.get('user')
         owner = get_valid_user(user)
@@ -70,7 +71,7 @@ class Command(BaseCommand):
         try:
             nyplservice = Service.objects.get(name=domain,parent=None)
         except:
-            nyplservice = Service.objects.get_or_create(base_url=base_url+"/tile/"+str(layer['id'])+"/{z}/{x}/{y}.png",
+            nyplservice = Service.objects.create(base_url=base_url+"/tile/"+str(layer['id'])+"/{z}/{x}/{y}.png",
                                      type='XYZ',
                                      method='X',
                                      name=domain,
@@ -79,7 +80,6 @@ class Command(BaseCommand):
                                      online_resource= base_url+"/tile/"+str(layer['id'])+"/{z}/{x}/{y}.png",
                                      owner=owner,
                                      parent=None)
-
             nyplservice.save()
             nyplservice.set_default_permissions()
         while start_page <= total_pages:
@@ -104,6 +104,7 @@ class Command(BaseCommand):
                         abstract = abstract + "    " + base_url + "/" + str(layer['id'])
                     else:
                         abstract = layer['description']
+                    extract = date_extract(layer)
                     if 'date_depicted' not in layer:
                         layer['date_depicted'] = None
                     if 'published_date' not in layer:
@@ -115,8 +116,11 @@ class Command(BaseCommand):
                     elif layer['published_date'] != None and layer['published_date'] != "":
                         layerdate = layer['published_date']
                     else:
-                        layerdate = layer['created_at'][:10]
-                        #layerdate = layer['created_at'].split()[0] + " "+ layer['created_at'].split()[1]
+                        if extract != None:
+                            layerdate = extract
+                        else:
+                            layerdate = layer['created_at'][:10]
+                            #layerdate = layer['created_at'].split()[0] + " "+ layer['created_at'].split()[1]
                     layerdate = dateutil.parser.parse(layerdate)
                     service = _process_wms_service(owsurl,name,"WMS", user, password, owner=owner, parent=nyplservice)
                     servicejson = json.loads(service.content)
@@ -128,3 +132,12 @@ class Command(BaseCommand):
                         servicelayer.abstract = abstract
                         servicelayer.save()
             start_page = start_page + 1
+def date_extract(layer):
+    year = re.search('\d{4}', layer['title'])
+    if year is None:
+        year = re.search('\d{4}', layer['description'])
+    if year != None and year > 1000 and year < 2020:
+        year = year.group(0)
+    else:
+        year = None
+    return year
