@@ -129,6 +129,7 @@ class Command(BaseCommand):
                     servicelayers = Layer.objects.filter(service=serviceobject)
                     for servicelayer in servicelayers:
                         servicelayer.date = layerdate
+                        servicelayer.temporal_extent_start = layerdate
                         servicelayer.abstract = abstract
                         servicelayer.save()
             start_page = start_page + 1

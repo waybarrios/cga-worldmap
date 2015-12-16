@@ -14,6 +14,9 @@ from owslib.csw import CatalogueServiceWeb
 from arcrest import Folder as ArcFolder, MapService as ArcMapService
 import logging
 import time
+from datetime import datetime
+import re
+import requests
 from geonode.layers.models import Layer
 from urlparse import urlparse
 
@@ -50,16 +53,50 @@ class OGP_utils(object):
         if hostname == "localhost":
             return "Harvard" # assumption
         return hostname
+    @staticmethod
+    def extract_date(layer):
+        year = re.search('\d{4}', layer.title)
+        if year is None:
+            year = re.search('\d{4}', layer.abstract)
+        if year is not None:
+            year = year.group(0).strip()
+            year = year.strip()
+            year = int(year)
+            if (year < 1000 or year > datetime.now().year):
+                year = None
+            else:
+                year = datetime(year=year,month=1,day=1)
+        return year
+    @staticmethod
+    def is_solr_up():
+        solr_url = getattr(settings, 'SOLR_URL', 'http://localhost:8983/solr/geonode24')
+        solr_url_parts = solr_url.split('/')
+        core = solr_url_parts[-1]
+        admin_url = '/'.join(solr_url_parts[:-1]) + '/admin/cores'
+        params = {'action': 'STATUS','wt':'json'}
+        try:
+            req = requests.get(admin_url,params=params)
+            response = json.loads(req.text)
+            status = response['status']
+            response = True
+        except requests.exceptions.RequestException as e:
+            response = False
+        return response
+            
         
 
     @staticmethod
     def layer_to_solr(layer, i=0):
         try:
             bbox = layer.bbox
+            date = layer.temporal_extent_start
+            if date is None:
+                date = OGP_utils.extract_date(layer)
+                if date is None:
+                    date = layer.date 
             if (OGP_utils.good_coords(bbox) == False):
                 print 'no coords in layer ', layer.title
                 return
-
             if (OGP_utils.good_coords(bbox)):
                 print 'in utils.layer_to_solr, bbox = ', bbox
                 username = ""
@@ -109,7 +146,6 @@ class OGP_utils(object):
                 domain = OGP_utils.get_domain(owsUrl)
                 if (i == 0):
                     i = layer.title
-
                 OGP_utils.solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i), 
                                  "Name": layer.title,  
                                  "LayerDisplayName": layer.title,
@@ -117,7 +153,7 @@ class OGP_utils(object):
                                  "Publisher": username,
                                  "Originator": domain,
                                  "ServiceType": servicetype,
-                                 "ContentDate": layer.date.date(),
+                                 "ContentDate": date,
                                  "Access": "Public",
                                  "DataType": dataType, 
                                  "Availability": "Online",
@@ -136,7 +172,34 @@ class OGP_utils(object):
                                  "bbox_rpt": wkt}])
                 OGP_utils.logger.error("solr record saved: " + layer.title)
         except Exception as e:
-            OGP_utils.logger.error("error in layer_to_solr processing layer: " + e.message)
+            if e.message.startswith("Connection") or e.message.startswith("[Reason: java.lang.OutOfMemoryError:"):
+                OGP_utils.solr.add([{"LayerId": "HarvardWorldMapLayer_" + str(i),
+                                 "Name": layer.title,
+                                 "LayerDisplayName": layer.title,
+                                 "Institution": institution,
+                                 "Publisher": username,
+                                 "Originator": domain,
+                                 "ServiceType": servicetype,
+                                 "ContentDate": date,
+                                 "Access": "Public",
+                                 "DataType": dataType,
+                                 "Availability": "Online",
+                                 "Location": '{"layerInfoPage": "' + layer.get_absolute_url() + '"}',
+                                 "Abstract": "abstract",
+                                 "SrsProjectionCode": projection,
+                                 "MinY": minY,
+                                 "MinX": minX,
+                                 "MaxY": maxY,
+                                 "MaxX": maxX,
+                                 "CenterY": centerY,
+                                 "CenterX": centerX,
+                                 "HalfWidth": halfWidth,
+                                 "HalfHeight": halfHeight,
+                                 "Area": area,
+                                 }])
+                OGP_utils.logger.error("failed solr record saved after retry: " + layer.title)
+            else:
+                OGP_utils.logger.error("error in layer_to_solr processing layer: " + e.message)
 
     @staticmethod
     def geonode_to_solr():
