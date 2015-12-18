@@ -90,6 +90,13 @@ class OGP_utils(object):
         try:
             bbox = layer.bbox
             date = layer.temporal_extent_start
+            if date:
+                if date is not None:
+                   date = str(date) 
+                if str(date).startswith('-'):
+                   date = str(date)[1:]
+                datesplit = date.split('-')
+                date = datetime(year=int(datesplit[0]),month=1,day=1)  
             if date is None:
                 date = OGP_utils.extract_date(layer)
                 if date is None:
