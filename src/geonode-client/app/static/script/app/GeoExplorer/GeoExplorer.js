@@ -1105,12 +1105,9 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             "local": thisRecord.get('service_type') === 'Hypermap:WorldMap'
         };
 
-        console.log("thisRecord.get('service_type')", thisRecord.get('service_type'));
-
         if (thisRecord.get('service_type') === 'Hypermap:WorldMap'){
             layer_detail_url = 'http://worldmap.harvard.edu/data/' + thisRecord.get('name');
         };
-        console.log('layer_detail_url', layer_detail_url);
 
         if(layer.local){
             // url is always the generic GeoServer endpoint for WM layers
