@@ -1083,7 +1083,7 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             parseFloat(thisRecord.get('max_y'))
             ];
 
-        var layer_detail_url = this.mapproxy_backend + '/registry/hypermap/layer/' + thisRecord.get('uuid') + '/';
+        var layer_detail_url = this.mapproxy_backend + JSON.parse(thisRecord.get('location')).layerInfoPage;
 
         var layer = {
             "styles": "",
@@ -1105,9 +1105,12 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
             "local": thisRecord.get('service_type') === 'Hypermap:WorldMap'
         };
 
+        console.log("thisRecord.get('service_type')", thisRecord.get('service_type'));
+
         if (thisRecord.get('service_type') === 'Hypermap:WorldMap'){
             layer_detail_url = 'http://worldmap.harvard.edu/data/' + thisRecord.get('name');
         };
+        console.log('layer_detail_url', layer_detail_url);
 
         if(layer.local){
             // url is always the generic GeoServer endpoint for WM layers
@@ -1191,13 +1194,13 @@ var GeoExplorer = Ext.extend(gxp.Viewer, {
     },
 
     addEsriSourceAndLayer: function(layerStore, layer, layer_detail_url){
-      this.addLayerSource({
-          config: {url: layer.url, ptype: 'gxp_arcrestsource'},
-          callback: function(source_id){
-              layer.source = source_id;
-              source = this.layerSources[source_id];
-              this.loadRecord(source, this.mapPanel.layers, layer, layer_detail_url);
-          }
+        this.addLayerSource({
+            config: {url: layer.url, ptype: 'gxp_arcrestsource'},
+            callback: function(source_id){
+                layer.source = source_id;
+                source = this.layerSources[source_id];
+                this.loadRecord(source, this.mapPanel.layers, layer, layer_detail_url);
+            }
         });
     },
 
