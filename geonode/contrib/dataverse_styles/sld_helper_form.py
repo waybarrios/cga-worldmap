@@ -1,15 +1,8 @@
-import re
-
-if __name__ == '__main__':
-    import os, sys
-    DJANGO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sys.path.append(DJANGO_ROOT)
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'geonode.settings'
-
-from django import forms
-from shared_dataverse_information.layer_classification.models import ClassificationMethod, ColorRamp
-
 """
+Format used to valid parameters from geoconnect that will be
+sent to the SLD Reser service
+
+Example of an SLD rest service url
  http://localhost:8000/gs/rest/sldservice/geonode:boston_social_disorder_pbl/classify.xml?
     attribute=Violence_4
 	&method=equalInterval
@@ -19,12 +12,30 @@ from shared_dataverse_information.layer_classification.models import Classificat
 	&endColor=%23A50F15
 	&reverse=
 """
+if __name__ == '__main__':
+    import os, sys
+    DJANGO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(DJANGO_ROOT)
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'geonode.settings'
 
-CLASSIFY_METHOD_CHOICES = [(x.value_name, x.display_name) for x in ClassificationMethod.objects.filter(active=True)]
-COLOR_RAMP_CHOICES = [(x.value_name, x.display_name) for x in ColorRamp.objects.filter(active=True)]
+import re
+from django import forms
+
+
+"""
+Note: Classify methods and Color Ramps names are from the GeoServer SLD REST service:
+
+http://docs.geoserver.org/stable/en/user/community/sldservice/index.html#classify-vector-data
+"""
+CLASSIFY_METHODS = ['equalInterval', 'quantile', 'jenks', 'uniqueInterval']
+CLASSIFY_METHOD_CHOICES = [(x, x) for x in CLASSIFY_METHODS]
+
+COLOR_RAMPS = ['red', 'blue', 'gray', 'jet', 'random', 'custom']
 
 LAYER_PARAM_NAME = 'layer_name'
-REQUIRED_PARAM_NAMES = [LAYER_PARAM_NAME, 'attribute', 'method', 'intervals', 'ramp', 'reverse', 'start_color', 'end_color']
+REQUIRED_PARAM_NAMES = [LAYER_PARAM_NAME, 'attribute',
+                        'method', 'intervals', 'ramp',
+                        'reverse', 'start_color', 'end_color']
 
 
 class SLDHelperForm(forms.Form):
@@ -35,11 +46,13 @@ class SLDHelperForm(forms.Form):
     attribute = forms.CharField(max_length=100)
     method = forms.ChoiceField(choices=CLASSIFY_METHOD_CHOICES)
     intervals = forms.IntegerField(required=False)
-    ramp = forms.ChoiceField(choices=COLOR_RAMP_CHOICES)
+    ramp = forms.CharField(max_length=255)
     reverse = forms.BooleanField(initial=False, required=False)
 
-    startColor = forms.CharField(max_length=7, required=False)   # irregular naming convention used to match the outgoing url string
-    endColor = forms.CharField(max_length=7, required=False)      # irregular naming convention used to match the outgoing url string
+    # camelcase naming convention used to match the outgoing url string
+    startColor = forms.CharField(max_length=7, required=False)
+    midColor = forms.CharField(max_length=7, required=False)
+    endColor = forms.CharField(max_length=7, required=False)
 
 
     def get_url_params_dict(self):
@@ -53,7 +66,15 @@ class SLDHelperForm(forms.Form):
 
         params = self.cleaned_data.copy()
 
-        return params
+        final_params = dict()
+
+        # Exclude non-required fields if they don't have values
+        # e.g. midColor
+        #
+        for key, val in params.items():
+            if key in REQUIRED_PARAM_NAMES or val:
+                final_params[key] = val
+        return final_params
 
 
     def is_valid_hex_color_val(self, hex_color_val):
@@ -65,6 +86,29 @@ class SLDHelperForm(forms.Form):
         if re.match(pattern, hex_color_val):
             return True
         return False
+
+
+    def clean_ramp(self):
+        """Check  the color ramp against geoserver allowed values"""
+
+        color_ramp = self.cleaned_data.get('ramp', None)
+
+        if color_ramp is None:
+            raise forms.ValidationError(\
+                ("The color ramp is required."
+                 " Valid values: %s") %\
+                  ','.split(COLOR_RAMPS))
+
+        color_ramp = color_ramp.lower()
+
+        if not color_ramp in COLOR_RAMPS:
+            raise forms.ValidationError(\
+                ("The color ramp is not valid."
+                 " Valid values: %s") %\
+                  ','.split(COLOR_RAMPS))
+
+        return color_ramp
+
 
     def clean_intervals(self):
         num_intervals = self.cleaned_data.get('intervals', -1)
@@ -79,6 +123,8 @@ class SLDHelperForm(forms.Form):
 
 
     def clean_startColor(self):
+        """Make sure the color is valid hex value"""
+
         c = self.cleaned_data.get('startColor', None)
         if self.is_valid_hex_color_val(c) or c == '':
             return c
@@ -86,10 +132,22 @@ class SLDHelperForm(forms.Form):
 
 
     def clean_endColor(self):
+        """Make sure the color is valid hex value"""
+
         c = self.cleaned_data.get('endColor', '')
         if self.is_valid_hex_color_val(c) or c == '':
             return c
         raise forms.ValidationError("This is not a valid end color: %s" % c)
+
+    def clean_midColor(self):
+        """Make sure the color is valid hex value"""
+
+        c = self.cleaned_data.get('midColor', '')
+
+        if self.is_valid_hex_color_val(c) or c == '':
+            return c
+
+        return ''   # default is blank
 
 
     """def clean_method(self):
@@ -101,18 +159,21 @@ class SLDHelperForm(forms.Form):
     """
 
     def clean_reverse(self):
+        """Reverse parameter for colors"""
         reverse = self.cleaned_data.get('reverse', None)
 
         if reverse == '':
             reverse = False
 
         if not reverse in (True, False):
-            raise forms.ValidationError("This is not a valid value for reverse (should be true or false): \"%s\"" % reverse)
+            raise forms.ValidationError(\
+                ('This is not a valid value for reverse'
+                 ' (should be true or false): \"%s\"') % reverse)
 
         if reverse is True:
             return 'true'
 
-        return ''
+        return ''   # default is blank
 
 
     def get_error_list(self):
@@ -127,32 +188,24 @@ class SLDHelperForm(forms.Form):
         return fmt_err_list
 
 
-    #def clean_ramp(self):
-    #    ramp = self.cleaned_data.get('ramp', None)
-    #
-    #    if not ramp in self.VALID_COLOR_RAMP_VALS:
-    #        raise forms.ValidationError("This is not a valid color ramp: %s" % ramp)
-    #   return ramp
-
-
-
 if __name__ == '__main__':
-    d = dict(layer_name='boston_social_disorder_pbl'\
-                , attribute='Income'\
-                , method='equalInterval'\
-                , intervals=5\
-                , ramp='Gray'\
-                , startColor='#FEE5D9'\
-                , endColor='#A50F15'\
-                , reverse=''\
-            )
+    d = dict(\
+            layer_name='boston_social_disorder_pbl',
+            attribute='Income',
+            method='equalInterval',
+            intervals=5,
+            ramp='Gray',
+            startColor='#FEE5D9',
+            endColor='#A50F15',
+            midColor='#ffcc00',
+            reverse='')
 
     f = SLDHelperForm(d)
 
     if f.is_valid():
         print 'valid'
         print f.cleaned_data
-        print f.get_url_params_str()
+        print f.get_url_params_dict()
     else:
         #print f.errors.items()
         for err_tuple in f.errors.items():

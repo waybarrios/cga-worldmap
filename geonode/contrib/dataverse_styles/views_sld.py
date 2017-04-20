@@ -17,7 +17,7 @@ from geonode.contrib.dataverse_styles.style_organizer import StyleOrganizer
 from geonode.contrib.basic_auth_decorator import http_basic_auth_for_api
 
 
-LOGGER = logging.getLogger("geonode.contrib.dataverse_connect.views_sld")
+LOGGER = logging.getLogger(__name__)
 
 
 @csrf_exempt

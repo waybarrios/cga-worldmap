@@ -29,7 +29,7 @@ from geonode.contrib.dataverse_styles.geonode_get_services import get_sld_rules
 from geoserver.catalog import Catalog
 from geonode.contrib.dataverse_connect.layer_metadata import LayerMetadata
 
-LOGGER = logging.getLogger("geonode.contrib.dataverse_styles.style_organizer")
+LOGGER = logging.getLogger(__name__)
 
 class StyleOrganizer(object):
     """

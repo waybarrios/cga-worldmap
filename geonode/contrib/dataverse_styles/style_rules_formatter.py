@@ -18,7 +18,7 @@ from lxml import etree
 
 from geonode.contrib.dataverse_connect.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
 
-logger = logging.getLogger("geonode.contrib.dataverse_styles.style_rules_formatter")
+LOGGER = logging.getLogger(__name__)
 
 class StyleRulesFormatter(object):
     """
@@ -41,7 +41,7 @@ class StyleRulesFormatter(object):
     def add_err_msg(self, err_msg):
         self.err_found = True
         self.err_msgs.append(err_msg)
-        logger.warn(err_msg)
+        LOGGER.warn(err_msg)
 
     def id_generator(self, size=7, chars=string.ascii_lowercase + string.digits):
         """

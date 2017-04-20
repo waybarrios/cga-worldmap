@@ -29,7 +29,7 @@ from geonode.contrib.dataverse_styles.sld_helper_form import SLDHelperForm
 #    import get_retrieve_sld_rules_url, get_layer_features_definition_url
 
 from geonode.contrib.dataverse_styles.geoserver_rest_util import make_geoserver_get_request
-logger = logging.getLogger("geonode.contrib.dataverse_styles.geonode_get_services")
+LOGGER = logging.getLogger(__name__)
 
 #WORLDMAP_WORKSPACE_NAME = settings.DEFAULT_WORKSPACE    #'geonode'
 
