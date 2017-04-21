@@ -157,12 +157,12 @@ class StyleRulesFormatter(object):
         if sld_xml_str is None:
             return None
 
-        stroke_color = '#ececec'
+        stroke_color = '#000000'
 
         no_stroke = '<sld:Stroke/>'
         default_stroke = ('<sld:Stroke>'
                           '<sld:CssParameter name="stroke">%s</sld:CssParameter>'
-                          '<sld:CssParameter name="stroke-width">0.75</sld:CssParameter>'
+                          '<sld:CssParameter name="stroke-width">0.5</sld:CssParameter>'
                           '</sld:Stroke>') % stroke_color
 
         return sld_xml_str.replace(no_stroke, default_stroke)
