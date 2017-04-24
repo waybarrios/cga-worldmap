@@ -13,7 +13,7 @@ from django.conf import settings
 import logging
 import random
 import string
-
+import re
 from lxml import etree
 
 from geonode.contrib.dataverse_connect.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
@@ -28,9 +28,13 @@ class StyleRulesFormatter(object):
     RULES_START_TAG = '<Rules>'
     RULES_END_TAG = '</Rules>'
 
-    def __init__(self, layer_name, sld_name=None):
+    def __init__(self, layer_name, **kwargs):
         self.layer_name = layer_name
-        self.sld_name = sld_name
+        self.sld_name = kwargs.get('sld_name', None)
+
+        self.is_point_layer = kwargs.get('is_point_layer', False)
+        self.current_sld = kwargs.get('current_sld', None)
+
         self.formatted_sld_xml = None
         self.err_found = False
         self.err_msgs = []
@@ -109,7 +113,79 @@ class StyleRulesFormatter(object):
 
         return rules_xml
 
+
+    def convert_rules_to_point(self, rules_xml_formatted):
+        """
+        The SLD service returns styles with "PolygonSymbolizer" specs.
+        For points, extra conversion is needed.
+        """
+        if rules_xml_formatted is None:
+            add_err_msg("rules_xml_formatted cannot be None")
+            return rules_xml_formatted
+
+        if self.current_sld is None:
+            add_err_msg("The current SLD cannot be None")
+            return rules_xml_formatted
+
+        start_polygon_tag = '<sld:PolygonSymbolizer>'
+        end_polygon_tag = '</sld:PolygonSymbolizer>'
+
+        start_idx = rules_xml_formatted.find(start_polygon_tag)
+
+        while start_idx > -1:
+
+            end_idx = rules_xml_formatted.find(end_polygon_tag, start_idx)
+            if end_idx == -1:
+                self.add_err_msg('Could not tag in SLD: %s' % end_polygon_tag)
+                return rules_xml_formatted
+
+            polygon_chunk = self.current_sld[start_idx:end_idx+len(end_polygon_tag)]
+
+            # Pull the color from the fill parameter
+            #
+            m = re.findall(\
+                r'<sld:CssParameter name="fill">(#[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})</sld:CssParameter>',
+                polygon_chunk)
+
+            # Use the color and replace the PolygonSymbolizer
+            #       with XML for a PointSymbolizer
+            #
+            if len(m) > 0:
+                hex_fill_color = m[0]
+                rules_xml_formatted = rules_xml_formatted.replace(\
+                                polygon_chunk,
+                                self.get_point_symbolizer_xml(hex_fill_color))
+
+            start_idx = rules_xml_formatted.find(start_polygon_tag)
+
+        return rules_xml_formatted
+
+
+
+    def get_point_symbolizer_xml(self, fill_color):
+        """Return a PointSymbolizer XML chunk with the givn fill color"""
+
+        return """<sld:PointSymbolizer>
+            <sld:Graphic>
+              <sld:Mark>
+                <sld:Fill>
+                  <sld:CssParameter name="fill">{0}</sld:CssParameter>
+                </sld:Fill>
+                <sld:Stroke>
+                  <sld:CssParameter name="stroke">#ffbbbb</sld:CssParameter>
+                </sld:Stroke>
+              </sld:Mark>
+              <sld:Size>10</sld:Size>
+            </sld:Graphic>
+          </sld:PointSymbolizer>
+        </sld:Rule>""".format(fill_color)
+
+
+
     def format_sld_xml(self, rules_xml):
+        """
+        Convert the XML rules into a full SLD
+        """
         if not rules_xml:
             self.add_err_msg('You must specify the "rules_xml"')
             return False
@@ -121,6 +197,9 @@ class StyleRulesFormatter(object):
             self.add_err_msg("Failed to format the XML rules (id:1)")
             return False
 
+        if self.is_point_layer:
+            rules_xml_formatted = self.convert_rules_to_point(rules_xml_formatted)
+
         xml_str = """<?xml version="1.0"?>
         <sld:StyledLayerDescriptor xmlns:sld="http://www.opengis.net/sld" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd">
             <sld:NamedLayer>
@@ -130,7 +209,11 @@ class StyleRulesFormatter(object):
                     <sld:FeatureTypeStyle>%s</sld:FeatureTypeStyle>
                 </sld:UserStyle>
             </sld:NamedLayer>
-        </sld:StyledLayerDescriptor>""" % (settings.DEFAULT_WORKSPACE, self.layer_name, self.sld_name, rules_xml_formatted)
+        </sld:StyledLayerDescriptor>""" % (\
+                    settings.DEFAULT_WORKSPACE,
+                    self.layer_name,
+                    self.sld_name,
+                    rules_xml_formatted)
 
         # For polgyons, add a stroke color.
         # If this isn't a polygon, the sld wil be returned unchanged
@@ -144,6 +227,8 @@ class StyleRulesFormatter(object):
         if xml_str is None:
             self.add_err_msg("Failed to format the XML rules (id:3)")
             return False
+
+        print ('self.formatted_sld_xml', self.formatted_sld_xml )
 
         return True
 

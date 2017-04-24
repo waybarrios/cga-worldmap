@@ -19,8 +19,12 @@ from __future__ import print_function
 
 import json
 import logging
+import psycopg2
 
 from django.conf import settings
+
+from geonode.contrib.datatables.db_helper import get_connection_string_via_settings
+from geonode.maps.models import Layer
 
 from geonode.contrib.dataverse_connect.dv_utils import MessageHelperJSON
 from geonode.contrib.dataverse_styles.style_layer_maker import StyleLayerMaker
@@ -28,6 +32,7 @@ from geonode.contrib.dataverse_styles.style_rules_formatter import StyleRulesFor
 from geonode.contrib.dataverse_styles.geonode_get_services import get_sld_rules
 from geoserver.catalog import Catalog
 from geonode.contrib.dataverse_connect.layer_metadata import LayerMetadata
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +42,91 @@ class StyleOrganizer(object):
     """
     def __init__(self, styling_params):
         self.styling_params = styling_params
-        self.layer_name = None
+        self.layer_name = styling_params.get('layer_name', None)
         self.err_found = False
         self.err_msgs = []
         self.layer_metadata = None
+
+        self.current_sld = None
+        self.is_point_layer = False
+
+        self.check_current_sld()
+
+    def check_current_sld(self):
+        """Check current SLD as a proxy to check
+        if the layer is a POINT or POLYGON
+        """
+        if self.layer_name is None:
+            self.add_err_msg("The layer name was not given.")
+            return False
+
+        # --------------------------------
+        # Retrieve the Layer
+        # --------------------------------
+        try:
+            layer = Layer.objects.get(name=self.layer_name)
+        except Layer.DoesNotExist:
+            self.add_err_msg(('The layer with name "%s"'
+                              ' was not found.') % self.layer_name)
+            return False
+
+        # --------------------------------
+        # Check if this is POINT geometry
+        #   via the database
+        # --------------------------------
+        success, conn_str_or_err = get_connection_string_via_settings(\
+                            'wmdata',
+                            **dict(NAME=layer.store))
+        if not success:
+            self.add_err_msg(conn_str_or_err)
+            return False
+
+        try:
+            sql_str = ('select type from geometry_columns'
+                       ' where f_table_name = \'%s\';')\
+                       % layer.typename.split(':')[-1]
+
+            conn = psycopg2.connect(conn_str_or_err)
+            cur = conn.cursor()
+            cur.execute(sql_str)
+            data_type = cur.fetchone()[0]
+            if data_type in ['POINT']:
+                self.is_point_layer = True
+            else:
+                self.is_point_layer = False
+
+        except Exception as ex_obj:
+            traceback.print_exc(sys.exc_info())
+            err_msg = ('Error finding geometry type'
+                       ' for layer: %s [id: %s]')
+            LOGGER.error(err_msg)
+            LOGGER.error(ex_obj)
+            return False
+        finally:
+            if conn:
+                conn.close()
+
+        # --------------------------------
+        # If this is a POINT layer,
+        # retrieve the SLD body
+        # --------------------------------
+        if self.is_point_layer is True:
+
+            if not (layer.default_style and layer.default_style.sld_body):
+                self.add_err_msg(('The default style for layer "%s"'
+                                  ' was not found.') % self.layer_name)
+                return False
+
+            sld_body = layer.default_style.sld_body
+
+            #if self.is_point_layer is False:
+            #    if sld_body.find('<sld:PointSymbolizer>') > -1:
+            #        self.is_point_layer = True
+
+            self.current_sld = sld_body
+
+        return True
+
 
 
     def add_err_msg(self, err_msg):
@@ -60,6 +146,10 @@ class StyleOrganizer(object):
 
 
     def style_layer(self):
+        """Run through the layer styling steps"""
+
+        if self.err_found:
+            return False
 
         # (1) Check params and create rules
         #
@@ -129,11 +219,19 @@ class StyleOrganizer(object):
         # --------------------------------------
         # Create a StyleRulesFormatter object
         # --------------------------------------
-        sld_formatter = StyleRulesFormatter(self.layer_name)#, style_name_or_err_msg)
+        extra_kwargs = {}
+        if self.is_point_layer:
+            extra_kwargs = dict(is_point_layer=True,
+                                current_sld=self.current_sld)
+
+        sld_formatter = StyleRulesFormatter(self.layer_name,
+                                            **extra_kwargs)
+        #, style_name_or_err_msg)
 
         sld_formatter.format_sld_xml(sld_rule_data)
 
         if sld_formatter.err_found:
+            print ('ERROR: %s' % sld_formatter.err_msgs)
             self.add_err_msg('Failed to format xml')
             if sld_formatter.err_found:
                 self.add_err_msg('\n'.join(sld_formatter.err_msgs))
