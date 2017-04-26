@@ -68,7 +68,7 @@ django-tastypie==0.9.16
 # --------------------------------------------------
 xmltodict
 shared_dataverse_information>=0.5.7
-#-e git+https://github.com/IQSS/shared-dataverse-information.git#egg=shared-dataverse-information
+beautifulsoup4==4.5.3
 
 # --------------------------------------------------
 # For Datatable app.  Tabular table joins to existing layers

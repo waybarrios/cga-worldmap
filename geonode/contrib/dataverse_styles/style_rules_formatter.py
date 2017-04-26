@@ -2,6 +2,7 @@
 Basic string formatting to take a new set of style rules
 and create a layer specific SLD in XML format
 """
+from __future__ import print_function
 
 if __name__=='__main__':
     import os, sys
@@ -17,6 +18,8 @@ import re
 from lxml import etree
 
 from geonode.contrib.dataverse_connect.dv_utils import remove_whitespace_from_xml, MessageHelperJSON
+from geonode.contrib.msg_util import dashes, msg, msgt
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +38,10 @@ class StyleRulesFormatter(object):
         self.is_point_layer = kwargs.get('is_point_layer', False)
         self.current_sld = kwargs.get('current_sld', None)
 
+        # Randomly generated extension to the layer name
+        #   - Ability to add an set id, used for tests
+        self.predefined_id = kwargs.get('predefined_id', None)
+
         self.formatted_sld_xml = None
         self.err_found = False
         self.err_msgs = []
@@ -51,6 +58,8 @@ class StyleRulesFormatter(object):
         """
         Create a random id used to generate an SLD name
         """
+        if self.predefined_id is not None:
+            return self.predefined_id
         return ''.join(random.choice(chars) for _ in range(size))
 
     def generate_sld_name(self):
@@ -133,14 +142,20 @@ class StyleRulesFormatter(object):
         start_idx = rules_xml_formatted.find(start_polygon_tag)
 
         while start_idx > -1:
+            dashes()
+            print ('start_idx', start_idx)
 
-            end_idx = rules_xml_formatted.find(end_polygon_tag, start_idx)
+            end_idx = rules_xml_formatted.find(end_polygon_tag, start_idx+len(start_polygon_tag))
+            print ('end_idx', end_idx)
             if end_idx == -1:
                 self.add_err_msg('Could not tag in SLD: %s' % end_polygon_tag)
                 return rules_xml_formatted
 
-            polygon_chunk = self.current_sld[start_idx:end_idx+len(end_polygon_tag)]
+            polygon_chunk = rules_xml_formatted[start_idx:end_idx+len(end_polygon_tag)]
 
+            dashes()
+            print ('polygon_chunk', polygon_chunk)
+            dashes()
             # Pull the color from the fill parameter
             #
             m = re.findall(\
@@ -152,6 +167,13 @@ class StyleRulesFormatter(object):
             #
             if len(m) > 0:
                 hex_fill_color = m[0]
+                point_chunk = self.get_point_symbolizer_xml(hex_fill_color)
+
+                dashes()
+                print ('hex_fill_color', hex_fill_color)
+                print ('point_chunk', point_chunk)
+                dashes()
+
                 rules_xml_formatted = rules_xml_formatted.replace(\
                                 polygon_chunk,
                                 self.get_point_symbolizer_xml(hex_fill_color))
@@ -172,13 +194,12 @@ class StyleRulesFormatter(object):
                   <sld:CssParameter name="fill">{0}</sld:CssParameter>
                 </sld:Fill>
                 <sld:Stroke>
-                  <sld:CssParameter name="stroke">#ffbbbb</sld:CssParameter>
+                  <sld:CssParameter name="stroke">#ffffbb</sld:CssParameter>
                 </sld:Stroke>
               </sld:Mark>
               <sld:Size>10</sld:Size>
             </sld:Graphic>
-          </sld:PointSymbolizer>
-        </sld:Rule>""".format(fill_color)
+          </sld:PointSymbolizer>""".format(fill_color)
 
 
 
@@ -191,6 +212,9 @@ class StyleRulesFormatter(object):
             return False
 
         self.formatted_sld_xml = None
+
+        msgt('rules_xml_formatted')
+        msg('rules_xml_formatted')
 
         rules_xml_formatted = self.format_rules_xml(rules_xml)
         if rules_xml_formatted is None:
@@ -303,4 +327,4 @@ class StyleRulesFormatter(object):
 
 if __name__=='__main__':
     sld_formatter = StyleRulesFormatter('layer-name')
-    print sld_formatter.format_sld_xml(sld_formatter.get_test_rules())
+    print (sld_formatter.format_sld_xml(sld_formatter.get_test_rules()))

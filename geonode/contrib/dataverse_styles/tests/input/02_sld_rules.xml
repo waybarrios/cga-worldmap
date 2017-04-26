@@ -1,0 +1,107 @@
+<Rules>
+  <Rule>
+    <Title> &gt; 0.0 AND &lt;= 6.0</Title>
+    <Filter>
+      <And>
+        <PropertyIsGreaterThanOrEqualTo>
+          <PropertyName>symbol</PropertyName>
+          <Literal>0.0</Literal>
+        </PropertyIsGreaterThanOrEqualTo>
+        <PropertyIsLessThanOrEqualTo>
+          <PropertyName>symbol</PropertyName>
+          <Literal>6.0</Literal>
+        </PropertyIsLessThanOrEqualTo>
+      </And>
+    </Filter>
+    <PolygonSymbolizer>
+      <Fill>
+        <CssParameter name="fill">#FFF5F0</CssParameter>
+      </Fill>
+      <Stroke/>
+    </PolygonSymbolizer>
+  </Rule>
+  <Rule>
+    <Title> &gt; 6.0 AND &lt;= 12.0</Title>
+    <Filter>
+      <And>
+        <PropertyIsGreaterThan>
+          <PropertyName>symbol</PropertyName>
+          <Literal>6.0</Literal>
+        </PropertyIsGreaterThan>
+        <PropertyIsLessThanOrEqualTo>
+          <PropertyName>symbol</PropertyName>
+          <Literal>12.0</Literal>
+        </PropertyIsLessThanOrEqualTo>
+      </And>
+    </Filter>
+    <PolygonSymbolizer>
+      <Fill>
+        <CssParameter name="fill">#E0C4C2</CssParameter>
+      </Fill>
+      <Stroke/>
+    </PolygonSymbolizer>
+  </Rule>
+  <Rule>
+    <Title> &gt; 12.0 AND &lt;= 18.0</Title>
+    <Filter>
+      <And>
+        <PropertyIsGreaterThan>
+          <PropertyName>symbol</PropertyName>
+          <Literal>12.0</Literal>
+        </PropertyIsGreaterThan>
+        <PropertyIsLessThanOrEqualTo>
+          <PropertyName>symbol</PropertyName>
+          <Literal>18.0</Literal>
+        </PropertyIsLessThanOrEqualTo>
+      </And>
+    </Filter>
+    <PolygonSymbolizer>
+      <Fill>
+        <CssParameter name="fill">#C29395</CssParameter>
+      </Fill>
+      <Stroke/>
+    </PolygonSymbolizer>
+  </Rule>
+  <Rule>
+    <Title> &gt; 18.0 AND &lt;= 24.0</Title>
+    <Filter>
+      <And>
+        <PropertyIsGreaterThan>
+          <PropertyName>symbol</PropertyName>
+          <Literal>18.0</Literal>
+        </PropertyIsGreaterThan>
+        <PropertyIsLessThanOrEqualTo>
+          <PropertyName>symbol</PropertyName>
+          <Literal>24.0</Literal>
+        </PropertyIsLessThanOrEqualTo>
+      </And>
+    </Filter>
+    <PolygonSymbolizer>
+      <Fill>
+        <CssParameter name="fill">#A36267</CssParameter>
+      </Fill>
+      <Stroke/>
+    </PolygonSymbolizer>
+  </Rule>
+  <Rule>
+    <Title> &gt; 24.0 AND &lt;= 30.0</Title>
+    <Filter>
+      <And>
+        <PropertyIsGreaterThan>
+          <PropertyName>symbol</PropertyName>
+          <Literal>24.0</Literal>
+        </PropertyIsGreaterThan>
+        <PropertyIsLessThanOrEqualTo>
+          <PropertyName>symbol</PropertyName>
+          <Literal>30.0</Literal>
+        </PropertyIsLessThanOrEqualTo>
+      </And>
+    </Filter>
+    <PolygonSymbolizer>
+      <Fill>
+        <CssParameter name="fill">#85313A</CssParameter>
+      </Fill>
+      <Stroke/>
+    </PolygonSymbolizer>
+  </Rule>
+</Rules>
