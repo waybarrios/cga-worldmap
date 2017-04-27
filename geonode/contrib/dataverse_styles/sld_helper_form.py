@@ -176,6 +176,17 @@ class SLDHelperForm(forms.Form):
         return ''   # default is blank
 
 
+    def get_attribute_and_classification_method(self):
+        """Return attribute and classification method values
+        for error user messages
+        """
+        if not self.cleaned_data:
+            return (None, None)
+
+        return (self.cleaned_data.get('attribute'),
+                self.cleaned_data.get('method'))
+
+
     def get_error_list(self):
         if not self.errors:
             return None

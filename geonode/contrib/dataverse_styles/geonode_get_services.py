@@ -99,29 +99,53 @@ def get_sld_rules(params):
     print '-' *40
     """
     response, content = make_geoserver_get_request(sld_rules_url)
-    #print 'response:', response
+
+    # used for error messages
+    param_str = 'Attribute "<b>%s</b>" and Classification Method "<b>%s</b>"' %\
+        f.get_attribute_and_classification_method()
+
+    if not 'status' in response:
+        return MessageHelperJSON.get_json_msg(success=False,\
+            msg='Sorry the style service appears to be unavailable.\nresponse: %s' % response)
+
+    if response.status != 200:
+        return MessageHelperJSON.get_json_msg(\
+            success=False,
+            msg=('Styling failed with %s.'
+                 ' Please try another Attribute'
+                 ' and/or Classification Method (e:1)') % param_str)
 
     # ----------------------------------
     # New rules not created -- possible bad data
     # ----------------------------------
     if content is not None and content == '<list/>':
-        return MessageHelperJSON.get_json_msg(success=False,\
-            msg='Error in creating style rules for layer. Bad parameters.')
+        return MessageHelperJSON.get_json_msg(\
+            success=False,
+            msg=('Styling failed with %s.'
+                 ' Please try another Attribute'
+                 ' and/or Classification Method. (e:2)') % param_str)
 
     # ----------------------------------
     # Remove whitespace from XML
     # ----------------------------------
     content = remove_whitespace_from_xml(content)
     if content is None:
-        return MessageHelperJSON.get_json_msg(success=False,\
-            msg='Failed to remove whitespace from XML')
+        return MessageHelperJSON.get_json_msg(\
+            success=False,
+            msg=('Styling failed with %s.'
+                 ' Please try another Attribute'
+                 ' and/or Classification Method. (e:3)') % param_str)
+
 
     # ----------------------------------
     # Were rules created?
     # ----------------------------------
     if not content.startswith('<Rules>'):
-        return MessageHelperJSON.get_json_msg(success=False,\
-            msg='Not able to create style rules for layer')
+        return MessageHelperJSON.get_json_msg(\
+            success=False,
+            msg=('Styling failed with %s.'
+                 ' Please try another Attribute'
+                 ' and/or Classification Method. (e:4)') % param_str)
 
     # ----------------------------------
     # Wrap the XML rules in JSON and send them back

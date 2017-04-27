@@ -120,9 +120,10 @@ def view_create_new_layer_style(request):
                                 msg=err_msg)
         return HttpResponse(status=400, content=json_msg, content_type="application/json")
 
-
     ls = StyleOrganizer(request.POST)
+    print ('StyleOrganizer 2')
     ls.style_layer()
+    print ('StyleOrganizer 3')
 
     json_msg = ls.get_json_message()    # Will determine success/failure and appropriate params
     return HttpResponse(content=json_msg, content_type="application/json")

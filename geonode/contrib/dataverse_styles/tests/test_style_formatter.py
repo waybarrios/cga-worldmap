@@ -70,7 +70,7 @@ class StyleFormatterTestCase(unittest.TestCase):
 
         new_dict = xmltodict.parse(new_sld_xml_pretty, process_namespaces=True)
         expected_dict = xmltodict.parse(expected_sld_pretty, process_namespaces=True)
-        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
         #msgt(new_dict)
         #msgt(expected_dict)
 
