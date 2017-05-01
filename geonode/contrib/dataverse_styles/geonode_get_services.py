@@ -54,6 +54,9 @@ def get_retrieve_sld_rules_url(params_dict):
 
     sld_rules_url = urljoin(settings.GEOSERVER_BASE_URL, sld_rules_fragment)
 
+    #print('sld_rules_url', sld_rules_url)
+    LOGGER.debug('sld_rules_url: %s', sld_rules_url)
+
     return sld_rules_url
 
 

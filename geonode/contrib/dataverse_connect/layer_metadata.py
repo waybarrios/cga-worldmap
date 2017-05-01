@@ -134,6 +134,7 @@ class LayerMetadata(object):
 
 
     def update_metadata_with_layer_object(self, layer_obj):
+        """Use a map Layer object to set additional metadata attributes"""
         if not type(layer_obj) is Layer:
             return False
 
@@ -141,7 +142,6 @@ class LayerMetadata(object):
         self.layer_link = '%sdata/%s' % (settings.SITEURL, layer_obj.typename)
 
         self.embed_map_link =  '%smaps/embed/?layer=%s' % (settings.SITEURL, layer_obj.typename)
-
 
         self.llbbox = layer_obj.llbbox
         #self.srs = layer_obj.srs
@@ -163,6 +163,13 @@ class LayerMetadata(object):
         return True
 
     def format_download_links(self, layer_obj):
+        """Using a Layer object, format the download links
+        for zip, gml, csv, png, and other formats available through
+        the WMS service.
+
+        Return a dict consisting of the format type (e.g. 'png')
+        and the link to retrieve that type
+        """
         assert type(layer_obj) is Layer, "layer_obj must be type Layer"
 
         if layer_obj.resource is None:
@@ -170,6 +177,16 @@ class LayerMetadata(object):
         if not hasattr(layer_obj.resource, 'resource_type'):
             return None
 
+        # ------------------------------------------------------
+        # Retrieve a list of tuples, each consisting of 3 items:
+        #
+        # (1) link type, e.g. zip, gml, csv, png, etc
+        # (2) proxy object (not used)
+        # (3) Link to generate the type, e.g. link for PNG:
+        #   http://localhost:8000/download/wms/25/png?layers=geonode%3Atransport_f8t&width=1205&bbox=-73.5332453121%2C41.230344801%2C-69.8985670049%2C42.8881123543&service=WMS&format=image%2Fpng&srs=EPSG%3A4326&request=GetMap&height=550
+        #
+        # From the list of tuples create a dict of (1) and (3)
+        # ------------------------------------------------------
         link_tuples = layer_obj.download_links()
         if not link_tuples:
             return None
@@ -177,7 +194,7 @@ class LayerMetadata(object):
         link_dict = {}
         for lt in link_tuples:
             if lt and len(lt)==3:
-                link_dict[lt[0]] = lt[2]
+                link_dict[lt[0]] = lt[2]    # { type, e.g. 'png' : link to png}
         if len(link_dict) == 0:
             return None
 

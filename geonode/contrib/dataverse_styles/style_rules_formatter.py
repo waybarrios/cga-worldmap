@@ -142,20 +142,13 @@ class StyleRulesFormatter(object):
         start_idx = rules_xml_formatted.find(start_polygon_tag)
 
         while start_idx > -1:
-            dashes()
-            print ('start_idx', start_idx)
-
             end_idx = rules_xml_formatted.find(end_polygon_tag, start_idx+len(start_polygon_tag))
-            print ('end_idx', end_idx)
             if end_idx == -1:
                 self.add_err_msg('Could not tag in SLD: %s' % end_polygon_tag)
                 return rules_xml_formatted
 
             polygon_chunk = rules_xml_formatted[start_idx:end_idx+len(end_polygon_tag)]
 
-            dashes()
-            print ('polygon_chunk', polygon_chunk)
-            dashes()
             # Pull the color from the fill parameter
             #
             m = re.findall(\
@@ -168,11 +161,6 @@ class StyleRulesFormatter(object):
             if len(m) > 0:
                 hex_fill_color = m[0]
                 point_chunk = self.get_point_symbolizer_xml(hex_fill_color)
-
-                dashes()
-                print ('hex_fill_color', hex_fill_color)
-                print ('point_chunk', point_chunk)
-                dashes()
 
                 rules_xml_formatted = rules_xml_formatted.replace(\
                                 polygon_chunk,
@@ -213,9 +201,6 @@ class StyleRulesFormatter(object):
 
         self.formatted_sld_xml = None
 
-        msgt('rules_xml_formatted')
-        msg('rules_xml_formatted')
-
         rules_xml_formatted = self.format_rules_xml(rules_xml)
         if rules_xml_formatted is None:
             self.add_err_msg("Failed to format the XML rules (id:1)")
@@ -252,7 +237,7 @@ class StyleRulesFormatter(object):
             self.add_err_msg("Failed to format the XML rules (id:3)")
             return False
 
-        print ('self.formatted_sld_xml', self.formatted_sld_xml )
+        LOGGER.debug('self.formatted_sld_xml %s', self.formatted_sld_xml )
 
         return True
 

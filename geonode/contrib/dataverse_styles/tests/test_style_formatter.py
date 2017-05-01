@@ -6,12 +6,11 @@ from unittest import skip
 from django.utils import unittest
 from django.conf import settings
 
-from bs4 import BeautifulSoup
+#from lxml import etree
 
 from geonode.contrib.dataverse_styles.style_rules_formatter import StyleRulesFormatter
 from geonode.contrib.msg_util import msg, msgt
 
-from compare_dicts import compare_dictionaries
 
 
 class StyleFormatterTestCase(unittest.TestCase):
@@ -38,41 +37,56 @@ class StyleFormatterTestCase(unittest.TestCase):
 
 
     def test_01_style_formatter(self):
-        msgt('test_01_style_formatter')
+        """Style lat/lng SLD on a string attribute"""
+        msgt(self.test_01_style_formatter.__doc__)
         extra_kwargs = dict(\
                 is_point_layer=True,
-                current_sld=self.get_input_file('01_current_sld.xml'),
+                current_sld=self.get_input_file('t1_01_current_sld.xml'),
                 predefined_id='abc1234')
 
-        sld_formatter = StyleRulesFormatter('centroid_alt_123',
+        msg('Load current SLD')
+        sld_formatter = StyleRulesFormatter('boston_pub_f43_abc1234',
                                             **extra_kwargs)
 
-        sld_rule_data = self.get_input_file('02_sld_rules.xml')
 
-        #print(sld_rule_data)
+        # Format rule data
+        msg('Apply rule data')
+        sld_rule_data = self.get_input_file('t1_02_sld_rules.xml')
         sld_formatter.format_sld_xml(sld_rule_data)
 
+        # Should be no errors
         self.assertEqual(sld_formatter.err_found, False)
 
         new_sld_xml = sld_formatter.formatted_sld_xml
-        new_sld_xml_pretty = BeautifulSoup(new_sld_xml, "xml").prettify()
-        #msg(new_sld_xml_pretty)
-        #open(join(self.test_file_dir, 'new_sld_xml_pretty.xml'), 'w').write(new_sld_xml_pretty.strip())
+        self.assertTrue(new_sld_xml is not None)
 
-        #expected_sld = self.get_input_file('03_full_sld.xml')
-        #expected_sld_pretty = BeautifulSoup(expected_sld, "xml").prettify()
-        expected_sld_pretty = self.get_input_file('expected_sld_pretty.xml')
-        #open('expected_sld_pretty.xml', 'w').write(expected_sld_pretty)
 
-        #self.assertEqual(new_sld_xml_pretty, expected_sld_pretty)
+        expected_sld = self.get_input_file('t1_03_full_sld.xml')
+        self.assertEqual(new_sld_xml.strip(), expected_sld.strip())
 
-        import xmltodict
+    def test_02_style_formatter(self):
+        """Style lat/lng SLD on a numeric attribute"""
+        msgt(self.test_02_style_formatter.__doc__)
 
-        new_dict = xmltodict.parse(new_sld_xml_pretty, process_namespaces=True)
-        expected_dict = xmltodict.parse(expected_sld_pretty, process_namespaces=True)
-        #import ipdb; ipdb.set_trace()
-        #msgt(new_dict)
-        #msgt(expected_dict)
+        extra_kwargs = dict(\
+                is_point_layer=True,
+                current_sld=self.get_input_file('t2_01_current_sld.xml'),
+                predefined_id='abc1234')
 
-        dict_diff = compare_dictionaries(new_dict, expected_dict, 'new_dict', 'expected_dict')
-        msgt(dict_diff)
+        msg('Load current SLD')
+        sld_formatter = StyleRulesFormatter('starbucks_u_gl_abc1234',
+                                            **extra_kwargs)
+
+        # Format rule data
+        msg('Apply rule data')
+        sld_rule_data = self.get_input_file('t2_02_sld_rules.xml')
+        sld_formatter.format_sld_xml(sld_rule_data)
+
+        # Should be no errors
+        self.assertEqual(sld_formatter.err_found, False)
+
+        new_sld_xml = sld_formatter.formatted_sld_xml
+        self.assertTrue(new_sld_xml is not None)
+
+        expected_sld = self.get_input_file('t2_03_full_sld.xml')
+        self.assertEqual(new_sld_xml.strip(), expected_sld.strip())

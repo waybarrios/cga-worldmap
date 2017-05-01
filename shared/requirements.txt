@@ -68,7 +68,6 @@ django-tastypie==0.9.16
 # --------------------------------------------------
 xmltodict
 shared_dataverse_information>=0.5.7
-beautifulsoup4==4.5.3
 
 # --------------------------------------------------
 # For Datatable app.  Tabular table joins to existing layers

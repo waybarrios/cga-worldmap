@@ -231,7 +231,7 @@ class StyleOrganizer(object):
         sld_formatter.format_sld_xml(sld_rule_data)
 
         if sld_formatter.err_found:
-            print ('ERROR: %s' % sld_formatter.err_msgs)
+            LOGGER.error('ERROR: %s', sld_formatter.err_msgs)
             self.add_err_msg('Failed to format xml')
             if sld_formatter.err_found:
                 self.add_err_msg('\n'.join(sld_formatter.err_msgs))
@@ -325,11 +325,10 @@ if __name__ == '__main__':
     style_organizer = StyleOrganizer(d)
     styler_succeeded = style_organizer.style_layer()
     if not styler_succeeded:
-        print ('\n'.join(style_organizer.err_msgs))
+        LOGGER.error('\n'.join(style_organizer.err_msgs))
     #else:
     #    print ('Yes!')
     #    metadata = ls.layer_metadata
     #    if metadata:
     #        print (metadata.get_metadata_dict())
-    print ('-'*40)
-    print (style_organizer.get_json_message())
+    LOGGER.debug(style_organizer.get_json_message())
