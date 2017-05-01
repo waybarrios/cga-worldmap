@@ -283,7 +283,6 @@ class LatLngTableMappingRecord(models.Model):
         data_dict['layer_id'] = self.layer.id
         data_dict['layer_name'] = self.layer.name
         data_dict['layer_typename'] = self.layer.typename
-        data_dict['layer_link'] = self.layer.get_absolute_url()
 
         data_dict['lat_attribute'] = dict(attribute=self.lat_attribute.attribute\
                     , type=self.lat_attribute.attribute_type)
