@@ -123,11 +123,10 @@ class LayerMetadata(object):
         """
         assert type(layer_obj) is Layer, "layer_obj must be a Layer"
 
-        attr_info = [ dict(name=info.attribute\
-                                    , display_name=info.attribute_label\
-                                    , type=info.attribute_type.replace('xsd:', ''))\
-                    for info in layer_obj.attribute_set.all().order_by('display_order')\
-                                ]
+        attr_info = [dict(name=info.attribute,
+                          display_name=info.attribute_label,
+                          type=info.attribute_type.replace('xsd:', ''))\
+                     for info in layer_obj.attribute_set.all().order_by('display_order')]
         try:
             return json.dumps(attr_info)
         except:

@@ -2,28 +2,46 @@ import sys
 from datetime import datetime
 from django.utils.translation import ugettext as _
 
-from django import forms 
+from django import forms
 
+from geonode.maps.models import Layer
 from geonode.contrib.dataverse_layer_metadata.models import DataverseLayerMetadata
-from shared_dataverse_information.dataverse_info.forms import DataverseInfoValidationForm                
+from shared_dataverse_information.dataverse_info.forms import DataverseInfoValidationForm
 from shared_dataverse_information.dataverse_info.forms_existing_layer import CheckForExistingLayerForm
 DATETIME_PAT_STR = '%Y-%m-%d %H:%M'
 
 
-        
+
 class DataverseLayerMetadataAdminForm(forms.ModelForm):
     class Meta:
         model = DataverseLayerMetadata
         widgets = {  'dataverse_description': forms.Textarea(attrs={'rows': 2, 'cols':70})\
                    , 'dataset_description': forms.Textarea(attrs={'rows': 2, 'cols':70})\
-              # , 'name': forms.TextInput(attrs={'size':20}) 
+              # , 'name': forms.TextInput(attrs={'size':20})
                }
-         
+
+    def __init__(self, *args, **kwargs):
+        super(DataverseLayerMetadataAdminForm, self).__init__(*args, **kwargs)
+
+        if self.instance and self.instance.id:
+            # Yes, limit choices
+
+            # Set the source layer and attribute
+            self.fields['map_layer'].queryset = Layer.objects.filter(\
+                                    pk=self.instance.map_layer.id)
+
+        else:
+            # These objects can't be created through the admin
+            # Also, production would create dropdowns with 1000s of listings
+            #
+            self.fields['map_layer'].queryset = Layer.objects.none()
+
+
 class DataverseLayerMetadataValidationForm(DataverseInfoValidationForm):
     """Used to validate incoming data from GeoConnect
     Excludes the map_layer attribute and create/modtimes
     """
-    
+
     @staticmethod
     def format_datafile_create_datetime(datetime_info):
         """
@@ -63,11 +81,11 @@ class CheckForExistingLayerFormWorldmap(CheckForExistingLayerForm):
         - Dataverse file id
         - Dataverse installation name
     """
-         
+
     def legitimate_layer_exists(self, post_dict):
         """
         Make sure that this layer has an associated DataverseLayerMetadata object.
-        
+
         Note: the layer_name (for styling) does not contain the "geonode:" prefix.
             This is the reason for the __endswith in the query
         """
@@ -75,15 +93,15 @@ class CheckForExistingLayerFormWorldmap(CheckForExistingLayerForm):
         assert hasattr(post_dict, 'has_key'), "post_dict must be a dictionary-like object ('has_key' not found)"
         assert post_dict.has_key('layer_name'), "post_dict must contain a layer_name key"
 
-        
+
         if DataverseLayerMetadata.objects.filter(**self.cleaned_data\
                         ).filter(map_layer__typename__endswith=post_dict.get('layer_name')\
                         ).count() > 0:
             return True
-             
+
         return False
 
-         
+
     def get_latest_dataverse_layer_metadata(self):
         """
         Return DataverseLayerMetadata objects that match the given 'dataverse_installation_name' and 'datafile_id'
@@ -92,11 +110,10 @@ class CheckForExistingLayerFormWorldmap(CheckForExistingLayerForm):
 
         # using pre 1.6 version of Django, so can't use 'first()'
         #return DataverseLayerMetadata.objects.select_related('map_layer').filter(**self.cleaned_data).first()
-        
+
         qs = DataverseLayerMetadata.objects.filter(**self.cleaned_data)
         r = list(qs[:1])
         #print ('r', r)
         if r:
             return r[0]
         return None
-    
