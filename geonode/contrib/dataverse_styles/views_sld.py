@@ -17,7 +17,7 @@ from geonode.contrib.dataverse_styles.style_organizer import StyleOrganizer
 from geonode.contrib.basic_auth_decorator import http_basic_auth_for_api
 
 
-LOGGER = logging.getLogger("geonode.contrib.dataverse_connect.views_sld")
+LOGGER = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -119,7 +119,6 @@ def view_create_new_layer_style(request):
         json_msg = MessageHelperJSON.get_json_msg(success=False,
                                 msg=err_msg)
         return HttpResponse(status=400, content=json_msg, content_type="application/json")
-
 
     ls = StyleOrganizer(request.POST)
     ls.style_layer()

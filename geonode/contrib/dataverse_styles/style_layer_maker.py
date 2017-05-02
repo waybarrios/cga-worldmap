@@ -28,7 +28,7 @@ from geonode.contrib.dataverse_styles.geonode_get_services import get_style_name
 
 
 
-logger = logging.getLogger("geonode.contrib.dataverse_styles.style_layer_maker")
+LOGGER = logging.getLogger(__name__)
 
 
 class StyleLayerMaker:
@@ -66,7 +66,7 @@ class StyleLayerMaker:
         self.err_found = True
         self.err_msgs.append(err_msg)
 
-        logger.warn(err_msg)
+        LOGGER.warn(err_msg)
 
 
     def create_layer_metadata(self, layer_name):

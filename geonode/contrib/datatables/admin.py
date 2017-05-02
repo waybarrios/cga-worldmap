@@ -16,8 +16,11 @@ class DataTableAdmin(admin.ModelAdmin):
         'created',
         'table_name',
         'tablespace')
+
     list_display_links = ('title',)
 
+    list_filter  = ('tablespace',
+                    'owner')
 
 class DataTableAttributeAdmin(admin.ModelAdmin):
     list_display = ('attribute',

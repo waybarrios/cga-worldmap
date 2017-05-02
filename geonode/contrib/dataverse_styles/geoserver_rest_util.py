@@ -16,7 +16,7 @@ import logging
 from django.conf import settings
 
 
-logger = logging.getLogger("geonode.contrib.dataverse_connect.geonode_post_services")
+LOGGER = logging.getLogger(__name__)
 
 
 def make_geoserver_json_put_request(request_url_str, json_data_str):
@@ -33,7 +33,7 @@ def make_geoserver_put_sld_request(request_url_str, xml_data):
     """
     content_type = 'application/vnd.ogc.sld+xml; charset=UTF-8'
 
-    
+
     return make_geoserver_put_request(request_url_str, xml_data, content_type)
 
 

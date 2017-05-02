@@ -381,6 +381,8 @@ def view_upload_lat_lng_table(request):
 
 
 
+
+
 def create_dataverse_metadata(new_layer, dv_metadata):
     """
     Create a DataverseInfo object based on a layer name and dv_metadata
@@ -444,7 +446,7 @@ def get_layer_metadata_dict(layer, additional_params=None):
 
 
 def get_layer_and_join_metadata(layer):
-    """Given Metadata for a Layer created by mapping a Dataverse tabular file"""
+    """Get metadata for a Layer created by mapping a Dataverse tabular file"""
 
     if not isinstance(layer, Layer):
         LOGGER.error('A Layer object must be specified, not  %s', type(Layer))
