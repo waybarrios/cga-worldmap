@@ -145,19 +145,16 @@ def create_point_col_from_lat_lon(new_table_owner, table_name, lat_column, lng_c
     #   (c) Create column index
     # ---------------------------------------------
     # (a) Add column SQL
-    alter_table_sql = "ALTER TABLE %s ADD COLUMN geom geometry;" % (table_name) # postgis 1.x
-    #alter_table_sql = "ALTER TABLE %s ADD COLUMN geom geometry(POINT,4326);" % (table_name) # postgi 2.x
+    alter_table_sql = "ALTER TABLE %s ADD COLUMN geom geometry(POINT,4326);" % (table_name) # postgi 2.x
 
     # (b) Populate column SQL
     update_table_sql = "UPDATE %s SET geom = ST_SetSRID(ST_MakePoint(%s,%s),4326);" \
                     % (table_name, lng_col_attr.attribute, lat_col_attr.attribute)
     #update_table_sql = "UPDATE %s SET geom = ST_SetSRID(ST_MakePoint(cast(%s AS float), cast(%s as float)),4326);" % (table_name, lng_column, lat_column)
-    msg('update_table_sql: %s' % update_table_sql)
 
     # (c) Index column SQL
     create_index_sql = "CREATE INDEX idx_%s_geom ON %s USING GIST(geom);" % (table_name, table_name)
 
-    msg('create_point_col_from_lat_lon - 3')
 
     # ---------------------------------------------
     # Run the SQL
@@ -167,14 +164,20 @@ def create_point_col_from_lat_lon(new_table_owner, table_name, lat_column, lng_c
 
         cur = conn.cursor()
 
+        LOGGER.debug('Run alter table SQL: %s', alter_table_sql)
         cur.execute(alter_table_sql)
+
+        LOGGER.debug('Run update table SQL: %s', update_table_sql)
         cur.execute(update_table_sql)
+
+        LOGGER.debug('Run create index SQL: %s', create_index_sql)
         cur.execute(create_index_sql)
+
         conn.commit()
         conn.close()
-    except Exception as e:
+    except Exception as ex_obj:
         conn.close()
-        err_msg =  "Error Creating Point Column from Latitude and Longitude %s" % (str(e[0]))
+        err_msg =  "Error Creating Point Column from Latitude and Longitude %s" % (ex_obj)
         LOGGER.error(err_msg)
         return False, err_msg
 

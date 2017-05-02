@@ -174,6 +174,7 @@ INSTALLED_APPS = (
     'geonode.contrib.dataverse_permission_links',
     'geonode.contrib.dataverse_layer_metadata', # uses the dataverse_info repository models
     'geonode.contrib.dataverse_connect',
+    'geonode.contrib.dataverse_styles',
 
 )
 LOGGING = {

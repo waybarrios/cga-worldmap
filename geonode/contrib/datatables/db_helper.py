@@ -19,6 +19,7 @@ def get_database_name(is_dataverse_db):
         return utils.get_db_store_name()
 
 
+
 def get_datastore_connection_string(url_format=False, is_dataverse_db=True, db_name=None):
     """
     Create a connection string to access the database directly
@@ -63,16 +64,34 @@ def get_datastore_connection_string(url_format=False, is_dataverse_db=True, db_n
     #print 'conn_str', conn_str
     return conn_str
 
-    '''
-    "dbname='" +
-    db['NAME'] +
-    "' user='" +
-    db['USER'] +
-    "'  password='" +
-    db['PASSWORD'] +
-    "' port=" +
-    db['PORT'] +
-    " host='" +
-    db['HOST'] +
-    "'"
-    '''
+
+def get_connection_string_via_settings(setting_db_name, url_format=False, **override_params):
+    """Initial use:
+    Get the connection string for wmdata based on the django settings file--
+    but override the name of the database
+    """
+
+    if setting_db_name not in settings.DATABASES:
+        return (False,
+                ('database key not found in settings.DATABASES:'
+                 ' [%s]') % setting_db_name)
+
+    db_params = settings.DATABASES[setting_db_name]
+    for k, v in override_params.items():
+        if k in db_params:
+            db_params[k] = v
+
+    if url_format:
+        # connection_string = "postgresql://%s:%s@%s:%s/%s" % (db['USER'],
+        # db['PASSWORD'], db['HOST'], db['PORT'], db['NAME'])
+        conn_str = "postgresql://%s:%s@%s:%s/%s" % \
+                        (db_params['USER'],
+                         db_params['PASSWORD'],
+                         db_params['HOST'],
+                         db_params['PORT'],
+                         db_params['NAME'])
+    else:
+        conn_str = """dbname='%s' user='%s' password='%s' port=%s host='%s'""" %\
+                    tuple([db_params.get(x) for x in DB_PARAM_NAMES])
+
+    return (True, conn_str)
