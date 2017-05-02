@@ -104,8 +104,8 @@ def get_sld_rules(params):
     response, content = make_geoserver_get_request(sld_rules_url)
 
     # used for error messages
-    param_str = 'Attribute "<b>%s</b>" and Classification Method "<b>%s</b>"' %\
-        f.get_attribute_and_classification_method()
+    param_err = SLDHelperForm.get_style_error_message(\
+                 *f.get_attribute_and_classification_method())
 
     if not 'status' in response:
         return MessageHelperJSON.get_json_msg(success=False,\
@@ -113,10 +113,8 @@ def get_sld_rules(params):
 
     if response.status != 200:
         return MessageHelperJSON.get_json_msg(\
-            success=False,
-            msg=('Styling failed with %s.'
-                 ' Please try another Attribute'
-                 ' and/or Classification Method (e:1)') % param_str)
+                                success=False,
+                                msg='%s  (e:1)' % param_err)
 
     # ----------------------------------
     # New rules not created -- possible bad data
@@ -124,9 +122,8 @@ def get_sld_rules(params):
     if content is not None and content == '<list/>':
         return MessageHelperJSON.get_json_msg(\
             success=False,
-            msg=('Styling failed with %s.'
-                 ' Please try another Attribute'
-                 ' and/or Classification Method. (e:2)') % param_str)
+            msg='%s  (e:2)' % param_err)
+
 
     # ----------------------------------
     # Remove whitespace from XML
@@ -135,9 +132,7 @@ def get_sld_rules(params):
     if content is None:
         return MessageHelperJSON.get_json_msg(\
             success=False,
-            msg=('Styling failed with %s.'
-                 ' Please try another Attribute'
-                 ' and/or Classification Method. (e:3)') % param_str)
+            msg='%s  (e:3)' % param_err)
 
 
     # ----------------------------------
@@ -146,9 +141,8 @@ def get_sld_rules(params):
     if not content.startswith('<Rules>'):
         return MessageHelperJSON.get_json_msg(\
             success=False,
-            msg=('Styling failed with %s.'
-                 ' Please try another Attribute'
-                 ' and/or Classification Method. (e:4)') % param_str)
+            msg='%s  (e:4)' % param_err)
+
 
     # ----------------------------------
     # Wrap the XML rules in JSON and send them back

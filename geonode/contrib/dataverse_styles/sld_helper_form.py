@@ -186,7 +186,6 @@ class SLDHelperForm(forms.Form):
         return (self.cleaned_data.get('attribute'),
                 self.cleaned_data.get('method'))
 
-
     def get_error_list(self):
         if not self.errors:
             return None
@@ -198,6 +197,13 @@ class SLDHelperForm(forms.Form):
                 fmt_err_list.append('%s: %s' % (attribute_name, single_err))
         return fmt_err_list
 
+    @staticmethod
+    def get_style_error_message(attribute_name, classify_method):
+        return ('Styling failed with Attribute "<b>%s</b>"'
+                ' and Classification Method "<b>%s</b>".'
+                ' Please try another Attribute'
+                ' and/or Classification Method.') %\
+                 (attribute_name, classify_method)
 
 if __name__ == '__main__':
     d = dict(\
