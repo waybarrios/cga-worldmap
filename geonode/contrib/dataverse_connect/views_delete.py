@@ -127,7 +127,7 @@ def delete_map_layer(map_layer):
     # Is this a part of a join_layer?
     # If so, then delete TableJoin objects
     # -----------------------------------------------
-    for table_join in map_layer.join_layer.all():
+    for table_join_obj in map_layer.join_layer.all():
 
         # delete the DataTable after the TableJoin object
         related_datatable = table_join_obj.datatable
