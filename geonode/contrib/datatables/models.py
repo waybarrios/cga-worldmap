@@ -258,7 +258,10 @@ class LatLngTableMappingRecord(models.Model):
     lat_attribute = models.ForeignKey(DataTableAttribute, related_name="lat_attribute")
     lng_attribute = models.ForeignKey(DataTableAttribute, related_name="lng_attribute")
 
-    layer = models.ForeignKey(Layer, related_name="mapped_layer", null=True, blank=True)
+    layer = models.ForeignKey(Layer,
+                              related_name="lat_lng_records",
+                              null=True,
+                              blank=True)
 
     mapped_record_count = models.IntegerField(default=0, help_text='Records mapped')
     unmapped_record_count = models.IntegerField(default=0, help_text='Records that failed to map Lat/Lng')
@@ -304,7 +307,7 @@ class TableJoin(models.Model):
     """
     TableJoin
     """
-    datatable = models.ForeignKey(DataTable)
+    datatable = models.ForeignKey(DataTable, on_delete=models.CASCADE)
     table_attribute = models.ForeignKey(DataTableAttribute, related_name="table_attribute")
 
     source_layer = models.ForeignKey(Layer, related_name="source_layer")
@@ -327,6 +330,7 @@ class TableJoin(models.Model):
 
     def remove_joins(self):
         drop_view_by_name(self.view_name)
+
 
     def as_json(self):
         return dict(

@@ -76,12 +76,6 @@ def view_delete_dataverse_map_layer(request):
         return HttpResponse(json_msg, mimetype='application/json', status=401)
 
 
-    #--------------------------------------
-    #print "delete map_layer: %s" % map_layer
-    #print "id, type", map_layer.id, type(map_layer)
-    #--------------------------------------
-    #map_layer.owners.clear()
-
     #   Note: On dev, layer not always deleting on 1st attempt, try twice
     #
     (success, err_msg) = delete_map_layer(map_layer)        # Delete Attempt #1
@@ -95,7 +89,7 @@ def view_delete_dataverse_map_layer(request):
 
 
     #--------------------------------------
-    print "delete existing_dv_layer_metadata"
+    LOGGER.debug("delete the Dataverse Layer Metadata")
     #--------------------------------------
 
     try:
@@ -115,28 +109,56 @@ def view_delete_dataverse_map_layer(request):
 
 
 def delete_map_layer(map_layer):
-    """Delete a Layer object and related UserObjectRoleMapping objects"""
+    """Delete a Dataverse-created Layer object and related UserObjectRoleMapping objects
+
+    If this is a JoinLayer, then also delete the related DataTable
+    """
     assert isinstance(map_layer, Layer),\
         "map_layer must be a geonode.maps.models.Layer object"
 
-    # Is this a part of a join_layer?
-    # If so, then the layer may be a view
+    if not map_layer.id:
+        return (False, "map layer was not saved. (no id found)")
+
+    # Save the id for removing UserObjectRoleMapping objects
     #
-    #if hasattr(map_layer, 'join_layer') and map_layer.join_layer.count() > 0:
-    #    join_layer = map_layer.join_layer.all()[0]
-
-
-    # save the id for pre-delete
     map_layer_id = map_layer.id
 
+    # -----------------------------------------------
+    # Is this a part of a join_layer?
+    # If so, then delete TableJoin objects
+    # -----------------------------------------------
+    for table_join in map_layer.join_layer.all():
+
+        # delete the DataTable after the TableJoin object
+        related_datatable = table_join_obj.datatable
+
+        table_join_obj.delete()
+
+        if related_datatable:
+            related_datatable.delete()
+
+    # -----------------------------------------------
+    # Is this a part of a lat/lng mapping record?
+    # If so, then delete LatLngTableMappingRecord objects
+    # -----------------------------------------------
+    for lat_lng_record in map_layer.lat_lng_records.all():
+
+        # delete the DataTable after the TableJoin object
+        related_datatable = lat_lng_record.datatable
+
+        lat_lng_record.delete()
+
+        if related_datatable:
+            related_datatable.delete()
+
+
     try:
-        map_layer.delete()
+        Layer.objects.filter(id=map_layer_id).delete()
     except FailedRequestError as e:
-        return (False, "Failed to map_layer.  Error: %s" % e.message)
+        return (False, "Failed to delete the map.  Error: %s" % e.message)
     except:
         err_msg = "Unexpected error: %s" % sys.exc_info()[0]
-        return (False, "Failed to map_layer. %s" % err_msg)
-
+        return (False, "ailed to delete the map. %s" % err_msg)
 
     # -----------------------------------------------
     # If the Layer was deleted,
@@ -145,6 +167,7 @@ def delete_map_layer(map_layer):
     ctype = ContentType.objects.get_for_model(Layer)
     role_params = dict(object_ct=ctype,
                        object_id=map_layer_id)
+
     UserObjectRoleMapping.objects.filter(**role_params).delete()
 
     return (True, None)
