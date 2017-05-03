@@ -16,12 +16,13 @@ API attributes include:
     reverse = models.BooleanField(default=False)
 """
 from __future__ import print_function
-
+import sys
 import json
 import logging
 import psycopg2
 
 from django.conf import settings
+from geoserver.catalog import FailedRequestError
 
 from geonode.contrib.datatables.db_helper import get_connection_string_via_settings
 from geonode.maps.models import Layer
@@ -30,9 +31,9 @@ from geonode.contrib.dataverse_connect.dv_utils import MessageHelperJSON
 from geonode.contrib.dataverse_styles.style_layer_maker import StyleLayerMaker
 from geonode.contrib.dataverse_styles.style_rules_formatter import StyleRulesFormatter
 from geonode.contrib.dataverse_styles.geonode_get_services import get_sld_rules
+from geonode.contrib.dataverse_styles.sld_helper_form import SLDHelperForm
 from geoserver.catalog import Catalog
 from geonode.contrib.dataverse_connect.layer_metadata import LayerMetadata
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class StyleOrganizer(object):
         self.check_current_sld()
 
     def check_current_sld(self):
-        """Check current SLD as a proxy to check
+        """Check the geometry via the database to see
         if the layer is a POINT or POLYGON
         """
         if self.layer_name is None:
@@ -176,11 +177,19 @@ class StyleOrganizer(object):
         #print ('set_layer_name_and_get_rule_data 1')
         if self.styling_params is None:
             return None
+
+        # used for error messages
+        param_err = SLDHelperForm.get_style_error_message(\
+                    self.styling_params.get('attribute', '(missing)'),
+                    self.styling_params.get('method', '(missing)'))
+
         resp_json = get_sld_rules(self.styling_params)
-        resp_dict = self.get_json_as_dict(resp_json, 'Failed to make the SLD rules')
+        resp_dict = self.get_json_as_dict(\
+                        resp_json,
+                        '%s (sld:1)' % param_err)
 
         if not resp_dict.get('success') is True:
-            user_msg = resp_dict.get('message',)
+            user_msg = '%s (sld:2)' % param_err
             self.add_err_msg(user_msg)
             for err_msg in resp_dict.get('data', []):
                 self.add_err_msg(err_msg)
@@ -191,15 +200,27 @@ class StyleOrganizer(object):
         #
         self.layer_name = self.styling_params.get('layer_name', None)
         if self.layer_name is None:
-            self.add_err_msg('Layer name is not in the parameters')
+            # Layer name is not in the parameters
+            self.add_err_msg('%s (sld:2)' % param_err)
             return None
 
         sld_rule_data = resp_dict.get('data', {}).get('style_rules', None)
         if sld_rule_data is None:
-            self.add_err_msg('Failed to find rules in response')
+            # Failed to find rules in response'
+            self.add_err_msg('%s (sld:3)' % param_err)
             return None
 
-        #print ('sld_rule_data', sld_rule_data)
+        num_filters = sld_rule_data.count('<Filter>')
+
+        if num_filters > 100:
+            user_msg = ('%s<br /><br />'
+                        'This combination created'
+                        ' %d categories but the limit'
+                        ' is 100. (sld:4)') %\
+                        (param_err, num_filters)
+            self.add_err_msg(user_msg)
+            return None
+
         return sld_rule_data
 
 
@@ -257,32 +278,48 @@ class StyleOrganizer(object):
         the_layer.default_style.update_body(formatted_sld_object.formatted_sld_xml)
 
         # save it
-        geoserver_catalog.save(the_layer)
+        try:
+            server_resp = geoserver_catalog.save(the_layer)
+            print ('------server_resp----\n', server_resp)
+        except FailedRequestError as fail_obj:
+            # Attempt to restore previous SLD
+            self.restore_old_sld(the_layer)
+            #
+            self.add_err_msg("Failed to add a new style.  Error: %s" % fail_obj.message)
+            return False
+        except:
+            # Attempt to restore previous SLD
+            self.restore_old_sld(the_layer)
+            #
+            err_msg = "Unexpected error: %s" % sys.exc_info()[0]
+            self.add_err_msg("Failed to add the new style.  Error: %s" % err_msg)
+            return False
 
         self.layer_metadata = LayerMetadata.create_metadata_using_layer_name(self.layer_name)
         return True
 
+    def restore_old_sld(self, the_layer):
+        """Attempt to restore old SLD if classification goes bad"""
+        if not the_layer:
+            LOGGER.error('Could not restore the old SLD. (res:1)')
+            return None
 
-    def add_new_sld_to_layer_orig(self, formatted_sld_object):
-        """
-        'Legacy': Simpler code implemented in "add_new_sld_to_layer"
-        (3) Add new SLD to Layer
-        """
-        if not formatted_sld_object:
-            self.add_err_msg('Formatted SLD data is not available')
+        if not self.current_sld:
+            LOGGER.error('Could not restore the old SLD. (res:2)')
             return False
 
-        slm = StyleLayerMaker(self.layer_name)
-        success = slm.add_sld_to_layer(formatted_sld_object)
-
-        if success:
-            self.layer_metadata = slm.layer_metadata
+        the_layer.default_style.update_body(self.current_sld)
+        try:
+            geoserver_catalog.save(the_layer)
             return True
-
-        for err in slm.err_msgs:
-            self.add_err_msg(err)
-
-        return False
+        except FailedRequestError as fail_obj:
+            LOGGER.error(\
+                    "Could not restore the old SLD. %s (res:3)"\
+                        % fail_obj.message)
+            return False
+        except:
+            LOGGER.error('Could not restore the old SLD. (res:4)')
+            return False
 
 
     def get_json_message(self):
@@ -306,6 +343,7 @@ class StyleOrganizer(object):
             err_msg = 'Failed to create layer.  Please try again'
 
         return MessageHelperJSON.get_json_msg(success=False, msg=err_msg)
+
 
 
 if __name__ == '__main__':
