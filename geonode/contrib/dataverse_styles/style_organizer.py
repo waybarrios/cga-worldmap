@@ -280,20 +280,46 @@ class StyleOrganizer(object):
         # save it
         try:
             server_resp = geoserver_catalog.save(the_layer)
+            print ('------server_resp----\n', server_resp)
         except FailedRequestError as fail_obj:
             # Attempt to restore previous SLD
-            geoserver_catalog.save(self.current_sld)
+            self.restore_old_sld(the_layer)
             #
-            return (False, "Failed to add a new style.  Error: %s" % fail_obj.message)
+            self.add_err_msg("Failed to add a new style.  Error: %s" % fail_obj.message)
+            return False
         except:
             # Attempt to restore previous SLD
-            geoserver_catalog.save(self.current_sld)
+            self.restore_old_sld(the_layer)
             #
             err_msg = "Unexpected error: %s" % sys.exc_info()[0]
-            return (False, "Failed to add a new style.  Error: %s" % err_msg)
+            self.add_err_msg("Failed to add the new style.  Error: %s" % err_msg)
+            return False
 
         self.layer_metadata = LayerMetadata.create_metadata_using_layer_name(self.layer_name)
         return True
+
+    def restore_old_sld(self, the_layer):
+        """Attempt to restore old SLD if classification goes bad"""
+        if not the_layer:
+            LOGGER.error('Could not restore the old SLD. (res:1)')
+            return None
+
+        if not self.current_sld:
+            LOGGER.error('Could not restore the old SLD. (res:2)')
+            return False
+
+        the_layer.default_style.update_body(self.current_sld)
+        try:
+            geoserver_catalog.save(the_layer)
+            return True
+        except FailedRequestError as fail_obj:
+            LOGGER.error(\
+                    "Could not restore the old SLD. %s (res:3)"\
+                        % fail_obj.message)
+            return False
+        except:
+            LOGGER.error('Could not restore the old SLD. (res:4)')
+            return False
 
 
     def get_json_message(self):
