@@ -213,8 +213,17 @@ var init = function() {
 
     }, this);
 
-    Ext.Msg.minWidth = 360;
-    Ext.Msg.alert("NOTICE:  WorldMap will be down from 12pm EST Monday May 22nd to 12pm EST May 24th due to an annual power shutdown on WorldMap’s host, Massachusetts Open Cloud(MOC).  WorldMap is hosted on the MOC, a public research cloud which is part of the state's MGHPCC data center, so WorldMap is subject to MGHPCC's maintenance schedule.");
+    message = "Dear WorldMap users, due to maintenance work on our host Massachusetts Open Cloud, any additions, deletions, or changes you make on the WorldMap system between 11am EST Monday May 22nd and 12pm EST Wednesday May 24th will lost.  We are very sorry for the inconvenience.  Yours, the Worldmap Team";
+    //Ext.Msg.minWidth = 360;
+    //Ext.Msg.BodyStyle = 'font-size: 25px;color: red;';
+    //Ext.Msg.alert(message);
+
+    Ext.Msg.show({
+        title: 'Notice',
+        msg: message,
+        multiline: false,
+        icon : Ext.Msg.WARNING
+    });
 
     {% endautoescape %}
     }
