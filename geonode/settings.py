@@ -303,7 +303,7 @@ SOUTH_MIGRATION_MODULES = {
 AUTH_PROFILE_MODULE = 'maps.Contact'
 
 # For django-registration
-REGISTRATION_OPEN = False
+REGISTRATION_OPEN = True
 
 # Arguments for the test runner
 NOSE_ARGS = [
@@ -369,8 +369,6 @@ DEFAULT_LAYER_SOURCE = {
     "restUrl": "/gs/rest"
 }
 
-
-REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 30
 SERVE_MEDIA = DEBUG;
 

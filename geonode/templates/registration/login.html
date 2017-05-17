@@ -13,8 +13,11 @@
   <p>{% trans "Your username and password didn't match. Please try again." %}</p>
   {% endif %}
 
+  {% if REGISTRATION_OPEN %}
   <p>{% trans "Don't have an account yet?" %} <a href="{% url registration_register %}">{% trans "Register" %}</a></p>
-    <form method="post" action="{% url auth_login %}">
+  {% endif %}
+
+  <form method="post" action="{% url auth_login %}">
 
     {% csrf_token %}
 	<ul class="form">
