@@ -29,7 +29,6 @@ from django.core.cache import cache
 import sys
 import re
 from geonode.maps.encode import despam, XssCleaner
-from geonode.flexidates import FlexiDateField, FlexiDateFormField
 
 
 logger = logging.getLogger("geonode.maps.models")
