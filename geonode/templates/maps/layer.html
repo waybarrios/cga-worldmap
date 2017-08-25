@@ -149,7 +149,7 @@
         }
         app.tools["styler"].actions[0].execute();
     }
-    
+
     function addToMap(selectInput) {
     	var selectedValue = selectInput.options[selectInput.selectedIndex].value;
     	if (selectedValue != '') {
@@ -181,7 +181,7 @@
 		<g:plusone size="small" href="http://{{ request.get_host }}{{ request.get_full_path }}"></g:plusone>
 		<div class="fb-like" data-href="http://{{ request.get_host }}{{ request.get_full_path }}" data-send="false" data-width="50" data-layout="button_count" data-show-faces="false"></div>
 	</div>
-    <p> <strong>{% trans "Abstract" %}:</strong> 
+    <p> <strong>{% trans "Abstract" %}:</strong>
     {% autoescape off %}
     {{ layer.abstract|default:_("No abstract for this layer.") }}
     {% endautoescape %}
@@ -196,7 +196,7 @@
 
     {% if layer.constraints_use or layer.constraints_other %}
     <p> <strong>{% trans "Citation" %}:</strong>
-        {{ layer.constraints_use}} 
+        {{ layer.constraints_use}}
         <br/><br/>
         {{ layer.constraints_other}}
     </p>
@@ -315,7 +315,7 @@
 	<div id="user_rating" class="category-layer"></div>
 {% endif %}
 
-	
+
 
 
 </div>
@@ -329,7 +329,7 @@
         {% for extension, type, link in layer.download_links %}
         <a href="{{link}}">{{type}}</a>
         {% endfor %}
-    </p>    
+    </p>
 
     <p> <strong>{% trans "Metadata" %}: </strong>
         {% for mimetype, mdtype, link in layer.metadata_links %}
@@ -337,10 +337,10 @@
         {% empty %}
             <em> {% trans "No metadata links provided for this data." noop %} </em>
         {% endfor %}
-    </p> 
+    </p>
     {% endif %}
 
-   
+
 
     <h3> {% trans "Legend" %} </h3>
     {% comment %}
@@ -390,7 +390,7 @@
     {% has_obj_perm user layer "maps.delete_layer" as can_delete %}
     {% is_certified user layer as certified %}
     {% object_certifications layer as certifications %}
-    
+
 
     <h3> {% trans "Layer Styles" %} </h3>
     <p> {% trans "The following styles are associated with this data set.  Choose a style to view it in the preview to the left.  Click on a style name to view or edit the style." %}
@@ -406,7 +406,7 @@
         </label>
         <a href="{{ GEOSERVER_BASE_URL }}styles/{{ layer.default_style.name }}.sld">SLD</a><br/>
 
-    {% for style in layer.styles %} 
+    {% for style in layer.styles %}
         <input type="radio" name="style" id="{{style.name}}" value="{{style.name}}"/>
         <label for="{{style.name}}" class="style-title">
             {% if style.sld_title %}
@@ -448,17 +448,20 @@
 		<li>{% trans "This layer has not been certified by any users" %}
 	{% endif %}
 	</ul>
-	
+
+  <h3>OGC WMS url</h3>
+  <p><a href="{{ GEOSERVER_BASE_URL }}geonode/{{ layer.typename }}/wms?tiled=true&service=WMS&request=GetCapabilities">OGC WMS link</a></p>
+
 	{% if user.is_authenticated and user.get_profile.is_certifier %}
 	<ul>
 	{% if certified %}
 	<li><a href="{% url uncertify 'maps.Layer' layer.id %}">
             {% trans "Uncertify this layer" %}
-        </a></li>	
+        </a></li>
 	{% else %}
 	<li><a href="{% url certify 'maps.Layer' layer.id %}">
             {% trans "Certify this layer" %}
-        </a></li>	
+        </a></li>
 	{% endif %}
 	</ul>
 
