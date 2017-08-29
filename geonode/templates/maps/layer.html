@@ -449,9 +449,6 @@
 	{% endif %}
 	</ul>
 
-  <h3>OGC WMS url</h3>
-  <p><a href="{{ GEOSERVER_BASE_URL }}geonode/{{ layer.typename }}/wms?tiled=true&service=WMS&request=GetCapabilities">OGC WMS link</a></p>
-
 	{% if user.is_authenticated and user.get_profile.is_certifier %}
 	<ul>
 	{% if certified %}
@@ -466,6 +463,9 @@
 	</ul>
 
 	{% endif %}
+
+  <h3>OGC WMS url</h3>
+  <p><a href="{{ GEOSERVER_BASE_URL }}geonode/{{ layer.typename }}/wms?tiled=true&service=WMS&request=GetCapabilities">OGC WMS link</a></p>
 
     {% if user.is_authenticated %}
     {% if can_change or can_delete or can_change_permissions %}
